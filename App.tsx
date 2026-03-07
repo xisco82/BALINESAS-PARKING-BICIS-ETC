@@ -239,7 +239,7 @@ const App: React.FC = () => {
               )}
 
               <img
-                src="https://i.postimg.cc/3NtL1zS5/XISCO_LOGO.png"
+                src="https://i.postimg.cc/fRsXZ0mn/Xiscologo.png"
                 alt="Xisco Logo"
                 onClick={handleLogoClick}
                 onAnimationEnd={() => setAnimationClass('')}
