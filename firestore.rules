@@ -1,0 +1,208 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "xiscoquin@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDate(date) {
+      return date is string && date.matches("^\\d{4}-\\d{2}-\\d{2}$");
+    }
+
+    function isValidDateTime(dateTime) {
+      return dateTime is string && dateTime.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidNewsEvent(data) {
+      return hasRequiredFields(['title', 'description', 'startDate', 'endDate']) &&
+             hasOnlyAllowedFields(['title', 'description', 'startDate', 'endDate']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.description is string && data.description.size() < 2000 &&
+             isValidDate(data.startDate) && isValidDate(data.endDate);
+    }
+
+    function isValidParkingBooking(data) {
+      return hasRequiredFields(['spotId', 'date', 'guestName', 'roomNumber']) &&
+             hasOnlyAllowedFields(['spotId', 'date', 'guestName', 'roomNumber']) &&
+             data.spotId is int && data.spotId >= 1 && data.spotId <= 13 &&
+             isValidDate(data.date) &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20;
+    }
+
+    function isValidBikeBooking(data) {
+      return hasRequiredFields(['bikeId', 'date', 'guestName', 'roomNumber']) &&
+             hasOnlyAllowedFields(['bikeId', 'date', 'guestName', 'roomNumber']) &&
+             data.bikeId is int &&
+             isValidDate(data.date) &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20;
+    }
+
+    function isValidBalineseBooking(data) {
+      return hasRequiredFields(['bedId', 'date', 'guestName', 'roomNumber', 'createdAt', 'createdBy']) &&
+             hasOnlyAllowedFields(['bedId', 'date', 'guestName', 'roomNumber', 'createdAt', 'createdBy']) &&
+             data.bedId is int &&
+             isValidDate(data.date) &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
+             isValidDateTime(data.createdAt) &&
+             data.createdBy is string;
+    }
+
+    function isValidServiceBooking(data) {
+      return hasRequiredFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description']) &&
+             hasOnlyAllowedFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description']) &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
+             isValidDate(data.startDate) && isValidDate(data.endDate) &&
+             data.description is string && data.description.size() < 500;
+    }
+
+    function isValidDayPassBooking(data) {
+      return hasRequiredFields(['date', 'clientName', 'serviceType', 'numberOfPeople', 'createdAt', 'createdBy', 'createdFrom']) &&
+             hasOnlyAllowedFields(['date', 'clientName', 'serviceType', 'numberOfPeople', 'createdAt', 'createdBy', 'createdFrom', 'notes']) &&
+             isValidDate(data.date) &&
+             data.clientName is string && data.clientName.size() > 0 && data.clientName.size() < 100 &&
+             data.serviceType is string &&
+             data.numberOfPeople is int && data.numberOfPeople > 0 &&
+             isValidDateTime(data.createdAt) &&
+             data.createdBy is string &&
+             data.createdFrom is string;
+    }
+
+    function isValidAccessibilityBooking(data) {
+      return hasRequiredFields(['guestName', 'roomNumber', 'arrivalDate', 'departureDate', 'disabilityInfo']) &&
+             hasOnlyAllowedFields(['guestName', 'roomNumber', 'arrivalDate', 'departureDate', 'disabilityInfo']) &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
+             isValidDate(data.arrivalDate) && isValidDate(data.departureDate) &&
+             data.disabilityInfo is string && data.disabilityInfo.size() < 1000;
+    }
+
+    function isValidSaunaBooking(data) {
+      return hasRequiredFields(['date', 'timeSlot', 'guestName', 'roomNumber']) &&
+             hasOnlyAllowedFields(['date', 'timeSlot', 'guestName', 'roomNumber']) &&
+             isValidDate(data.date) &&
+             data.timeSlot is string &&
+             data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20;
+    }
+
+    function isValidEmailRecipient(data) {
+      return hasRequiredFields(['department', 'email']) &&
+             hasOnlyAllowedFields(['department', 'email']) &&
+             data.department is string &&
+             isValidEmail(data.email);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /news_events/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidNewsEvent(request.resource.data);
+      allow update: if isAuthenticated() && isValidNewsEvent(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /parking_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidParkingBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidParkingBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /bike_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidBikeBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidBikeBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /bike_availability/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    match /balinese_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidBalineseBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidBalineseBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /restaurant_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /sky_dinner_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /day_pass_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidDayPassBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidDayPassBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /accessibility_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidAccessibilityBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidAccessibilityBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /sauna_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidSaunaBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidSaunaBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /email_recipients/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidEmailRecipient(request.resource.data);
+      allow update: if isAuthenticated() && isValidEmailRecipient(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+    }
+  }
+}

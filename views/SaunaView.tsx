@@ -1,15 +1,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { SaunaBooking } from '../types';
+import { SaunaBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { sql } from '../services/dbService';
-
-type UserRole = 'editor' | 'balinese_editor';
+import { 
+  getSaunaBookings, 
+  addSaunaBooking, 
+  deleteSaunaBooking 
+} from '../services/firebaseService';
 
 interface SaunaViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
@@ -68,7 +71,7 @@ const TimeSlot: React.FC<{
 }
 
 
-const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
     const [bookings, setBookings] = useState<SaunaBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -76,29 +79,15 @@ const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, userRol
     const [currentTimeSlot, setCurrentTimeSlot] = useState<string | null>(null);
     const [newBooking, setNewBooking] = useState({ guestName: '', roomNumber: '' });
 
-    const fetchBookings = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            // FIX: The sql template literal tag does not support generic type arguments.
-            const result = await sql`
-                SELECT date, time_slot as "timeSlot", guest_name as "guestName", room_number as "roomNumber"
-                FROM sauna_bookings 
-                WHERE date = ${selectedDate}`;
-            setBookings(result);
-        } catch (error) {
-            console.error("Error fetching sauna bookings:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedDate, dbError, isDbInitialized]);
-    
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        if (!isAuthReady) return;
+        setIsLoading(true);
+        const unsubscribe = getSaunaBookings(selectedDate, (bookingsData) => {
+            setBookings(bookingsData);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [isAuthReady, selectedDate]);
 
     const handleOpenModal = (time: string) => {
         setCurrentTimeSlot(time);
@@ -116,11 +105,12 @@ const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, userRol
         if (!currentTimeSlot || !newBooking.guestName || !newBooking.roomNumber) return;
         
         try {
-            await sql`
-                INSERT INTO sauna_bookings (date, time_slot, guest_name, room_number)
-                VALUES (${selectedDate}, ${currentTimeSlot}, ${newBooking.guestName}, ${newBooking.roomNumber})
-            `;
-            fetchBookings();
+            await addSaunaBooking({
+                date: selectedDate,
+                timeSlot: currentTimeSlot,
+                guestName: newBooking.guestName,
+                roomNumber: newBooking.roomNumber
+            });
         } catch (error: any) {
             console.error("Error booking sauna slot:", error);
             const errorMessage = error.message || 'Error desconocido.';
@@ -133,11 +123,7 @@ const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, userRol
     const handleCancelBooking = async (time: string) => {
         if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
             try {
-                await sql`
-                    DELETE FROM sauna_bookings 
-                    WHERE date = ${selectedDate} AND time_slot = ${time}
-                `;
-                fetchBookings();
+                await deleteSaunaBooking(selectedDate, time);
             } catch (error: any) {
                 console.error("Error canceling sauna booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';

@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BikeBooking } from '../types';
+import { BikeBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { sql } from '../services/dbService';
+import { 
+  getBikeBookings, 
+  addBikeBooking, 
+  deleteBikeBooking,
+  getBikeAvailability,
+  updateBikeAvailability
+} from '../services/firebaseService';
 
 const TOTAL_BIKES = 15;
-type UserRole = 'editor' | 'balinese_editor';
 
 interface BikesViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
@@ -56,7 +62,7 @@ const Bike: React.FC<{
     );
 }
 
-const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
     const [bookings, setBookings] = useState<BikeBooking[]>([]);
     const [availableBikes, setAvailableBikes] = useState<Set<number>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
@@ -65,35 +71,24 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, userRol
     const [currentBikeId, setCurrentBikeId] = useState<number | null>(null);
     const [newBooking, setNewBooking] = useState({ guestName: '', roomNumber: '' });
     
-    const fetchBookingsAndAvailability = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            const [bookingsResult, availabilityResult] = await Promise.all([
-                sql`
-                    SELECT bike_id as "bikeId", guest_name as "guestName", room_number as "roomNumber"
-                    FROM bike_bookings
-                    WHERE date = ${selectedDate}
-                `,
-                sql`
-                    SELECT bike_id FROM bike_availability WHERE date = ${selectedDate}
-                `
-            ]);
-            setBookings(bookingsResult);
-            setAvailableBikes(new Set(availabilityResult.map((r: any) => r.bike_id)));
-        } catch (error) {
-            console.error("Error fetching bike data:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedDate, dbError, isDbInitialized]);
-    
     useEffect(() => {
-        fetchBookingsAndAvailability();
-    }, [fetchBookingsAndAvailability]);
+        if (!isAuthReady) return;
+        setIsLoading(true);
+        
+        const unsubscribeBookings = getBikeBookings(selectedDate, (bookingsData) => {
+            setBookings(bookingsData);
+        });
+
+        const unsubscribeAvailability = getBikeAvailability(selectedDate, (ids) => {
+            setAvailableBikes(new Set(ids));
+            setIsLoading(false);
+        });
+
+        return () => {
+            unsubscribeBookings();
+            unsubscribeAvailability();
+        };
+    }, [isAuthReady, selectedDate]);
 
     const handleOpenModal = (bikeId: number) => {
         setCurrentBikeId(bikeId);
@@ -111,11 +106,12 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, userRol
         if (!currentBikeId || !newBooking.guestName || !newBooking.roomNumber) return;
         
         try {
-            await sql`
-                INSERT INTO bike_bookings (bike_id, date, guest_name, room_number)
-                VALUES (${currentBikeId}, ${selectedDate}, ${newBooking.guestName}, ${newBooking.roomNumber})
-            `;
-            fetchBookingsAndAvailability();
+            await addBikeBooking({
+                bikeId: currentBikeId,
+                date: selectedDate,
+                guestName: newBooking.guestName,
+                roomNumber: newBooking.roomNumber
+            });
         } catch (error: any) {
             console.error("Error booking bike:", error);
             const errorMessage = error.message || 'Error desconocido.';
@@ -128,11 +124,7 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, userRol
     const handleCancelBooking = async (bikeId: number) => {
         if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
             try {
-                await sql`
-                    DELETE FROM bike_bookings
-                    WHERE bike_id = ${bikeId} AND date = ${selectedDate}
-                `;
-                fetchBookingsAndAvailability();
+                await deleteBikeBooking(bikeId, selectedDate);
             } catch (error: any) {
                 console.error("Error canceling booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';
@@ -142,30 +134,13 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, userRol
     };
 
     const handleToggleAvailability = async (bikeId: number) => {
-        const originalAvailableBikes = new Set(availableBikes);
-        const isCurrentlyAvailable = originalAvailableBikes.has(bikeId);
+        const isCurrentlyAvailable = availableBikes.has(bikeId);
 
-        // Optimistic UI update
-        const newAvailableBikes = new Set(originalAvailableBikes);
-        if (isCurrentlyAvailable) {
-            newAvailableBikes.delete(bikeId);
-        } else {
-            newAvailableBikes.add(bikeId);
-        }
-        setAvailableBikes(newAvailableBikes);
-
-        // Database update
         try {
-            if (isCurrentlyAvailable) {
-                await sql`DELETE FROM bike_availability WHERE bike_id = ${bikeId} AND date = ${selectedDate}`;
-            } else {
-                await sql`INSERT INTO bike_availability (bike_id, date) VALUES (${bikeId}, ${selectedDate}) ON CONFLICT DO NOTHING`;
-            }
+            await updateBikeAvailability(bikeId, selectedDate, !isCurrentlyAvailable);
         } catch (error) {
             console.error("Error updating bike availability:", error);
             alert("No se pudo actualizar el estado de la bicicleta.");
-            // Revert UI on failure
-            setAvailableBikes(originalAvailableBikes);
         }
     };
 

@@ -10,7 +10,9 @@ import BikesView from './views/BikesView';
 import SaunaView from './views/SaunaView';
 import DayPassView from './views/DayPassView';
 import { initClient } from './services/googleSheetsService';
-import { initializeDatabase } from './services/dbService';
+import { auth } from './services/firebase';
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { seedEmailRecipients } from './services/firebaseService';
 import LoginView from './views/LoginView';
 import { 
     NewsIcon,
@@ -35,6 +37,7 @@ const App: React.FC = () => {
   const [gapiError, setGapiError] = useState<string | null>(null);
   const [dbError, setDbError] = useState<string | null>(null);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [isLogoEnlarged, setIsLogoEnlarged] = useState(false);
   const [animationClass, setAnimationClass] = useState('');
   
@@ -51,6 +54,19 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        signInAnonymously(auth).catch(err => console.error("Firebase Auth Error", err));
+      } else {
+        setIsAuthReady(true);
+        // Seed email recipients once signed in
+        seedEmailRecipients();
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
     if (!isAuthenticated) return;
 
     // Initialize the Google API client for Sheets integration.
@@ -60,15 +76,7 @@ const App: React.FC = () => {
       setGapiError(`Google API Error: ${message}`);
     });
 
-    // Initialize PostgreSQL database and create tables if they don't exist.
-    initializeDatabase()
-      .then(() => {
-        setIsDbInitialized(true);
-      })
-      .catch(err => {
-        console.error("Fatal Error initializing database", err);
-        setDbError(err.message);
-      });
+    setIsDbInitialized(true);
   }, [updateSigninStatus, isAuthenticated]);
 
   const handleLoginSuccess = (role: UserRole) => {
@@ -127,6 +135,7 @@ const App: React.FC = () => {
     const commonProps = {
         dbError,
         isDbInitialized,
+        isAuthReady,
         userRole,
     };
     switch (activeView) {

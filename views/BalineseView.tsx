@@ -1,16 +1,20 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { BalineseBedBooking } from '../types';
+import { BalineseBedBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { sql } from '../services/dbService';
+import { 
+  getBalineseBookings, 
+  addBalineseBooking, 
+  deleteBalineseBooking 
+} from '../services/firebaseService';
 
 const TOTAL_BEDS = 6;
-type UserRole = 'editor' | 'balinese_editor';
 
 interface BalineseViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
@@ -58,7 +62,7 @@ const BalineseBed: React.FC<{ bedId: number; booking: BalineseBedBooking | undef
     );
 }
 
-const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
     const [bookings, setBookings] = useState<BalineseBedBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -66,29 +70,15 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, u
     const [currentBedId, setCurrentBedId] = useState<number | null>(null);
     const [newBooking, setNewBooking] = useState({ guestName: '', roomNumber: '' });
     
-    const fetchBookings = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            // FIX: The sql template literal tag does not support generic type arguments.
-            const result = await sql`
-                SELECT bed_id as "bedId", guest_name as "guestName", room_number as "roomNumber", created_at as "createdAt", created_by as "createdBy"
-                FROM balinese_bookings 
-                WHERE date = ${selectedDate}`;
-            setBookings(result);
-        } catch (error) {
-            console.error("Error fetching balinese bed bookings:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedDate, dbError, isDbInitialized]);
-
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        if (!isAuthReady) return;
+        setIsLoading(true);
+        const unsubscribe = getBalineseBookings(selectedDate, (bookingsData) => {
+            setBookings(bookingsData);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [isAuthReady, selectedDate]);
 
     const handleOpenModal = (bedId: number) => {
         setCurrentBedId(bedId);
@@ -106,11 +96,13 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, u
         if (!currentBedId || !newBooking.guestName || !newBooking.roomNumber) return;
 
         try {
-            await sql`
-                INSERT INTO balinese_bookings (bed_id, date, guest_name, room_number, created_by)
-                VALUES (${currentBedId}, ${selectedDate}, ${newBooking.guestName}, ${newBooking.roomNumber}, ${userRole})
-            `;
-            fetchBookings();
+            await addBalineseBooking({
+                bedId: currentBedId,
+                date: selectedDate,
+                guestName: newBooking.guestName,
+                roomNumber: newBooking.roomNumber,
+                createdBy: userRole
+            });
         } catch (error: any) {
             console.error("Error booking bed:", error);
             const errorMessage = error.message || 'Error desconocido. Revise la consola del navegador para más detalles.';
@@ -123,11 +115,7 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, u
     const handleCancelBooking = async (bedId: number) => {
         if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
             try {
-                await sql`
-                    DELETE FROM balinese_bookings 
-                    WHERE bed_id = ${bedId} AND date = ${selectedDate}
-                `;
-                fetchBookings();
+                await deleteBalineseBooking(bedId, selectedDate);
             } catch (error: any) {
                 console.error("Error canceling booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';

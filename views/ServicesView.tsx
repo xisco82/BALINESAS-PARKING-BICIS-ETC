@@ -3,22 +3,29 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RestaurantBooking } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { sql } from '../services/dbService';
+import { 
+  getServiceBookings, 
+  addServiceBooking, 
+  deleteServiceBooking, 
+  updateServiceBooking 
+} from '../services/firebaseService';
 
 type UserRole = 'editor' | 'balinese_editor';
 
 interface ServicesViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
   title: string;
   tableName: string;
 }
 
-const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, userRole, title, tableName }) => {
+const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName }) => {
     const [bookings, setBookings] = useState<RestaurantBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingBooking, setEditingBooking] = useState<RestaurantBooking | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [newBooking, setNewBooking] = useState({ 
         guestName: '', 
@@ -28,39 +35,42 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, u
         endDate: ''
     });
 
-    const fetchBookings = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            // FIX: The sql template literal tag does not support generic type arguments.
-            const result = await sql`
-                SELECT id, guest_name as "guestName", room_number as "roomNumber", 
-                       start_date as "startDate", end_date as "endDate", description
-                FROM ${sql(tableName)}
-                WHERE ${selectedDate} >= start_date AND ${selectedDate} <= end_date
-                ORDER BY room_number ASC
-            `;
-            setBookings(result);
-        } catch (error) {
-            console.error(`Error fetching ${tableName} bookings:`, error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedDate, dbError, isDbInitialized, tableName]);
-    
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        if (!isAuthReady) return;
+        setIsLoading(true);
+        const unsubscribe = getServiceBookings(tableName, selectedDate, (allBookings) => {
+            setBookings(allBookings);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [isAuthReady, tableName, selectedDate]);
 
-    const handleOpenModal = () => {
+    const handleOpenModal = (booking?: RestaurantBooking) => {
+        if (booking && typeof booking === 'object') {
+            setEditingBooking(booking);
+            setNewBooking({
+                guestName: booking.guestName,
+                roomNumber: booking.roomNumber,
+                description: booking.description,
+                startDate: booking.startDate,
+                endDate: booking.endDate
+            });
+        } else {
+            setEditingBooking(null);
+            setNewBooking({
+                guestName: '',
+                roomNumber: '',
+                description: '',
+                startDate: selectedDate,
+                endDate: ''
+            });
+        }
         setIsModalOpen(true);
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
+        setEditingBooking(null);
         setNewBooking({ 
             guestName: '', 
             roomNumber: '', 
@@ -82,25 +92,24 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, u
         }
         
         try {
-            await sql`
-                INSERT INTO ${sql(tableName)} (guest_name, room_number, start_date, end_date, description)
-                VALUES (${newBooking.guestName}, ${newBooking.roomNumber}, ${newBooking.startDate}, ${newBooking.endDate}, ${newBooking.description})
-            `;
-            fetchBookings();
+            if (editingBooking) {
+                await updateServiceBooking(tableName, editingBooking.id, newBooking);
+            } else {
+                await addServiceBooking(tableName, newBooking);
+            }
         } catch (error: any) {
-            console.error(`Error adding ${tableName}:`, error);
+            console.error(`Error saving ${tableName}:`, error);
             const errorMessage = error.message || 'Error desconocido.';
-            alert(`No se pudo añadir el servicio.\n\nError: ${errorMessage}`);
+            alert(`No se pudo guardar el servicio.\n\nError: ${errorMessage}`);
         }
         
         handleCloseModal();
     };
     
-    const handleDeleteBooking = async (id: number) => {
+    const handleDeleteBooking = async (id: string) => {
         if (window.confirm("¿Seguro que quieres eliminar este servicio?")) {
            try {
-                await sql`DELETE FROM ${sql(tableName)} WHERE id = ${id}`;
-                fetchBookings();
+                await deleteServiceBooking(tableName, id);
            } catch (error: any) {
                console.error(`Error deleting ${tableName}:`, error);
                const errorMessage = error.message || 'Error desconocido.';
@@ -178,13 +187,21 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, u
                                     <span>{formatDate(booking.endDate)}</span>
                                 </div>
                                 {userRole === 'editor' && (
-                                    <button 
-                                        onClick={() => handleDeleteBooking(booking.id)} 
-                                        className="bg-red-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
-                                        aria-label="Cancelar servicio"
-                                    >
-                                        Cancelar
-                                    </button>
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={() => handleOpenModal(booking)} 
+                                            className="bg-blue-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-blue-600 transition-colors"
+                                        >
+                                            Editar
+                                        </button>
+                                        <button 
+                                            onClick={() => handleDeleteBooking(booking.id)} 
+                                            className="bg-red-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
+                                            aria-label="Cancelar servicio"
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -196,7 +213,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, u
                 )}
             </div>
             
-            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Añadir Nuevo Servicio">
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? `Editar ${title}` : `Añadir Nuevo ${title}`}>
                 <form onSubmit={handleAddBooking}>
                     <div className="space-y-4">
                         <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
@@ -213,7 +230,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, u
                             </div>
                         </div>
                         <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-                            Guardar Servicio
+                            {editingBooking ? 'Guardar Cambios' : `Guardar ${title}`}
                         </button>
                     </div>
                 </form>

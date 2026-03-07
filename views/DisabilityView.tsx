@@ -1,14 +1,17 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { AccessibilityBooking } from '../types';
+import { AccessibilityBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { sql } from '../services/dbService';
-
-type UserRole = 'editor' | 'balinese_editor';
+import { 
+  getAccessibilityBookings, 
+  addAccessibilityBooking, 
+  deleteAccessibilityBooking 
+} from '../services/firebaseService';
 
 interface DisabilityViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
@@ -28,7 +31,7 @@ const formatDate = (dateString: string) => {
     });
 };
 
-const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id: number) => void, userRole: UserRole }> = ({ booking, onDelete, userRole }) => (
+const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id: string) => void, userRole: UserRole }> = ({ booking, onDelete, userRole }) => (
     <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-3 rounded-xl shadow-md animate-fade-in hover:shadow-lg transition-shadow duration-300">
         <div className="flex justify-between items-start">
             <div>
@@ -59,7 +62,7 @@ const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id
     </div>
 );
 
-const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
     const [bookings, setBookings] = useState<AccessibilityBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -71,31 +74,15 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
         disabilityInfo: ''
     });
 
-    const fetchBookings = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            // FIX: The sql template literal tag does not support generic type arguments.
-            const result = await sql`
-                SELECT id, guest_name as "guestName", room_number as "roomNumber", 
-                       arrival_date as "arrivalDate", departure_date as "departureDate", 
-                       disability_info as "disabilityInfo" 
-                FROM accessibility_bookings
-                ORDER BY arrival_date ASC, room_number ASC`;
-            setBookings(result);
-        } catch (error) {
-            console.error("Error fetching accessibility bookings:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [dbError, isDbInitialized]);
-
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        if (!isAuthReady) return;
+        setIsLoading(true);
+        const unsubscribe = getAccessibilityBookings((bookingsData) => {
+            setBookings(bookingsData);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [isAuthReady]);
 
     const sortedBookings = useMemo(() => {
       // Sorts bookings by arrival date ascending, then by room number.
@@ -124,11 +111,7 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
         }
         
         try {
-            await sql`
-                INSERT INTO accessibility_bookings (guest_name, room_number, arrival_date, departure_date, disability_info)
-                VALUES (${newBooking.guestName}, ${newBooking.roomNumber}, ${newBooking.arrivalDate}, ${newBooking.departureDate}, ${newBooking.disabilityInfo})
-            `;
-            fetchBookings();
+            await addAccessibilityBooking(newBooking);
         } catch (error: any) {
             console.error("Error adding accessibility booking:", error);
             const errorMessage = error.message || 'Error desconocido.';
@@ -145,11 +128,10 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
         });
     };
 
-    const handleDeleteBooking = async (id: number) => {
+    const handleDeleteBooking = async (id: string) => {
         if (window.confirm("¿Seguro que quieres eliminar este registro?")) {
             try {
-                await sql`DELETE FROM accessibility_bookings WHERE id = ${id}`;
-                fetchBookings();
+                await deleteAccessibilityBooking(id);
             } catch (error: any) {
                 console.error("Error deleting accessibility booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';

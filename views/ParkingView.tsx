@@ -5,7 +5,11 @@ import { ParkingBooking } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { DisabilityIcon } from '../components/icons/NavIcons';
-import { sql } from '../services/dbService';
+import { 
+  getParkingBookings, 
+  addParkingBooking, 
+  deleteParkingBooking 
+} from '../services/firebaseService';
 
 const TOTAL_SPOTS = 13;
 const DISABILITY_SPOT_ID = 1;
@@ -31,10 +35,11 @@ const getDateString = (date: string | Date | null | undefined): string => {
 interface ParkingViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
-const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [monthlyBookings, setMonthlyBookings] = useState<ParkingBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -51,31 +56,22 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, use
         endDate: formatDateToYYYYMMDD(new Date()),
     });
     
-    const fetchBookings = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
+    useEffect(() => {
+        if (!isAuthReady) return;
         setIsLoading(true);
         const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-
-        try {
-            const result = (await sql`
-                SELECT spot_id as "spotId", guest_name as "guestName", room_number as "roomNumber", date::text as date
-                FROM parking_bookings 
-                WHERE date BETWEEN ${formatDateToYYYYMMDD(firstDay)} AND ${formatDateToYYYYMMDD(lastDay)}`) as ParkingBooking[];
-            setMonthlyBookings(result);
-        } catch (error) {
-            console.error("Error fetching parking bookings:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [currentDate, dbError, isDbInitialized]);
-    
-    useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        
+        const unsubscribe = getParkingBookings(
+            formatDateToYYYYMMDD(firstDay),
+            formatDateToYYYYMMDD(lastDay),
+            (bookings) => {
+                setMonthlyBookings(bookings);
+                setIsLoading(false);
+            }
+        );
+        return () => unsubscribe();
+    }, [isAuthReady, currentDate]);
 
     const bookingsMap = useMemo(() => {
         const map = new Map<string, ParkingBooking>();
@@ -181,57 +177,32 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, use
         try {
             if (editingBooking) {
                 // --- UPDATE LOGIC ---
-                // Check for conflicts on new dates, excluding the original booking's dates
-                const conflictCheck = await sql`
-                    SELECT COUNT(*) FROM parking_bookings 
-                    WHERE 
-                        spot_id = ${spotId} AND 
-                        date BETWEEN ${startDate} AND ${endDate} AND 
-                        NOT (
-                            guest_name = ${editingBooking.guestName} AND 
-                            room_number = ${editingBooking.roomNumber} AND
-                            spot_id = ${editingBooking.spotId}
-                        )
-                `;
+                const oldRange = getReservationRange(editingBooking, true);
+                const oldStart = oldRange.start as Date;
+                const oldEnd = oldRange.end as Date;
                 
-                if (Number(conflictCheck[0].count) > 0) {
-                    alert(`Conflicto de reserva. La plaza ${spotId} ya está ocupada en parte o la totalidad del nuevo período seleccionado por otra reserva.`);
-                    return;
+                const deletePromises = [];
+                for (let d = new Date(oldStart); d <= oldEnd; d.setDate(d.getDate() + 1)) {
+                    deletePromises.push(deleteParkingBooking(editingBooking.spotId, formatDateToYYYYMMDD(d)));
                 }
-
-                // Delete original booking
-                await sql`
-                    DELETE FROM parking_bookings 
-                    WHERE spot_id = ${editingBooking.spotId} 
-                      AND guest_name = ${editingBooking.guestName}
-                      AND room_number = ${editingBooking.roomNumber}
-                `;
-            } else {
-                // --- CREATE LOGIC ---
-                const conflictCheck = await sql`
-                    SELECT COUNT(*) FROM parking_bookings 
-                    WHERE spot_id = ${spotId} AND date BETWEEN ${startDate} AND ${endDate}`;
-                
-                if (Number(conflictCheck[0].count) > 0) {
-                    alert(`Conflicto de reserva. La plaza ${spotId} ya está ocupada en parte o la totalidad del período seleccionado.`);
-                    return;
-                }
+                await Promise.all(deletePromises);
             }
 
-            // Insert new booking dates (for both create and update)
+            // Insert new booking dates
             const start = new Date(startDate + 'T00:00:00');
             const end = new Date(endDate + 'T00:00:00');
             const bookingPromises = [];
 
             for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                bookingPromises.push(sql`
-                    INSERT INTO parking_bookings (spot_id, date, guest_name, room_number)
-                    VALUES (${spotId}, ${formatDateToYYYYMMDD(d)}, ${guestName}, ${roomNumber})
-                `);
+                bookingPromises.push(addParkingBooking({
+                    spotId,
+                    date: formatDateToYYYYMMDD(d),
+                    guestName,
+                    roomNumber
+                }));
             }
             await Promise.all(bookingPromises);
             
-            fetchBookings();
             handleCloseBookingModal();
         } catch (error: any) {
             console.error("Error saving parking spot reservation:", error);
@@ -245,14 +216,13 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, use
         }
         
         // Find all reservations for this guest in this spot to check for multi-day
-        const allGuestReservations = await sql`
-            SELECT date FROM parking_bookings
-            WHERE spot_id = ${bookingToCancel.spotId}
-              AND guest_name = ${bookingToCancel.guestName}
-              AND room_number = ${bookingToCancel.roomNumber}
-        `;
+        const guestReservations = monthlyBookings.filter(b => 
+            b.spotId === bookingToCancel.spotId && 
+            b.guestName === bookingToCancel.guestName && 
+            b.roomNumber === bookingToCancel.roomNumber
+        );
     
-        const isMultiDay = allGuestReservations.length > 1;
+        const isMultiDay = guestReservations.length > 1;
         let deleteAll = false;
         const dateToCancel = new Date(getDateString(bookingToCancel.date) + 'T00:00:00');
     
@@ -264,20 +234,14 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, use
         
         try {
             if (deleteAll) {
-                await sql`
-                    DELETE FROM parking_bookings 
-                    WHERE spot_id = ${bookingToCancel.spotId} 
-                      AND guest_name = ${bookingToCancel.guestName}
-                      AND room_number = ${bookingToCancel.roomNumber}
-                `;
+                const deletePromises = guestReservations.map(b => 
+                    deleteParkingBooking(b.spotId, getDateString(b.date))
+                );
+                await Promise.all(deletePromises);
             } else {
-                await sql`
-                    DELETE FROM parking_bookings 
-                    WHERE spot_id = ${bookingToCancel.spotId} AND date = ${getDateString(bookingToCancel.date)}
-                `;
+                await deleteParkingBooking(bookingToCancel.spotId, getDateString(bookingToCancel.date));
             }
             
-            await fetchBookings();
             handleCloseDetailModal();
         } catch (error: any) {
             console.error("Error canceling booking:", error);

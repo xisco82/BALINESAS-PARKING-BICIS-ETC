@@ -1,14 +1,18 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { DayPassBooking } from '../types';
+import { DayPassBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
-import { sql } from '../services/dbService';
-
-type UserRole = 'editor' | 'balinese_editor';
+import { 
+  getDayPassBookings, 
+  addDayPassBooking, 
+  deleteDayPassBooking,
+  updateDayPassBooking
+} from '../services/firebaseService';
 
 interface DayPassViewProps {
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
@@ -29,7 +33,7 @@ const initialFormState = {
     createdFrom: 'direct',
 };
 
-const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
     const [bookings, setBookings] = useState<DayPassBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -40,32 +44,15 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, use
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const filterRef = useRef<HTMLDivElement>(null);
 
-    const fetchBookings = useCallback(async () => {
-        if (!isDbInitialized || dbError) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            const result = (await sql`
-                SELECT id, date, client_name as "clientName", service_type as "serviceType", 
-                       notes, created_by as "createdBy", number_of_people as "numberOfPeople", created_at,
-                       created_from as "createdFrom"
-                FROM day_pass_bookings
-                WHERE date = ${selectedDate}
-                ORDER BY service_type ASC, created_at ASC
-            `) as DayPassBooking[];
-            setBookings(result);
-        } catch (error) {
-            console.error("Error fetching day pass bookings:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [selectedDate, dbError, isDbInitialized]);
-    
     useEffect(() => {
-        fetchBookings();
-    }, [fetchBookings]);
+        if (!isAuthReady) return;
+        setIsLoading(true);
+        const unsubscribe = getDayPassBookings(selectedDate, (bookingsData) => {
+            setBookings(bookingsData);
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, [isAuthReady, selectedDate]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -113,20 +100,24 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, use
         
         try {
             if (editingBooking) {
-                await sql`
-                    UPDATE day_pass_bookings 
-                    SET client_name = ${clientName}, service_type = ${serviceType}, 
-                        notes = ${notes || null}, number_of_people = ${numberOfPeople},
-                        created_from = ${createdFrom}
-                    WHERE id = ${editingBooking.id}
-                `;
+                await updateDayPassBooking(editingBooking.id, {
+                    clientName,
+                    serviceType,
+                    notes: notes || null,
+                    numberOfPeople,
+                    createdFrom
+                });
             } else {
-                await sql`
-                    INSERT INTO day_pass_bookings (date, client_name, service_type, notes, created_by, number_of_people, created_from)
-                    VALUES (${selectedDate}, ${clientName}, ${serviceType}, ${notes || null}, ${userRole}, ${numberOfPeople}, ${createdFrom})
-                `;
+                await addDayPassBooking({
+                    date: selectedDate,
+                    clientName,
+                    serviceType,
+                    notes: notes || null,
+                    createdBy: userRole,
+                    numberOfPeople,
+                    createdFrom
+                });
             }
-            fetchBookings();
         } catch (error: any) {
             console.error("Error saving day pass:", error);
             const errorMessage = error.message || 'Error desconocido.';
@@ -136,11 +127,10 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, use
         handleCloseModal();
     };
     
-    const handleDeleteBooking = async (id: number) => {
+    const handleDeleteBooking = async (id: string) => {
         if (window.confirm("¿Seguro que quieres eliminar este Day Pass?")) {
            try {
-                await sql`DELETE FROM day_pass_bookings WHERE id = ${id}`;
-                fetchBookings();
+                await deleteDayPassBooking(id);
            } catch (error: any) {
                console.error("Error deleting day pass:", error);
                const errorMessage = error.message || 'Error desconocido.';

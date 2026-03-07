@@ -11,8 +11,10 @@ export enum View {
   SkyDinner,
 }
 
+export type UserRole = 'editor' | 'balinese_editor';
+
 export interface NewsEvent {
-  id: number; // Changed from string for PostgreSQL compatibility
+  id: string;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   time?: string;
@@ -40,6 +42,7 @@ export interface BikeBooking {
 
 export interface BalineseBedBooking {
   bedId: number;
+  date: string; // YYYY-MM-DD
   guestName: string;
   roomNumber: string;
   createdAt: string; // ISO string from database
@@ -57,7 +60,7 @@ export interface ExtraOrder {
 }
 
 export interface RestaurantBooking {
-  id: number;
+  id: string;
   guestName: string;
   roomNumber: string;
   startDate: string; // YYYY-MM-DD
@@ -66,7 +69,7 @@ export interface RestaurantBooking {
 }
 
 export interface DayPassBooking {
-  id: number;
+  id: string;
   date: string; // YYYY-MM-DD
   clientName: string;
   serviceType: string;
@@ -77,7 +80,7 @@ export interface DayPassBooking {
 }
 
 export interface AccessibilityBooking {
-  id: number;
+  id: string;
   guestName: string;
   roomNumber: string;
   arrivalDate: string; // YYYY-MM-DD

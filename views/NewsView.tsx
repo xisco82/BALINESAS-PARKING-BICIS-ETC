@@ -2,12 +2,18 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { NewsEvent } from '../types';
-import { sql } from '../services/dbService';
+import { 
+  getNewsEvents, 
+  addNewsEvent, 
+  deleteNewsEvent, 
+  updateNewsEvent,
+  getEmailRecipients 
+} from '../services/firebaseService';
 
 type UserRole = 'editor' | 'balinese_editor';
 
 interface EmailRecipient {
-  id: number;
+  id: string;
   department: string;
   email: string;
 }
@@ -17,6 +23,7 @@ interface NewsViewProps {
   gapiError: string | null;
   dbError: string | null;
   isDbInitialized: boolean;
+  isAuthReady: boolean;
   userRole: UserRole;
 }
 
@@ -44,14 +51,14 @@ const HIGHLIGHT_COLORS = [
   { name: 'Rojo Claro', value: '#f8d7da' },
 ];
 
-const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isDbInitialized, userRole }) => {
+const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isDbInitialized, isAuthReady, userRole }) => {
   const [events, setEvents] = useState<NewsEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<NewsEvent | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isNewsSelectionModalOpen, setIsNewsSelectionModalOpen] = useState(false);
-  const [selectedNewsIds, setSelectedNewsIds] = useState<Set<number>>(new Set());
+  const [selectedNewsIds, setSelectedNewsIds] = useState<Set<string>>(new Set());
   const [emailContent, setEmailContent] = useState({ subject: '', bodyPlainText: '', bodyHtml: '' });
   const [emailRecipients, setEmailRecipients] = useState<EmailRecipient[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
@@ -122,52 +129,21 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     }
   }, [isModalOpen, editingEvent, updateToolbarState]);
 
-  const fetchMonthlyEvents = useCallback(async () => {
-    if (!isDbInitialized || dbError) return;
-    
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1);
-    const lastDayOfMonth = new Date(year, month + 1, 0);
-
-    try {
-        const result = await sql`
-            SELECT id, title, description, start_date as "startDate", end_date as "endDate" FROM news_events
-            WHERE start_date <= ${formatDateToYYYYMMDD(lastDayOfMonth)} AND end_date >= ${formatDateToYYYYMMDD(firstDayOfMonth)}
-        `;
-        setMonthlyEvents(result);
-    } catch (error) {
-        console.error("Error fetching monthly news events:", error);
-    }
-  }, [currentDate, dbError, isDbInitialized]);
-
-  const fetchEventsForDay = useCallback(async () => {
-    if (!isDbInitialized || dbError) {
-        setIsLoading(false);
-        return;
-    }
+  useEffect(() => {
+    if (!isAuthReady) return;
     setIsLoading(true);
-    try {
-        const result = await sql`
-            SELECT id, title, description, start_date as "startDate", end_date as "endDate"
-            FROM news_events 
-            WHERE ${selectedDate} BETWEEN start_date AND end_date
-            ORDER BY id DESC`;
-        setEvents(result);
-    } catch (error) {
-        console.error("Error fetching news events for day:", error);
-    } finally {
-        setIsLoading(false);
-    }
-  }, [selectedDate, dbError, isDbInitialized]);
-
-  useEffect(() => {
-    fetchMonthlyEvents();
-  }, [fetchMonthlyEvents]);
-
-  useEffect(() => {
-    fetchEventsForDay();
-  }, [fetchEventsForDay]);
+    const unsubscribe = getNewsEvents((allEvents) => {
+      setEvents(allEvents.filter(e => {
+        const start = new Date(e.startDate);
+        const end = new Date(e.endDate);
+        const current = new Date(selectedDate);
+        return current >= start && current <= end;
+      }));
+      setMonthlyEvents(allEvents);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, [isAuthReady, selectedDate]);
 
   const calendarDays = useMemo(() => {
     const eventsByDate = new Map<string, NewsEvent[]>();
@@ -261,19 +237,10 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       
       try {
         if (editingEvent) {
-             await sql`
-                UPDATE news_events
-                SET title = ${title}, description = ${description}, start_date = ${startDate}, end_date = ${endDate}
-                WHERE id = ${editingEvent.id}
-            `;
+             await updateNewsEvent(editingEvent.id, { ...formData });
         } else {
-            await sql`
-                INSERT INTO news_events (start_date, end_date, title, description) 
-                VALUES (${startDate}, ${endDate}, ${title}, ${description})
-            `;
+            await addNewsEvent({ ...formData });
         }
-        fetchMonthlyEvents();
-        fetchEventsForDay();
       } catch (error: any) {
         console.error("Error saving event:", error);
         alert(`No se pudo guardar la novedad.\n\nError: ${error.message}`);
@@ -286,12 +253,10 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     handleSaveEvent();
   };
 
-  const handleDeleteEvent = async (id: number) => {
+  const handleDeleteEvent = async (id: string) => {
     if (window.confirm("¿Seguro que quieres eliminar esta novedad?")) {
       try {
-        await sql`DELETE FROM news_events WHERE id = ${id}`;
-        fetchMonthlyEvents();
-        fetchEventsForDay();
+        await deleteNewsEvent(id);
       } catch (error: any) {
         console.error("Error deleting event:", error);
         alert(`No se pudo eliminar la novedad.\n\nError: ${error.message}`);
@@ -311,10 +276,8 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     setSelectedRecipients([]);
 
     try {
-        const recipientsResult = await sql`
-            SELECT id, department, email FROM email_recipients ORDER BY department
-        `;
-        setEmailRecipients(recipientsResult);
+        const recipientsResult = await getEmailRecipients();
+        setEmailRecipients(recipientsResult as any);
     } catch (error) {
         console.error("Error fetching email recipients:", error);
         alert("No se pudieron cargar los destinatarios de la base de datos.");
@@ -376,7 +339,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     handlePrepareEmailNotification(selectedEvents);
   };
 
-  const handleNewsSelectionChange = (eventId: number) => {
+  const handleNewsSelectionChange = (eventId: string) => {
     setSelectedNewsIds(prev => {
         const newSet = new Set(prev);
         if (newSet.has(eventId)) {

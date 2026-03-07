@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "NewsEvent": {
+      "title": "News Event",
+      "description": "An event or news item displayed in the news view.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" }
+      },
+      "required": ["title", "description", "startDate", "endDate"]
+    },
+    "ParkingBooking": {
+      "title": "Parking Booking",
+      "description": "A booking for a parking spot.",
+      "type": "object",
+      "properties": {
+        "spotId": { "type": "integer" },
+        "date": { "type": "string", "format": "date" },
+        "guestName": { "type": "string" },
+        "roomNumber": { "type": "string" }
+      },
+      "required": ["spotId", "date", "guestName", "roomNumber"]
+    },
+    "BikeBooking": {
+      "title": "Bike Booking",
+      "description": "A booking for a bike.",
+      "type": "object",
+      "properties": {
+        "bikeId": { "type": "integer" },
+        "date": { "type": "string", "format": "date" },
+        "guestName": { "type": "string" },
+        "roomNumber": { "type": "string" }
+      },
+      "required": ["bikeId", "date", "guestName", "roomNumber"]
+    },
+    "BalineseBooking": {
+      "title": "Balinese Bed Booking",
+      "description": "A booking for a Balinese bed.",
+      "type": "object",
+      "properties": {
+        "bedId": { "type": "integer" },
+        "date": { "type": "string", "format": "date" },
+        "guestName": { "type": "string" },
+        "roomNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["bedId", "date", "guestName", "roomNumber"]
+    },
+    "ServiceBooking": {
+      "title": "Service Booking",
+      "description": "A booking for a service like Restaurant or Sky Dinner.",
+      "type": "object",
+      "properties": {
+        "guestName": { "type": "string" },
+        "roomNumber": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "description": { "type": "string" }
+      },
+      "required": ["guestName", "roomNumber", "startDate", "endDate", "description"]
+    },
+    "DayPassBooking": {
+      "title": "Day Pass Booking",
+      "description": "A booking for a day pass.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "clientName": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" },
+        "numberOfPeople": { "type": "integer" },
+        "createdFrom": { "type": "string" }
+      },
+      "required": ["date", "clientName", "serviceType", "numberOfPeople"]
+    },
+    "AccessibilityBooking": {
+      "title": "Accessibility Booking",
+      "description": "A booking for a guest with accessibility needs.",
+      "type": "object",
+      "properties": {
+        "guestName": { "type": "string" },
+        "roomNumber": { "type": "string" },
+        "arrivalDate": { "type": "string", "format": "date" },
+        "departureDate": { "type": "string", "format": "date" },
+        "disabilityInfo": { "type": "string" }
+      },
+      "required": ["guestName", "roomNumber", "arrivalDate", "departureDate", "disabilityInfo"]
+    },
+    "SaunaBooking": {
+      "title": "Sauna Booking",
+      "description": "A booking for a sauna session.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "timeSlot": { "type": "string" },
+        "guestName": { "type": "string" },
+        "roomNumber": { "type": "string" }
+      },
+      "required": ["date", "timeSlot", "guestName", "roomNumber"]
+    },
+    "BikeAvailability": {
+      "title": "Bike Availability",
+      "description": "Availability status of a bike on a specific date.",
+      "type": "object",
+      "properties": {
+        "bikeId": { "type": "integer" },
+        "date": { "type": "string", "format": "date" }
+      },
+      "required": ["bikeId", "date"]
+    },
+    "EmailRecipient": {
+      "title": "Email Recipient",
+      "description": "A department and its corresponding email address.",
+      "type": "object",
+      "properties": {
+        "department": { "type": "string" },
+        "email": { "type": "string", "format": "email" }
+      },
+      "required": ["department", "email"]
+    }
+  },
+  "firestore": {
+    "news_events": {
+      "schema": "NewsEvent",
+      "description": "Collection of news events."
+    },
+    "parking_bookings": {
+      "schema": "ParkingBooking",
+      "description": "Collection of parking bookings."
+    },
+    "bike_bookings": {
+      "schema": "BikeBooking",
+      "description": "Collection of bike bookings."
+    },
+    "bike_availability": {
+      "schema": "BikeAvailability",
+      "description": "Collection of bike availability status."
+    },
+    "balinese_bookings": {
+      "schema": "BalineseBooking",
+      "description": "Collection of Balinese bed bookings."
+    },
+    "restaurant_bookings": {
+      "schema": "ServiceBooking",
+      "description": "Collection of restaurant bookings."
+    },
+    "sky_dinner_bookings": {
+      "schema": "ServiceBooking",
+      "description": "Collection of sky dinner bookings."
+    },
+    "day_pass_bookings": {
+      "schema": "DayPassBooking",
+      "description": "Collection of day pass bookings."
+    },
+    "accessibility_bookings": {
+      "schema": "AccessibilityBooking",
+      "description": "Collection of accessibility bookings."
+    },
+    "sauna_bookings": {
+      "schema": "SaunaBooking",
+      "description": "Collection of sauna bookings."
+    },
+    "email_recipients": {
+      "schema": "EmailRecipient",
+      "description": "Collection of email recipients for different departments."
+    }
+  }
+}
