@@ -1,0 +1,225 @@
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { RestaurantBooking } from '../types';
+import Header from '../components/Header';
+import Modal from '../components/Modal';
+import { sql } from '../services/dbService';
+
+type UserRole = 'editor' | 'balinese_editor';
+
+interface ServicesViewProps {
+  dbError: string | null;
+  isDbInitialized: boolean;
+  userRole: UserRole;
+  title: string;
+  tableName: string;
+}
+
+const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, userRole, title, tableName }) => {
+    const [bookings, setBookings] = useState<RestaurantBooking[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [newBooking, setNewBooking] = useState({ 
+        guestName: '', 
+        roomNumber: '', 
+        description: '',
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: ''
+    });
+
+    const fetchBookings = useCallback(async () => {
+        if (!isDbInitialized || dbError) {
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        try {
+            // FIX: The sql template literal tag does not support generic type arguments.
+            const result = await sql`
+                SELECT id, guest_name as "guestName", room_number as "roomNumber", 
+                       start_date as "startDate", end_date as "endDate", description
+                FROM ${sql(tableName)}
+                WHERE ${selectedDate} >= start_date AND ${selectedDate} <= end_date
+                ORDER BY room_number ASC
+            `;
+            setBookings(result);
+        } catch (error) {
+            console.error(`Error fetching ${tableName} bookings:`, error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedDate, dbError, isDbInitialized, tableName]);
+    
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
+
+    const handleOpenModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setNewBooking({ 
+            guestName: '', 
+            roomNumber: '', 
+            description: '',
+            startDate: new Date().toISOString().split('T')[0],
+            endDate: ''
+        });
+    };
+
+    const handleAddBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newBooking.guestName || !newBooking.roomNumber || !newBooking.startDate || !newBooking.endDate || !newBooking.description) {
+            alert("Por favor, complete todos los campos.");
+            return;
+        }
+        if (newBooking.startDate > newBooking.endDate) {
+            alert('La fecha de inicio no puede ser posterior a la fecha de fin.');
+            return;
+        }
+        
+        try {
+            await sql`
+                INSERT INTO ${sql(tableName)} (guest_name, room_number, start_date, end_date, description)
+                VALUES (${newBooking.guestName}, ${newBooking.roomNumber}, ${newBooking.startDate}, ${newBooking.endDate}, ${newBooking.description})
+            `;
+            fetchBookings();
+        } catch (error: any) {
+            console.error(`Error adding ${tableName}:`, error);
+            const errorMessage = error.message || 'Error desconocido.';
+            alert(`No se pudo añadir el servicio.\n\nError: ${errorMessage}`);
+        }
+        
+        handleCloseModal();
+    };
+    
+    const handleDeleteBooking = async (id: number) => {
+        if (window.confirm("¿Seguro que quieres eliminar este servicio?")) {
+           try {
+                await sql`DELETE FROM ${sql(tableName)} WHERE id = ${id}`;
+                fetchBookings();
+           } catch (error: any) {
+               console.error(`Error deleting ${tableName}:`, error);
+               const errorMessage = error.message || 'Error desconocido.';
+               alert(`No se pudo eliminar el servicio.\n\nError: ${errorMessage}`);
+           }
+        }
+    };
+    
+    const formatDate = (dateString: string) => {
+        if (!dateString) {
+            return '';
+        }
+
+        // The database driver creates a Date object based on the local timezone
+        // from a timezone-less DATE column. Previously, formatting this with
+        // `timeZone: 'UTC'` caused an off-by-one-day error for timezones ahead of UTC.
+        // By removing the `timeZone` option, `toLocaleDateString` now correctly uses the
+        // browser's local timezone for formatting, matching how the date was created.
+        const date = new Date(dateString);
+        
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+        });
+    }
+
+    return (
+        <div>
+            <Header title={title}>
+              {userRole === 'editor' && (
+                <button onClick={handleOpenModal} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                    Añadir {title}
+                </button>
+              )}
+            </Header>
+
+            <div className="p-4 space-y-2">
+                 <div className="mb-4">
+                    <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
+                    <input 
+                        type="date"
+                        id="service-date-picker"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                    />
+                </div>
+                
+                {dbError && (
+                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg" role="alert">
+                        <p className="font-bold">Error de Base de Datos</p>
+                        <p>{dbError}</p>
+                    </div>
+                )}
+                {isLoading ? (
+                     <div className="text-center py-10">Cargando...</div>
+                ) : !dbError && bookings.length > 0 ? (
+                    bookings.map(booking => (
+                        <div key={booking.id} className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-md animate-fade-in">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
+                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>
+                            </div>
+                            
+                            <p className="text-gray-700 dark:text-gray-200 text-base my-1">{booking.description}</p>
+                            
+                            <div className="flex justify-between items-end text-xs">
+                                <div className="text-black dark:text-gray-300 font-medium">
+                                    <span>{formatDate(booking.startDate)}</span>
+                                    <span className="mx-1">-</span>
+                                    <span>{formatDate(booking.endDate)}</span>
+                                </div>
+                                {userRole === 'editor' && (
+                                    <button 
+                                        onClick={() => handleDeleteBooking(booking.id)} 
+                                        className="bg-red-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
+                                        aria-label="Cancelar servicio"
+                                    >
+                                        Cancelar
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                        No hay servicios activos para esta fecha.
+                    </div>
+                )}
+            </div>
+            
+            <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="Añadir Nuevo Servicio">
+                <form onSubmit={handleAddBooking}>
+                    <div className="space-y-4">
+                        <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <textarea placeholder="Descripción del servicio" value={newBooking.description} onChange={(e) => setNewBooking({ ...newBooking, description: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} required></textarea>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Inicio</label>
+                                <input type="date" value={newBooking.startDate} onChange={(e) => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Fin</label>
+                                <input type="date" value={newBooking.endDate} onChange={(e) => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                            </div>
+                        </div>
+                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            Guardar Servicio
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        </div>
+    );
+};
+
+export default ServicesView;

@@ -1,0 +1,215 @@
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { AccessibilityBooking } from '../types';
+import Header from '../components/Header';
+import Modal from '../components/Modal';
+import { sql } from '../services/dbService';
+
+type UserRole = 'editor' | 'balinese_editor';
+
+interface DisabilityViewProps {
+  dbError: string | null;
+  isDbInitialized: boolean;
+  userRole: UserRole;
+}
+
+const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    // The database driver returns an ISO 8601 string for DATE types.
+    // Directly creating a new Date object from this string correctly
+    // parses it, avoiding timezone issues.
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+        return '';
+    }
+    return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+    });
+};
+
+const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id: number) => void, userRole: UserRole }> = ({ booking, onDelete, userRole }) => (
+    <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-3 rounded-xl shadow-md animate-fade-in hover:shadow-lg transition-shadow duration-300">
+        <div className="flex justify-between items-start">
+            <div>
+                <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
+                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">Habitación {booking.roomNumber}</p>
+            </div>
+            <div className="text-right text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0 ml-2">
+                <p><span className="font-semibold">Llegada:</span> {formatDate(booking.arrivalDate)}</p>
+                <p><span className="font-semibold">Salida:</span> {formatDate(booking.departureDate)}</p>
+            </div>
+        </div>
+        
+        <div className="pt-2 mt-2 border-t border-gray-200/80 dark:border-gray-700/80">
+             <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{booking.disabilityInfo}</p>
+        </div>
+        
+        {userRole === 'editor' && (
+          <div className="flex justify-end mt-2">
+              <button 
+                  onClick={() => onDelete(booking.id)} 
+                  className="bg-red-500 text-white px-3 py-1 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
+                  aria-label="Eliminar registro"
+              >
+                  Eliminar
+              </button>
+          </div>
+        )}
+    </div>
+);
+
+const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialized, userRole }) => {
+    const [bookings, setBookings] = useState<AccessibilityBooking[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newBooking, setNewBooking] = useState({
+        guestName: '',
+        roomNumber: '',
+        arrivalDate: new Date().toISOString().split('T')[0],
+        departureDate: '',
+        disabilityInfo: ''
+    });
+
+    const fetchBookings = useCallback(async () => {
+        if (!isDbInitialized || dbError) {
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        try {
+            // FIX: The sql template literal tag does not support generic type arguments.
+            const result = await sql`
+                SELECT id, guest_name as "guestName", room_number as "roomNumber", 
+                       arrival_date as "arrivalDate", departure_date as "departureDate", 
+                       disability_info as "disabilityInfo" 
+                FROM accessibility_bookings
+                ORDER BY arrival_date ASC, room_number ASC`;
+            setBookings(result);
+        } catch (error) {
+            console.error("Error fetching accessibility bookings:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [dbError, isDbInitialized]);
+
+    useEffect(() => {
+        fetchBookings();
+    }, [fetchBookings]);
+
+    const sortedBookings = useMemo(() => {
+      // Sorts bookings by arrival date ascending, then by room number.
+      return [...bookings].sort((a, b) => {
+          const dateA = new Date(a.arrivalDate);
+          const dateB = new Date(b.arrivalDate);
+          const dateComparison = dateA.getTime() - dateB.getTime();
+          
+          if (dateComparison !== 0) {
+              return dateComparison;
+          }
+          return a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true });
+      });
+    }, [bookings]);
+
+
+    const handleAddBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newBooking.guestName || !newBooking.roomNumber || !newBooking.arrivalDate || !newBooking.departureDate || !newBooking.disabilityInfo) {
+            alert('Por favor, complete todos los campos.');
+            return;
+        }
+        if (newBooking.arrivalDate > newBooking.departureDate) {
+            alert('La fecha de llegada no puede ser posterior a la fecha de salida.');
+            return;
+        }
+        
+        try {
+            await sql`
+                INSERT INTO accessibility_bookings (guest_name, room_number, arrival_date, departure_date, disability_info)
+                VALUES (${newBooking.guestName}, ${newBooking.roomNumber}, ${newBooking.arrivalDate}, ${newBooking.departureDate}, ${newBooking.disabilityInfo})
+            `;
+            fetchBookings();
+        } catch (error: any) {
+            console.error("Error adding accessibility booking:", error);
+            const errorMessage = error.message || 'Error desconocido.';
+            alert(`No se pudo guardar el registro.\n\nError: ${errorMessage}`);
+        }
+
+        setIsModalOpen(false);
+        setNewBooking({
+            guestName: '',
+            roomNumber: '',
+            arrivalDate: new Date().toISOString().split('T')[0],
+            departureDate: '',
+            disabilityInfo: ''
+        });
+    };
+
+    const handleDeleteBooking = async (id: number) => {
+        if (window.confirm("¿Seguro que quieres eliminar este registro?")) {
+            try {
+                await sql`DELETE FROM accessibility_bookings WHERE id = ${id}`;
+                fetchBookings();
+            } catch (error: any) {
+                console.error("Error deleting accessibility booking:", error);
+                const errorMessage = error.message || 'Error desconocido.';
+                alert(`No se pudo eliminar el registro.\n\nError: ${errorMessage}`);
+            }
+        }
+    };
+    
+    return (
+        <div>
+            <Header title="Accesibilidad">
+                {userRole === 'editor' && (
+                  <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                      Añadir Huésped
+                  </button>
+                )}
+            </Header>
+            <div className="p-4 space-y-4">
+                 {dbError && (
+                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg" role="alert">
+                        <p className="font-bold">Error de Base de Datos</p>
+                        <p>{dbError}</p>
+                    </div>
+                )}
+                {isLoading ? (
+                    <div className="text-center py-10">Cargando...</div>
+                ) : !dbError && sortedBookings.length > 0 ? (
+                    sortedBookings.map(booking => (
+                        <AccessibilityCard key={booking.id} booking={booking} onDelete={handleDeleteBooking} userRole={userRole} />
+                    ))
+                ) : (
+                    !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                        No hay registros de accesibilidad en este momento.
+                    </div>
+                )}
+            </div>
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Añadir Registro de Accesibilidad">
+                <form onSubmit={handleAddBooking}>
+                    <div className="space-y-4">
+                        <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Llegada</label>
+                                <input type="date" value={newBooking.arrivalDate} onChange={(e) => setNewBooking({ ...newBooking, arrivalDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Salida</label>
+                                <input type="date" value={newBooking.departureDate} onChange={(e) => setNewBooking({ ...newBooking, departureDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            </div>
+                        </div>
+                        <textarea placeholder="Descripción de la discapacidad o necesidad especial" value={newBooking.disabilityInfo} onChange={(e) => setNewBooking({ ...newBooking, disabilityInfo: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={4} required></textarea>
+                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                            Guardar Registro
+                        </button>
+                    </div>
+                </form>
+            </Modal>
+        </div>
+    );
+};
+
+export default DisabilityView;

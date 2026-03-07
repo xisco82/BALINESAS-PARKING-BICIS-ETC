@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hotel Reception Desk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "react": "https://esm.sh/react@^19.1.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.13.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "@neondatabase/serverless": "https://esm.sh/@neondatabase/serverless@^0.9.4",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.3.0/"
+  }
+}
+</script>
+<style>
+  body {
+    background-image: url('https://i.postimg.cc/856xjf34/piscina-sky.jpg');
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+  @keyframes grow-in-pulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+    70% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  .animate-grow-in-pulse { animation: grow-in-pulse 0.7s ease-out; }
+
+  @keyframes grow-in-spin {
+    0% { transform: translate(-50%, -50%) scale(0.5) rotate(-180deg); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+  }
+  .animate-grow-in-spin { animation: grow-in-spin 0.7s cubic-bezier(0.25, 1, 0.5, 1); }
+
+  @keyframes grow-in-float {
+      0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+      50% { transform: translate(-50%, -55%) scale(1.05); opacity: 1; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  }
+  .animate-grow-in-float { animation: grow-in-float 1s ease-in-out; }
+  
+  .font-fancy {
+    font-family: 'Brush Script MT', 'Brush Script Std', cursive;
+    font-weight: normal;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Old Paper Theme for News Modal */
+  .old-paper-modal-content {
+    background: linear-gradient(to bottom, #fdf5e6 0%, #f3e9d2 100%);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2), 0 0 0 1px #d3c5ac, inset 0 0 10px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 2rem;
+    color: #5a4a3a;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    border: 1px solid #d3c5ac;
+  }
+  .old-paper-modal-content h3 {
+    font-family: 'Georgia', serif;
+    font-weight: bold;
+    color: #8B4513; /* SaddleBrown */
+    border-bottom: 2px solid #cdab7d;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .old-paper-modal-content .paper-input,
+  .old-paper-modal-content .paper-textarea {
+    background-color: rgba(243, 233, 210, 0.5);
+    border: none;
+    border-bottom: 2px solid #cdab7d;
+    border-radius: 0;
+    font-family: inherit;
+    color: #5a4a3a;
+    padding: 0.75rem;
+    transition: border-color 0.3s;
+    width: 100%;
+  }
+  .old-paper-modal-content .paper-input:focus,
+  .old-paper-modal-content .paper-textarea:focus {
+    outline: none;
+    border-bottom-color: #8B4513;
+  }
+  .old-paper-modal-content .paper-button {
+    background-color: #8B4513; /* SaddleBrown */
+    color: #fdf5e6;
+    font-family: inherit;
+    font-weight: bold;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    border: 1px solid #7a3d10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    transition: background-color 0.3s;
+  }
+  .old-paper-modal-content .paper-button:hover {
+    background-color: #a0522d; /* Sienna */
+  }
+
+  /* Rich Text Editor Toolbar Styles */
+  .editor-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-bottom: 2px solid #cdab7d;
+  }
+  .toolbar-button, .toolbar-select {
+    background-color: transparent;
+    border: 1px solid #cdab7d;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: #5a4a3a;
+    transition: background-color 0.2s, box-shadow 0.2s;
+  }
+  .toolbar-button b, .toolbar-button i, .toolbar-button u {
+    font-weight: bold;
+    font-style: normal;
+    text-decoration: none;
+    display: inline-block;
+    min-width: 1em;
+    text-align: center;
+  }
+  .toolbar-button i { font-style: italic; }
+  .toolbar-button u { text-decoration: underline; }
+
+  .toolbar-button:hover, .toolbar-select:hover {
+    background-color: rgba(205, 171, 125, 0.2);
+  }
+  .toolbar-button.active {
+    background-color: rgba(205, 171, 125, 0.4);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+  }
+  .toolbar-select {
+     -webkit-appearance: none;
+     -moz-appearance: none;
+     appearance: none;
+     padding-right: 1.5rem;
+     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238B4513' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+     background-position: right 0.5rem center;
+     background-repeat: no-repeat;
+     background-size: 1em;
+  }
+  .toolbar-separator {
+    width: 1px;
+    background-color: #cdab7d;
+    height: 1.5rem;
+    margin: 0 0.25rem;
+  }
+  .color-palette {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .color-swatch {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 4px;
+    border: 1px solid #cdab7d;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 0;
+  }
+  .color-swatch:hover {
+    transform: scale(1.15);
+  }
+  .color-swatch.active {
+    box-shadow: 0 0 0 2px #8B4513;
+    transform: scale(1.1);
+  }
+
+  .old-paper-modal-content .paper-textarea[contenteditable] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    overflow-y: auto; /* Add scroll for long content */
+  }
+
+  /* Print Styles */
+  @media print {
+    body {
+      background-image: none !important;
+      background-color: white !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Hide UI elements not meant for printing */
+    .no-print, 
+    .fixed.bottom-0.left-0.right-0, /* BottomNav */
+    img[alt="Xisco Logo"],             /* Floating Logo */
+    .fixed.bottom-4.right-4          /* Logout Button container */
+    {
+      display: none !important;
+    }
+
+    /* Reset layout for print */
+    body, #root {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    main {
+      padding-bottom: 0 !important;
+      max-width: 100% !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+    }
+
+    /* Make header static and less obtrusive */
+    .sticky {
+      position: static !important;
+      box-shadow: none !important;
+      border-bottom: 1px solid #ccc !important;
+      background: none !important;
+      backdrop-filter: none !important;
+    }
+    
+    /* Remove transparency and shadows to save ink */
+    .bg-white\/50, .bg-white\/30, .dark\:bg-gray-800\/50, .dark\:bg-gray-800\/30,
+    .bg-white\/80, .dark\:bg-gray-800\/80 {
+      background: transparent !important;
+    }
+    .backdrop-blur-md, .backdrop-blur-sm {
+      backdrop-filter: none !important;
+    }
+    .shadow-md, .shadow-sm, .shadow-xl, .shadow-2xl, .shadow-lg {
+      box-shadow: none !important;
+    }
+    
+    /* Ensure text is black and visible */
+    * {
+      color: #000 !important;
+    }
+
+    /* Style the calendar for better print visibility */
+    .grid-cols-7 > div:not([class*="isEmpty"]) {
+      border: 1px solid #ddd !important;
+    }
+    .bg-blue-200\/70, .dark\:bg-blue-800\/50,
+    .bg-blue-100\/60, .dark\:bg-blue-900\/40 {
+      background-color: #e0e0e0 !important; /* light grey for selected/today */
+    }
+    .ring-2 {
+      border: 2px solid #000 !important;
+      box-shadow: none !important;
+    }
+  }
+</style>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

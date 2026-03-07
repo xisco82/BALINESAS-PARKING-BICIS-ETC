@@ -1,0 +1,6 @@
+{
+  "name": "RECEPCIÓN XISCO",
+  "description": "An application for managing reservations and operations at a hotel reception desk. Features include Balinese bed reservations, bike rentals, parking management, extra order logging, and accessibility tracking.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
