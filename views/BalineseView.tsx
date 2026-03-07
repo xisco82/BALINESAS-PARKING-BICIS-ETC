@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BalineseBedBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { 
   getBalineseBookings, 
   addBalineseBooking, 
@@ -16,6 +17,7 @@ interface BalineseViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
 const formatBookingTime = (isoString: string) => {
@@ -62,7 +64,8 @@ const BalineseBed: React.FC<{ bedId: number; booking: BalineseBedBooking | undef
     );
 }
 
-const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
+const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<BalineseBedBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -103,23 +106,26 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, i
                 roomNumber: newBooking.roomNumber,
                 createdBy: userRole
             });
+            showToast("Cama Balinesa reservada correctamente", "success");
         } catch (error: any) {
             console.error("Error booking bed:", error);
             const errorMessage = error.message || 'Error desconocido. Revise la consola del navegador para más detalles.';
-            alert(`No se pudo guardar la reserva. Puede que ya exista una para esa cama en esta fecha.\n\nError: ${errorMessage}`);
+            showToast(`No se pudo guardar la reserva. Puede que ya exista una para esa cama en esta fecha: ${errorMessage}`, "error");
         }
         
         handleCloseModal();
     };
     
     const handleCancelBooking = async (bedId: number) => {
-        if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
+        const confirmed = await confirm("¿Seguro que quieres cancelar esta reserva?");
+        if (confirmed) {
             try {
                 await deleteBalineseBooking(bedId, selectedDate);
+                showToast("Reserva cancelada correctamente", "success");
             } catch (error: any) {
                 console.error("Error canceling booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';
-                alert(`No se pudo cancelar la reserva.\n\nError: ${errorMessage}`);
+                showToast(`No se pudo cancelar la reserva: ${errorMessage}`, "error");
             }
         }
     };
@@ -141,8 +147,14 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, i
 
                 {dbError && (
                     <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
-                        <p className="font-bold">Error de Base de Datos</p>
-                        <p>{dbError}</p>
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
                     </div>
                 )}
 

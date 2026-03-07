@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { NewsEvent } from '../types';
+import { useToast } from '../components/Toast';
 import { 
   getNewsEvents, 
   addNewsEvent, 
@@ -25,6 +26,7 @@ interface NewsViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
 const formatDateToYYYYMMDD = (date: Date): string => {
@@ -51,7 +53,8 @@ const HIGHLIGHT_COLORS = [
   { name: 'Rojo Claro', value: '#f8d7da' },
 ];
 
-const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isDbInitialized, isAuthReady, userRole }) => {
+const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+  const { showToast, confirm } = useToast();
   const [events, setEvents] = useState<NewsEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -227,23 +230,25 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const handleSaveEvent = async () => {
       const { title, description, startDate, endDate } = formData;
       if (!title || !description || !startDate || !endDate) {
-        alert("Por favor, complete todos los campos.");
+        showToast("Por favor, complete todos los campos.", "error");
         return;
       }
        if (new Date(startDate) > new Date(endDate)) {
-            alert('La fecha de inicio no puede ser posterior a la fecha de fin.');
+            showToast('La fecha de inicio no puede ser posterior a la fecha de fin.', "error");
             return;
         }
       
       try {
         if (editingEvent) {
              await updateNewsEvent(editingEvent.id, { ...formData });
+             showToast("Novedad actualizada correctamente", "success");
         } else {
             await addNewsEvent({ ...formData });
+            showToast("Novedad guardada correctamente", "success");
         }
       } catch (error: any) {
         console.error("Error saving event:", error);
-        alert(`No se pudo guardar la novedad.\n\nError: ${error.message}`);
+        showToast(`No se pudo guardar la novedad: ${error.message}`, "error");
       }
       handleCloseModal();
   }
@@ -254,12 +259,14 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (window.confirm("¿Seguro que quieres eliminar esta novedad?")) {
+    const confirmed = await confirm("¿Seguro que quieres eliminar esta novedad?");
+    if (confirmed) {
       try {
         await deleteNewsEvent(id);
+        showToast("Novedad eliminada correctamente", "success");
       } catch (error: any) {
         console.error("Error deleting event:", error);
-        alert(`No se pudo eliminar la novedad.\n\nError: ${error.message}`);
+        showToast(`No se pudo eliminar la novedad: ${error.message}`, "error");
       }
     }
   };
@@ -280,7 +287,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         setEmailRecipients(recipientsResult as any);
     } catch (error) {
         console.error("Error fetching email recipients:", error);
-        alert("No se pudieron cargar los destinatarios de la base de datos.");
+        showToast("No se pudieron cargar los destinatarios de la base de datos.", "error");
     } finally {
         setIsFetchingRecipients(false);
     }
@@ -315,7 +322,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   
   const handleOpenEmailModal = () => {
     if (events.length === 0) {
-      alert("No hay novedades para notificar en la fecha seleccionada.");
+      showToast("No hay novedades para notificar en la fecha seleccionada.", "info");
       return;
     }
 
@@ -332,7 +339,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const handleProceedWithSelection = () => {
     const selectedEvents = events.filter(event => selectedNewsIds.has(event.id));
     if (selectedEvents.length === 0) {
-        alert('Por favor, seleccione al menos una novedad para continuar.');
+        showToast('Por favor, seleccione al menos una novedad para continuar.', "error");
         return;
     }
     setIsNewsSelectionModalOpen(false);
@@ -362,7 +369,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const handleSendMailto = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedRecipients.length === 0) {
-        alert("Por favor, seleccione al menos un destinatario.");
+        showToast("Por favor, seleccione al menos un destinatario.", "error");
         return;
     }
     const to = selectedRecipients.join(';');
@@ -400,11 +407,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
         await navigator.clipboard.write(data);
         
+        showToast('Contenido copiado al portapapeles', 'success');
         setCopyButtonText('¡Copiado!');
         setTimeout(() => setCopyButtonText('Copiar Correo'), 2000);
     } catch (error) {
         console.error("Error copying to clipboard:", error);
-        alert('No se pudo copiar el contenido. Por favor, cópielo manually (Ctrl+C).');
+        showToast('No se pudo copiar el contenido. Por favor, cópielo manualmente (Ctrl+C).', 'error');
         setCopyButtonText('Error al copiar');
         setTimeout(() => setCopyButtonText('Copiar Correo'), 2000);
     }
@@ -490,7 +498,18 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
         {/* News for selected day */}
         <h3 className="text-xl font-bold pt-4">Novedades para el {new Date(selectedDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
-        {dbError && <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg"><p className="font-bold">Error de Base de Datos</p><p>{dbError}</p></div>}
+        {dbError && (
+            <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
+                <p className="font-bold text-red-700 dark:text-red-200">Error de Conexión</p>
+                <p className="text-red-700 dark:text-red-200 whitespace-pre-line">{dbError}</p>
+                <button 
+                    onClick={onRetryAuth} 
+                    className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                >
+                    Reintentar Conexión
+                </button>
+            </div>
+        )}
         {isLoading ? (
             <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
         ) : !dbError && events.length > 0 ? events.map(event => (

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { BikeBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { 
   getBikeBookings, 
   addBikeBooking, 
@@ -17,6 +18,7 @@ interface BikesViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
 const Bike: React.FC<{ 
@@ -62,7 +64,8 @@ const Bike: React.FC<{
     );
 }
 
-const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
+const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<BikeBooking[]>([]);
     const [availableBikes, setAvailableBikes] = useState<Set<number>>(new Set());
     const [isLoading, setIsLoading] = useState(true);
@@ -112,23 +115,26 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, isAuthR
                 guestName: newBooking.guestName,
                 roomNumber: newBooking.roomNumber
             });
+            showToast("Bicicleta reservada correctamente", "success");
         } catch (error: any) {
             console.error("Error booking bike:", error);
             const errorMessage = error.message || 'Error desconocido.';
-            alert(`No se pudo guardar la reserva. Puede que la bici ya esté ocupada en esta fecha.\n\nError: ${errorMessage}`);
+            showToast(`No se pudo guardar la reserva. Puede que la bici ya esté ocupada en esta fecha: ${errorMessage}`, "error");
         }
         
         handleCloseModal();
     };
     
     const handleCancelBooking = async (bikeId: number) => {
-        if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
+        const confirmed = await confirm("¿Seguro que quieres cancelar esta reserva?");
+        if (confirmed) {
             try {
                 await deleteBikeBooking(bikeId, selectedDate);
+                showToast("Reserva cancelada correctamente", "success");
             } catch (error: any) {
                 console.error("Error canceling booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';
-                alert(`No se pudo cancelar la reserva.\n\nError: ${errorMessage}`);
+                showToast(`No se pudo cancelar la reserva: ${errorMessage}`, "error");
             }
         }
     };
@@ -138,9 +144,10 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, isAuthR
 
         try {
             await updateBikeAvailability(bikeId, selectedDate, !isCurrentlyAvailable);
+            showToast(`Bicicleta ${bikeId} marcada como ${!isCurrentlyAvailable ? 'disponible' : 'no disponible'}`, "info");
         } catch (error) {
             console.error("Error updating bike availability:", error);
-            alert("No se pudo actualizar el estado de la bicicleta.");
+            showToast("No se pudo actualizar el estado de la bicicleta.", "error");
         }
     };
 
@@ -161,8 +168,14 @@ const BikesView: React.FC<BikesViewProps> = ({ dbError, isDbInitialized, isAuthR
 
                  {dbError && (
                     <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
-                        <p className="font-bold">Error de Base de Datos</p>
-                        <p>{dbError}</p>
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
                     </div>
                 )}
 

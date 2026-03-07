@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { DayPassBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { 
   getDayPassBookings, 
   addDayPassBooking, 
@@ -14,6 +15,7 @@ interface DayPassViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
 const DAY_PASS_OPTIONS = [
@@ -33,7 +35,8 @@ const initialFormState = {
     createdFrom: 'direct',
 };
 
-const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
+const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<DayPassBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -94,7 +97,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
         e.preventDefault();
         const { clientName, serviceType, notes, numberOfPeople, createdFrom } = formData;
         if (!clientName || !serviceType || !numberOfPeople || numberOfPeople < 1) {
-            alert("Por favor, complete todos los campos requeridos y asegúrese de que el número de personas sea al menos 1.");
+            showToast("Por favor, complete todos los campos requeridos y asegúrese de que el número de personas sea al menos 1.", "error");
             return;
         }
         
@@ -107,6 +110,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                     numberOfPeople,
                     createdFrom
                 });
+                showToast("Day Pass actualizado correctamente", "success");
             } else {
                 await addDayPassBooking({
                     date: selectedDate,
@@ -117,24 +121,27 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                     numberOfPeople,
                     createdFrom
                 });
+                showToast("Day Pass guardado correctamente", "success");
             }
         } catch (error: any) {
             console.error("Error saving day pass:", error);
             const errorMessage = error.message || 'Error desconocido.';
-            alert(`No se pudo guardar el Day Pass.\n\nError: ${errorMessage}`);
+            showToast(`No se pudo guardar el Day Pass: ${errorMessage}`, "error");
         }
         
         handleCloseModal();
     };
     
     const handleDeleteBooking = async (id: string) => {
-        if (window.confirm("¿Seguro que quieres eliminar este Day Pass?")) {
+        const confirmed = await confirm("¿Seguro que quieres eliminar este Day Pass?");
+        if (confirmed) {
            try {
                 await deleteDayPassBooking(id);
+                showToast("Day Pass eliminado correctamente", "success");
            } catch (error: any) {
                console.error("Error deleting day pass:", error);
                const errorMessage = error.message || 'Error desconocido.';
-               alert(`No se pudo eliminar el Day Pass.\n\nError: ${errorMessage}`);
+               showToast(`No se pudo eliminar el Day Pass: ${errorMessage}`, "error");
            }
         }
     };
@@ -255,9 +262,15 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                 </div>
                 
                 {dbError && (
-                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg" role="alert">
-                        <p className="font-bold">Error de Base de Datos</p>
-                        <p>{dbError}</p>
+                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
                     </div>
                 )}
                 

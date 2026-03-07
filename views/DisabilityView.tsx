@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { AccessibilityBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { 
   getAccessibilityBookings, 
   addAccessibilityBooking, 
@@ -13,6 +14,7 @@ interface DisabilityViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
 const formatDate = (dateString: string) => {
@@ -62,7 +64,8 @@ const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id
     </div>
 );
 
-const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
+const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<AccessibilityBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,40 +105,42 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
     const handleAddBooking = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newBooking.guestName || !newBooking.roomNumber || !newBooking.arrivalDate || !newBooking.departureDate || !newBooking.disabilityInfo) {
-            alert('Por favor, complete todos los campos.');
+            showToast('Por favor, complete todos los campos.', "error");
             return;
         }
         if (newBooking.arrivalDate > newBooking.departureDate) {
-            alert('La fecha de llegada no puede ser posterior a la fecha de salida.');
+            showToast('La fecha de llegada no puede ser posterior a la fecha de salida.', "error");
             return;
         }
         
         try {
             await addAccessibilityBooking(newBooking);
+            showToast("Registro de accesibilidad guardado correctamente", "success");
+            setIsModalOpen(false);
+            setNewBooking({
+                guestName: '',
+                roomNumber: '',
+                arrivalDate: new Date().toISOString().split('T')[0],
+                departureDate: '',
+                disabilityInfo: ''
+            });
         } catch (error: any) {
             console.error("Error adding accessibility booking:", error);
             const errorMessage = error.message || 'Error desconocido.';
-            alert(`No se pudo guardar el registro.\n\nError: ${errorMessage}`);
+            showToast(`No se pudo guardar el registro: ${errorMessage}`, "error");
         }
-
-        setIsModalOpen(false);
-        setNewBooking({
-            guestName: '',
-            roomNumber: '',
-            arrivalDate: new Date().toISOString().split('T')[0],
-            departureDate: '',
-            disabilityInfo: ''
-        });
     };
 
     const handleDeleteBooking = async (id: string) => {
-        if (window.confirm("¿Seguro que quieres eliminar este registro?")) {
+        const confirmed = await confirm("¿Seguro que quieres eliminar este registro?");
+        if (confirmed) {
             try {
                 await deleteAccessibilityBooking(id);
+                showToast("Registro eliminado correctamente", "success");
             } catch (error: any) {
                 console.error("Error deleting accessibility booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';
-                alert(`No se pudo eliminar el registro.\n\nError: ${errorMessage}`);
+                showToast(`No se pudo eliminar el registro: ${errorMessage}`, "error");
             }
         }
     };
@@ -151,9 +156,15 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
             </Header>
             <div className="p-4 space-y-4">
                  {dbError && (
-                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg" role="alert">
-                        <p className="font-bold">Error de Base de Datos</p>
-                        <p>{dbError}</p>
+                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
                     </div>
                 )}
                 {isLoading ? (

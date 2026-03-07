@@ -11,8 +11,11 @@ import SaunaView from './views/SaunaView';
 import DayPassView from './views/DayPassView';
 import { initClient } from './services/googleSheetsService';
 import { auth } from './services/firebase';
+import firebaseConfig from './firebase-applet-config.json';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { seedEmailRecipients } from './services/firebaseService';
+import { ToastProvider } from './components/Toast';
+import ErrorBoundary from './components/ErrorBoundary';
 import LoginView from './views/LoginView';
 import { 
     NewsIcon,
@@ -53,14 +56,56 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const handleRetryAuth = () => {
+    setDbError(null);
+    console.log("Attempting to re-authenticate...");
+    signInAnonymously(auth)
+      .then((userCredential) => {
+        console.log("Auth success:", userCredential.user.uid);
+        setIsAuthReady(true);
+        setDbError(null);
+      })
+      .catch(err => {
+        console.error("Firebase Auth Retry Error", err);
+        const projectId = firebaseConfig.projectId;
+        if (err.code === 'auth/admin-restricted-operation') {
+          setDbError(`Error de Autenticación: La operación sigue restringida. 
+            
+            Pasos para solucionar:
+            1. Abre la consola de Firebase: https://console.firebase.google.com/project/${projectId}/authentication/providers
+            2. Asegúrate de que "Anónimo" (Anonymous) esté en estado "Habilitado".
+            3. Ve a la pestaña "Ajustes" (Settings) > "Dominios autorizados" y verifica que aparezca:
+               - localhost
+               - ${window.location.hostname}
+            4. Si usas AdBlockers o extensiones de privacidad, desactívalos temporalmente.
+            5. Pulsa el botón de abajo para volver a intentar.`);
+        } else {
+          setDbError(`Error de Autenticación (${err.code}): ${err.message}`);
+        }
+      });
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        signInAnonymously(auth).catch(err => console.error("Firebase Auth Error", err));
-      } else {
+      if (user) {
         setIsAuthReady(true);
-        // Seed email recipients once signed in
+        setDbError(null);
         seedEmailRecipients();
+      } else {
+        // Only attempt sign in if not already authenticated
+        signInAnonymously(auth).catch(err => {
+          console.error("Initial Firebase Auth Error", err);
+          const projectId = firebaseConfig.projectId;
+          if (err.code === 'auth/admin-restricted-operation') {
+            setDbError(`Error de Autenticación: La operación está restringida. 
+              1. Ve a la consola de Firebase del proyecto "${projectId}".
+              2. Ve a Authentication > Sign-in method.
+              3. Habilita "Anónimo" (Anonymous) y guarda los cambios.
+              4. Verifica los "Dominios autorizados" en la pestaña Ajustes.`);
+          } else {
+            setDbError(`Error de Autenticación (${err.code}): ${err.message}`);
+          }
+        });
       }
     });
     return () => unsubscribe();
@@ -137,6 +182,7 @@ const App: React.FC = () => {
         isDbInitialized,
         isAuthReady,
         userRole,
+        onRetryAuth: handleRetryAuth,
     };
     switch (activeView) {
       case View.News:
@@ -171,57 +217,61 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-gray-900 dark:text-gray-100 font-sans">
-      {isAuthenticated && userRole ? (
-        <>
-          <main className="pb-24 max-w-2xl mx-auto">
-            {renderView()}
-          </main>
-          <BottomNav 
-              activeView={activeView} 
-              setActiveView={handleViewChange}
-              navItems={visibleNavItems} 
-          />
+    <ToastProvider>
+      <ErrorBoundary>
+        <div className="min-h-screen text-gray-900 dark:text-gray-100 font-sans">
+          {isAuthenticated && userRole ? (
+            <>
+              <main className="pb-24 max-w-2xl mx-auto">
+                {renderView()}
+              </main>
+              <BottomNav 
+                  activeView={activeView} 
+                  setActiveView={handleViewChange}
+                  navItems={visibleNavItems} 
+              />
 
-          {isLogoEnlarged && (
-            <div
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 animate-fade-in"
-              onClick={handleLogoClick}
-            />
-          )}
+              {isLogoEnlarged && (
+                <div
+                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 animate-fade-in"
+                  onClick={handleLogoClick}
+                />
+              )}
 
-          <img
-            src="https://i.postimg.cc/3NtL1zS5/XISCO_LOGO.png"
-            alt="Xisco Logo"
-            onClick={handleLogoClick}
-            onAnimationEnd={() => setAnimationClass('')}
-            className={`fixed shadow-lg cursor-pointer
-              ${isLogoEnlarged
-                ? `w-3/4 max-w-[500px] h-auto z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${animationClass}`
-                : 'bottom-0 left-4 w-16 h-16 opacity-90 z-20 hover:scale-110 hover:opacity-100 transition-transform'
-              }`
-            }
-          />
+              <img
+                src="https://i.postimg.cc/3NtL1zS5/XISCO_LOGO.png"
+                alt="Xisco Logo"
+                onClick={handleLogoClick}
+                onAnimationEnd={() => setAnimationClass('')}
+                className={`fixed shadow-lg cursor-pointer
+                  ${isLogoEnlarged
+                    ? `w-3/4 max-w-[500px] h-auto z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${animationClass}`
+                    : 'bottom-0 left-4 w-16 h-16 opacity-90 z-20 hover:scale-110 hover:opacity-100 transition-transform'
+                  }`
+                }
+              />
 
-          <div className="fixed bottom-4 right-4 z-20">
-              <button 
-                onClick={handleLogout} 
-                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                title="Cerrar Sesión"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-            <footer className="fixed bottom-2 left-20 text-left text-xs text-gray-400 dark:text-gray-500 pointer-events-none z-20">
-              © {new Date().getFullYear()} Xisco G. H. Todos los derechos reservados.
-            </footer>
-        </>
-        ) : (
-          <LoginView onLoginSuccess={handleLoginSuccess} />
-        )}
-    </div>
+              <div className="fixed bottom-4 right-4 z-20">
+                  <button 
+                    onClick={handleLogout} 
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                    title="Cerrar Sesión"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                  </button>
+                </div>
+                <footer className="fixed bottom-2 left-20 text-left text-xs text-gray-400 dark:text-gray-500 pointer-events-none z-20">
+                  © {new Date().getFullYear()} Xisco G. H. Todos los derechos reservados.
+                </footer>
+            </>
+            ) : (
+              <LoginView onLoginSuccess={handleLoginSuccess} />
+            )}
+        </div>
+      </ErrorBoundary>
+    </ToastProvider>
   );
 };
 

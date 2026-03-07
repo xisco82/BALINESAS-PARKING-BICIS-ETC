@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { RestaurantBooking } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { 
   getServiceBookings, 
   addServiceBooking, 
@@ -19,9 +20,11 @@ interface ServicesViewProps {
   userRole: UserRole;
   title: string;
   tableName: string;
+  onRetryAuth: () => void;
 }
 
-const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName }) => {
+const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<RestaurantBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,37 +86,41 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     const handleAddBooking = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newBooking.guestName || !newBooking.roomNumber || !newBooking.startDate || !newBooking.endDate || !newBooking.description) {
-            alert("Por favor, complete todos los campos.");
+            showToast("Por favor, complete todos los campos.", "error");
             return;
         }
         if (newBooking.startDate > newBooking.endDate) {
-            alert('La fecha de inicio no puede ser posterior a la fecha de fin.');
+            showToast('La fecha de inicio no puede ser posterior a la fecha de fin.', "error");
             return;
         }
         
         try {
             if (editingBooking) {
                 await updateServiceBooking(tableName, editingBooking.id, newBooking);
+                showToast("Servicio actualizado correctamente", "success");
             } else {
                 await addServiceBooking(tableName, newBooking);
+                showToast("Servicio guardado correctamente", "success");
             }
         } catch (error: any) {
             console.error(`Error saving ${tableName}:`, error);
             const errorMessage = error.message || 'Error desconocido.';
-            alert(`No se pudo guardar el servicio.\n\nError: ${errorMessage}`);
+            showToast(`No se pudo guardar el servicio: ${errorMessage}`, "error");
         }
         
         handleCloseModal();
     };
     
     const handleDeleteBooking = async (id: string) => {
-        if (window.confirm("¿Seguro que quieres eliminar este servicio?")) {
+        const confirmed = await confirm("¿Seguro que quieres eliminar este servicio?");
+        if (confirmed) {
            try {
                 await deleteServiceBooking(tableName, id);
+                showToast("Servicio eliminado correctamente", "success");
            } catch (error: any) {
                console.error(`Error deleting ${tableName}:`, error);
                const errorMessage = error.message || 'Error desconocido.';
-               alert(`No se pudo eliminar el servicio.\n\nError: ${errorMessage}`);
+               showToast(`No se pudo eliminar el servicio: ${errorMessage}`, "error");
            }
         }
     };
@@ -144,7 +151,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         <div>
             <Header title={title}>
               {userRole === 'editor' && (
-                <button onClick={handleOpenModal} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                     Añadir {title}
                 </button>
               )}
@@ -163,9 +170,15 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 </div>
                 
                 {dbError && (
-                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg" role="alert">
-                        <p className="font-bold">Error de Base de Datos</p>
-                        <p>{dbError}</p>
+                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
                     </div>
                 )}
                 {isLoading ? (

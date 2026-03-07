@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { SaunaBooking, UserRole } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
+import { useToast } from '../components/Toast';
 import { 
   getSaunaBookings, 
   addSaunaBooking, 
@@ -14,6 +15,7 @@ interface SaunaViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
 // Helper to generate time slots from 09:00 to 19:30
@@ -71,7 +73,8 @@ const TimeSlot: React.FC<{
 }
 
 
-const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
+const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<SaunaBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -111,23 +114,26 @@ const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, isAuthR
                 guestName: newBooking.guestName,
                 roomNumber: newBooking.roomNumber
             });
+            showToast("Sauna reservada correctamente", "success");
         } catch (error: any) {
             console.error("Error booking sauna slot:", error);
             const errorMessage = error.message || 'Error desconocido.';
-            alert(`No se pudo guardar la reserva. Puede que la franja horaria ya esté ocupada.\n\nError: ${errorMessage}`);
+            showToast(`No se pudo guardar la reserva. Puede que la franja horaria ya esté ocupada: ${errorMessage}`, "error");
         }
 
         handleCloseModal();
     };
     
     const handleCancelBooking = async (time: string) => {
-        if (window.confirm("¿Seguro que quieres cancelar esta reserva?")) {
+        const confirmed = await confirm("¿Seguro que quieres cancelar esta reserva?");
+        if (confirmed) {
             try {
                 await deleteSaunaBooking(selectedDate, time);
+                showToast("Reserva cancelada correctamente", "success");
             } catch (error: any) {
                 console.error("Error canceling sauna booking:", error);
                 const errorMessage = error.message || 'Error desconocido.';
-                alert(`No se pudo cancelar la reserva.\n\nError: ${errorMessage}`);
+                showToast(`No se pudo cancelar la reserva: ${errorMessage}`, "error");
             }
         }
     };
@@ -149,8 +155,14 @@ const SaunaView: React.FC<SaunaViewProps> = ({ dbError, isDbInitialized, isAuthR
 
                 {dbError && (
                     <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
-                        <p className="font-bold">Error de Base de Datos</p>
-                        <p>{dbError}</p>
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
                     </div>
                 )}
                 

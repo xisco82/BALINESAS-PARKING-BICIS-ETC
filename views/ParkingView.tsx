@@ -5,6 +5,7 @@ import { ParkingBooking } from '../types';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { DisabilityIcon } from '../components/icons/NavIcons';
+import { useToast } from '../components/Toast';
 import { 
   getParkingBookings, 
   addParkingBooking, 
@@ -37,9 +38,11 @@ interface ParkingViewProps {
   isDbInitialized: boolean;
   isAuthReady: boolean;
   userRole: UserRole;
+  onRetryAuth: () => void;
 }
 
-const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole }) => {
+const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+    const { showToast, confirm } = useToast();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [monthlyBookings, setMonthlyBookings] = useState<ParkingBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -166,11 +169,11 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isA
         e.preventDefault();
         const { guestName, roomNumber, spotId, startDate, endDate } = newBooking;
         if (!guestName || !roomNumber || !spotId || !startDate || !endDate) {
-            alert("Por favor, complete todos los campos.");
+            showToast("Por favor, complete todos los campos.", "error");
             return;
         }
         if (new Date(startDate) > new Date(endDate)) {
-            alert('La fecha de inicio no puede ser posterior a la fecha de fin.');
+            showToast('La fecha de inicio no puede ser posterior a la fecha de fin.', "error");
             return;
         }
         
@@ -203,15 +206,17 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isA
             }
             await Promise.all(bookingPromises);
             
+            showToast(editingBooking ? "Reserva actualizada correctamente" : "Reserva realizada correctamente", "success");
             handleCloseBookingModal();
         } catch (error: any) {
             console.error("Error saving parking spot reservation:", error);
-            alert(`No se pudo guardar la reserva.\n\nError: ${error.message}`);
+            showToast(`No se pudo guardar la reserva: ${error.message}`, "error");
         }
     };
     
     const handleCancelBooking = async (bookingToCancel: ParkingBooking) => {
-        if (!window.confirm(`¿Cancelar reserva de la plaza ${bookingToCancel.spotId} for ${bookingToCancel.guestName}?`)) {
+        const confirmed = await confirm(`¿Cancelar reserva de la plaza ${bookingToCancel.spotId} para ${bookingToCancel.guestName}?`);
+        if (!confirmed) {
             return;
         }
         
@@ -227,7 +232,8 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isA
         const dateToCancel = new Date(getDateString(bookingToCancel.date) + 'T00:00:00');
     
         if (isMultiDay) {
-            if (window.confirm(`Esta es una reserva de varios días. ¿Quieres eliminar la reserva completa? (Si no, sólo se borrará el día ${dateToCancel.toLocaleDateString('es-ES')})`)) {
+            const deleteFull = await confirm(`Esta es una reserva de varios días. ¿Quieres eliminar la reserva completa? (Si no, sólo se borrará el día ${dateToCancel.toLocaleDateString('es-ES')})`);
+            if (deleteFull) {
                 deleteAll = true;
             }
         }
@@ -242,10 +248,11 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isA
                 await deleteParkingBooking(bookingToCancel.spotId, getDateString(bookingToCancel.date));
             }
             
+            showToast("Reserva cancelada correctamente", "success");
             handleCloseDetailModal();
         } catch (error: any) {
             console.error("Error canceling booking:", error);
-            alert(`No se pudo cancelar la reserva.\n\nError: ${error.message}`);
+            showToast(`No se pudo cancelar la reserva: ${error.message}`, "error");
         }
     };
     
@@ -331,7 +338,18 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isA
                     </select>
                 </div>
 
-                {dbError && <div className="bg-red-100/80 dark:bg-red-900/80 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert"><p className="font-bold">Error de Base de Datos</p><p>{dbError}</p></div>}
+                {dbError && (
+                    <div className="bg-red-100/80 dark:bg-red-900/80 border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                        <p className="font-bold">Error de Conexión</p>
+                        <p className="whitespace-pre-line">{dbError}</p>
+                        <button 
+                            onClick={onRetryAuth} 
+                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                        >
+                            Reintentar Conexión
+                        </button>
+                    </div>
+                )}
                 
                 {isLoading ? <div className="text-center py-10">Cargando...</div> : (
                     <>
@@ -348,7 +366,7 @@ const ParkingView: React.FC<ParkingViewProps> = ({ dbError, isDbInitialized, isA
                         <div className="space-y-3 text-gray-800 dark:text-gray-100">
                             <p className="text-lg"><strong className="font-semibold">Huésped:</strong> {bookingToView.guestName}</p>
                             <p className="text-lg"><strong className="font-semibold">Habitación:</strong> {bookingToView.roomNumber}</p>
-                            <p className="text-lg"><strong className="font-semibold">Periodo:</strong> {range.start} - {range.end}</p>
+                            <p className="text-lg"><strong className="font-semibold">Periodo:</strong> {range.start instanceof Date ? range.start.toLocaleDateString() : range.start} - {range.end instanceof Date ? range.end.toLocaleDateString() : range.end}</p>
                             {userRole === 'editor' && (
                                 <div className="pt-4 flex justify-end space-x-2">
                                      <button
