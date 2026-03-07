@@ -242,17 +242,22 @@ export const deleteBalineseBooking = async (bedId: number, date: string) => {
 // --- Service Bookings (Restaurant & Sky Dinner) ---
 export const getServiceBookings = (tableName: string, date: string, callback: (bookings: RestaurantBooking[]) => void) => {
   const path = tableName;
+  // Using only one where clause to avoid composite index requirement.
+  // We filter the rest client-side for better performance and reliability in new projects.
   const q = query(
     collection(db, path),
-    where('startDate', '<=', date),
-    where('endDate', '>=', date)
+    where('startDate', '<=', date)
   );
   return onSnapshot(q, (snapshot) => {
-    const bookings = snapshot.docs.map(doc => ({
-      id: doc.id as any,
-      ...doc.data()
-    })) as RestaurantBooking[];
-    callback(bookings);
+    const bookings = snapshot.docs
+      .map(doc => ({
+        id: doc.id as any,
+        ...doc.data()
+      })) as RestaurantBooking[];
+    
+    // Client-side filtering for endDate
+    const filteredBookings = bookings.filter(b => b.endDate >= date);
+    callback(filteredBookings);
   }, (err) => handleFirestoreError(err, OperationType.GET, path));
 };
 
@@ -405,7 +410,11 @@ export const getEmailRecipients = async () => {
   }
 };
 
+let isSeeding = false;
 export const seedEmailRecipients = async () => {
+  if (isSeeding) return;
+  isSeeding = true;
+  
   const path = 'email_recipients';
   const recipients = [
     { department: 'Back office', email: 'rec1granfiesta@hmhotels.com' },
@@ -420,6 +429,14 @@ export const seedEmailRecipients = async () => {
   ];
 
   try {
+    // Check if we already have recipients to avoid unnecessary writes
+    const existingSnapshot = await getDocs(collection(db, path));
+    if (existingSnapshot.size >= recipients.length) {
+      console.log("Email recipients already seeded.");
+      isSeeding = false;
+      return;
+    }
+
     for (const recipient of recipients) {
       const q = query(collection(db, path), where('department', '==', recipient.department));
       const snapshot = await getDocs(q);
@@ -432,6 +449,8 @@ export const seedEmailRecipients = async () => {
     }
     console.log("Email recipients seeded successfully.");
   } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, path);
+    console.error("Error seeding email recipients:", err);
+  } finally {
+    isSeeding = false;
   }
 };
