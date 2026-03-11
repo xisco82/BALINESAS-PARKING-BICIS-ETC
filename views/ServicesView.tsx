@@ -258,21 +258,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                     <div className="flex flex-col space-y-4">
                     {bookings.map(booking => (
                         <div key={booking.id} className={`group cursor-pointer w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
-                            <div className="flex justify-between items-center">
-                                <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
-                                {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
-                            </div>
-                            
-                            <div className="overflow-hidden transition-all duration-300">
-                                {booking.origin === 'news' ? (
-                                    <div className="text-black text-base my-1 whitespace-pre-wrap line-clamp-1 group-hover:line-clamp-none" dangerouslySetInnerHTML={{ __html: booking.description }} />
-                                ) : (
-                                    <p className="text-black text-base my-1 line-clamp-1 group-hover:line-clamp-none">{booking.description}</p>
-                                )}
-                            </div>
-                            
-                            <div className="flex justify-between items-end text-xs mt-2">
-                                <div className="text-black dark:text-gray-300 font-medium">
+                            <div className="flex justify-between items-start mb-2">
+                                <div className="text-black dark:text-gray-300 font-medium text-xs bg-gray-200/60 dark:bg-gray-700/60 px-2 py-1 rounded-md w-fit">
                                     <span>{formatDate(booking.startDate)}</span>
                                     <span className="mx-1">-</span>
                                     <span>{formatDate(booking.endDate)}</span>
@@ -293,6 +280,19 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                             Cancelar
                                         </button>
                                     </div>
+                                )}
+                            </div>
+                            
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
+                                {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
+                            </div>
+                            
+                            <div className="overflow-hidden transition-all duration-300">
+                                {booking.origin === 'news' ? (
+                                    <div className="text-black text-base my-1 whitespace-pre-wrap line-clamp-1 group-hover:line-clamp-none" dangerouslySetInnerHTML={{ __html: booking.description }} />
+                                ) : (
+                                    <p className="text-black text-base my-1 line-clamp-1 group-hover:line-clamp-none">{booking.description}</p>
                                 )}
                             </div>
                         </div>
