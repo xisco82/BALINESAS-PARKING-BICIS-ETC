@@ -257,7 +257,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 ) : !dbError && bookings.length > 0 ? (
                     <div className="flex flex-col space-y-4">
                     {bookings.map(booking => (
-                        <div key={booking.id} className={`group cursor-pointer w-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
+                        <div key={booking.id} className={`group cursor-pointer w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
                             <div className="flex justify-between items-center">
                                 <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
                                 {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
@@ -299,7 +299,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                     ))}
                     </div>
                 ) : (
-                    !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                    !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg">
                         {tableName === 'events_bookings' ? 'No hay eventos registrados para este año.' : 'No hay servicios activos para esta fecha.'}
                     </div>
                 )}

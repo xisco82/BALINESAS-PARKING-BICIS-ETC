@@ -524,7 +524,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       </Header>
       <div className="p-4 flex flex-col gap-6">
         {/* Calendar */}
-        <div className="w-full p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-sm h-fit">
+        <div className="w-full p-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-sm h-fit">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={goToPreviousMonth} className="no-print p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
                 <h2 className="text-lg font-bold text-center">{getHeaderTitle()}</h2>
@@ -543,7 +543,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     } else if (d.isToday) {
                         dayClasses += "bg-blue-100/60 dark:bg-blue-900/40";
                     } else {
-                        dayClasses += "bg-white/10 dark:bg-gray-800/10 hover:bg-gray-200/50 dark:hover:bg-gray-700/50";
+                        dayClasses += "bg-white/60 dark:bg-gray-800/60 hover:bg-gray-200/80 dark:hover:bg-gray-700/80";
                     }
 
                     return (
@@ -587,7 +587,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         ) : !dbError && events.length > 0 ? (
             <div className="flex flex-col space-y-4">
                 {events.map(event => (
-                    <div key={event.id} className={`w-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
+                    <div key={event.id} className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
                         <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
                         {userRole === 'editor' && event.type !== 'event' && (
@@ -600,7 +600,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 ))}
             </div>
         ) : (
-           !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">No hay novedades registradas para esta fecha.</div>
+           !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg">No hay novedades registradas para esta fecha.</div>
         )}
         </div>
       </div>
