@@ -411,7 +411,8 @@ export const deleteSaunaBooking = async (date: string, timeSlot: string) => {
 export const getEmailRecipients = async () => {
   const path = 'email_recipients';
   try {
-    const snapshot = await getDocs(collection(db, path));
+    const q = query(collection(db, path), orderBy('order', 'asc'));
+    const snapshot = await getDocs(q);
     return snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
@@ -429,15 +430,15 @@ export const seedEmailRecipients = async () => {
   
   const path = 'email_recipients';
   const recipients = [
-    { department: 'Back office', email: 'rec1granfiesta@hmhotels.com' },
-    { department: 'Bar y Restaurante', email: 'bargranfiesta@hmhotels.com' },
-    { department: 'Cocina', email: 'cocinagranfiesta@hmhotels.com' },
-    { department: 'Subdirección', email: 'subdirecciongranfiesta@hmhotels.com' },
-    { department: 'Dirección', email: 'direcciongranfiesta@hmhotels.com' },
-    { department: 'Mantenimiento', email: 'mantenimientogranfiesta@hmhotels.com' },
-    { department: 'Pisos', email: 'pisosgranfiesta@hmhotels.com' },
-    { department: 'Recepción', email: 'recepciongranfiesta@hmhotels.com' },
-    { department: 'Economato', email: 'almgranfiesta@hmhotels.com' }
+    { department: 'Dirección', email: 'direcciongranfiesta@hmhotels.com', order: 1 },
+    { department: 'Subdirección', email: 'subdirgranfiesta@hmhotels.com', order: 2 },
+    { department: 'Back office', email: 'rec1granfiesta@hmhotels.com', order: 3 },
+    { department: 'Recepción', email: 'recepciongranfiesta@hmhotels.com', order: 4 },
+    { department: 'Pisos', email: 'pisosgranfiesta@hmhotels.com', order: 5 },
+    { department: 'Cocina', email: 'cocinagranfiesta@hmhotels.com', order: 6 },
+    { department: 'Mantenimiento', email: 'mantenimientogranfiesta@hmhotels.com', order: 7 },
+    { department: 'Bar salón y Restaurante', email: 'bargranfiesta@hmhotels.com', order: 9 },
+    { department: 'Economato', email: 'almgranfiesta@hmhotels.com', order: 10 }
   ];
 
   try {
@@ -457,8 +458,8 @@ export const seedEmailRecipients = async () => {
       const existing = existingDocs.find(d => d.department === recipient.department);
       if (!existing) {
         await addDoc(collection(db, path), recipient);
-      } else if (existing.email !== recipient.email) {
-        await updateDoc(doc(db, path, existing.id), { email: recipient.email });
+      } else if (existing.email !== recipient.email || existing.order !== recipient.order) {
+        await updateDoc(doc(db, path, existing.id), { email: recipient.email, order: recipient.order });
       }
     }
     
