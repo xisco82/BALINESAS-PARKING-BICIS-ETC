@@ -133,7 +133,11 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
     const handleAddBooking = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newBooking.guestName || !newBooking.roomNumber || !newBooking.startDate || !newBooking.endDate || !newBooking.description) {
+        if (!newBooking.guestName || !newBooking.startDate || !newBooking.endDate || !newBooking.description) {
+            showToast("Por favor, complete todos los campos.", "error");
+            return;
+        }
+        if (tableName !== 'events_bookings' && !newBooking.roomNumber) {
             showToast("Por favor, complete todos los campos.", "error");
             return;
         }
@@ -253,19 +257,21 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 ) : !dbError && bookings.length > 0 ? (
                     <div className="flex flex-col space-y-4">
                     {bookings.map(booking => (
-                        <div key={booking.id} className={`w-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
+                        <div key={booking.id} className={`group cursor-pointer w-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
                             <div className="flex justify-between items-center">
                                 <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
                                 {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
                             </div>
                             
-                            {booking.origin === 'news' ? (
-                                <div className="text-gray-700 dark:text-gray-200 text-base my-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: booking.description }} />
-                            ) : (
-                                <p className="text-gray-700 dark:text-gray-200 text-base my-1">{booking.description}</p>
-                            )}
+                            <div className="overflow-hidden transition-all duration-300">
+                                {booking.origin === 'news' ? (
+                                    <div className="text-gray-700 dark:text-gray-200 text-base my-1 whitespace-pre-wrap line-clamp-1 group-hover:line-clamp-none" dangerouslySetInnerHTML={{ __html: booking.description }} />
+                                ) : (
+                                    <p className="text-gray-700 dark:text-gray-200 text-base my-1 line-clamp-1 group-hover:line-clamp-none">{booking.description}</p>
+                                )}
+                            </div>
                             
-                            <div className="flex justify-between items-end text-xs">
+                            <div className="flex justify-between items-end text-xs mt-2">
                                 <div className="text-black dark:text-gray-300 font-medium">
                                     <span>{formatDate(booking.startDate)}</span>
                                     <span className="mx-1">-</span>
@@ -302,8 +308,10 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? `Editar ${title}` : `Añadir Nuevo ${title}`}>
                 <form onSubmit={handleAddBooking}>
                     <div className="space-y-4">
-                        <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                        <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <input type="text" placeholder={tableName === 'events_bookings' ? "Título del Evento" : "Nombre del Huésped"} value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        {tableName !== 'events_bookings' && (
+                            <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        )}
                         <textarea placeholder="Descripción del servicio" value={newBooking.description} onChange={(e) => setNewBooking({ ...newBooking, description: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} required></textarea>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
