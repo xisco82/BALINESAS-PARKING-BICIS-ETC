@@ -432,34 +432,37 @@ export const seedEmailRecipients = async () => {
     { department: 'Back office', email: 'rec1granfiesta@hmhotels.com' },
     { department: 'Bar y Restaurante', email: 'bargranfiesta@hmhotels.com' },
     { department: 'Cocina', email: 'cocinagranfiesta@hmhotels.com' },
-    { department: 'Comercial', email: 'comercialgranfiesta@hmhotels.com' },
+    { department: 'Subdirección', email: 'subdirecciongranfiesta@hmhotels.com' },
     { department: 'Dirección', email: 'direcciongranfiesta@hmhotels.com' },
     { department: 'Mantenimiento', email: 'mantenimientogranfiesta@hmhotels.com' },
     { department: 'Pisos', email: 'pisosgranfiesta@hmhotels.com' },
     { department: 'Recepción', email: 'recepciongranfiesta@hmhotels.com' },
-    { department: 'Spa', email: 'spagranfiesta@hmhotels.com' }
+    { department: 'Economato', email: 'almgranfiesta@hmhotels.com' }
   ];
 
   try {
-    // Check if we already have recipients to avoid unnecessary writes
     const existingSnapshot = await getDocs(collection(db, path));
-    if (existingSnapshot.size >= recipients.length) {
-      console.log("Email recipients already seeded.");
-      isSeeding = false;
-      return;
-    }
+    const existingDocs = existingSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
 
-    for (const recipient of recipients) {
-      const q = query(collection(db, path), where('department', '==', recipient.department));
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) {
-        await addDoc(collection(db, path), recipient);
-      } else {
-        const docRef = doc(db, path, snapshot.docs[0].id);
-        await updateDoc(docRef, { email: recipient.email });
+    // Delete obsolete departments (like Comercial and Spa)
+    const validDepartments = recipients.map(r => r.department);
+    for (const docData of existingDocs) {
+      if (!validDepartments.includes(docData.department)) {
+        await deleteDoc(doc(db, path, docData.id));
       }
     }
-    console.log("Email recipients seeded successfully.");
+
+    // Add or update valid departments
+    for (const recipient of recipients) {
+      const existing = existingDocs.find(d => d.department === recipient.department);
+      if (!existing) {
+        await addDoc(collection(db, path), recipient);
+      } else if (existing.email !== recipient.email) {
+        await updateDoc(doc(db, path, existing.id), { email: recipient.email });
+      }
+    }
+    
+    console.log("Email recipients synced successfully.");
   } catch (err) {
     console.error("Error seeding email recipients:", err);
   } finally {

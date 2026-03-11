@@ -250,7 +250,7 @@ const App: React.FC = () => {
                 className={`fixed shadow-lg cursor-pointer
                   ${isLogoEnlarged
                     ? `w-3/4 max-w-[500px] h-auto z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${animationClass}`
-                    : 'bottom-2 left-2 w-16 h-16 opacity-90 z-40 hover:scale-110 hover:opacity-100 transition-transform'
+                    : 'bottom-2 left-2 w-14 h-14 md:w-16 md:h-16 opacity-90 z-40 hover:scale-110 hover:opacity-100 transition-transform'
                   }`
                 }
               />
