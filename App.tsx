@@ -250,7 +250,7 @@ const App: React.FC = () => {
                 className={`fixed shadow-lg cursor-pointer
                   ${isLogoEnlarged
                     ? `w-3/4 max-w-[500px] h-auto z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${animationClass}`
-                    : 'bottom-0 left-4 w-16 h-16 opacity-90 z-20 hover:scale-110 hover:opacity-100 transition-transform'
+                    : 'bottom-2 left-2 w-16 h-16 opacity-90 z-40 hover:scale-110 hover:opacity-100 transition-transform'
                   }`
                 }
               />
@@ -266,7 +266,7 @@ const App: React.FC = () => {
                     </svg>
                   </button>
                 </div>
-                <footer className="fixed bottom-2 left-20 text-left text-xs text-gray-400 dark:text-gray-500 pointer-events-none z-20">
+                <footer className="hidden md:block fixed bottom-2 left-20 text-left text-xs text-gray-400 dark:text-gray-500 pointer-events-none z-40">
                   © {new Date().getFullYear()} Xisco G. H. Todos los derechos reservados.
                 </footer>
             </>

@@ -43,7 +43,7 @@ const NavItem: React.FC<{
 const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView, navItems }) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 h-20 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border-t border-gray-200/50 dark:border-gray-700/50 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.1)] z-30">
-      <div className="flex justify-start md:justify-around items-center h-full max-w-2xl mx-auto pl-20 pr-2 md:px-2 overflow-x-auto no-scrollbar gap-2">
+      <div className="flex justify-start md:justify-around items-center h-full max-w-2xl mx-auto pl-20 pr-6 md:px-2 overflow-x-auto no-scrollbar gap-3 md:gap-2">
         {navItems.map((item) => (
           <div key={item.view} className="min-w-[64px] flex-shrink-0">
             <NavItem
