@@ -8,7 +8,8 @@ import {
   addNewsEvent, 
   deleteNewsEvent, 
   updateNewsEvent,
-  getEmailRecipients 
+  getEmailRecipients,
+  getAllServiceBookings
 } from '../services/firebaseService';
 
 type UserRole = 'editor' | 'balinese_editor';
@@ -135,7 +136,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   useEffect(() => {
     if (!isAuthReady) return;
     setIsLoading(true);
-    const unsubscribe = getNewsEvents((allEvents) => {
+    
+    let newsEvents: NewsEvent[] = [];
+    let serviceEvents: NewsEvent[] = [];
+
+    const updateCombinedEvents = () => {
+      const allEvents = [...newsEvents, ...serviceEvents];
       setEvents(allEvents.filter(e => {
         const start = new Date(e.startDate);
         const end = new Date(e.endDate);
@@ -144,8 +150,29 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       }));
       setMonthlyEvents(allEvents);
       setIsLoading(false);
+    };
+
+    const unsubscribeNews = getNewsEvents((allEvents) => {
+      newsEvents = allEvents.map(e => ({ ...e, type: 'news' as const }));
+      updateCombinedEvents();
     });
-    return () => unsubscribe();
+
+    const unsubscribeServices = getAllServiceBookings('events_bookings', (bookings) => {
+      serviceEvents = bookings.map(b => ({
+        id: b.id,
+        title: `Evento: ${b.guestName}`,
+        description: b.description,
+        startDate: b.startDate,
+        endDate: b.endDate,
+        type: 'event' as const
+      }));
+      updateCombinedEvents();
+    });
+
+    return () => {
+      unsubscribeNews();
+      unsubscribeServices();
+    };
   }, [isAuthReady, selectedDate]);
 
   const calendarDays = useMemo(() => {
@@ -480,7 +507,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
                              <div className="w-full space-y-0.5 text-left">
                                 {d.events.slice(0, 2).map((event: NewsEvent) => (
-                                    <div key={event.id} className="text-xs bg-red-400 text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm">
+                                    <div key={event.id} className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm ${event.type === 'event' ? 'bg-purple-400' : 'bg-red-400'}`}>
                                         {event.title}
                                     </div>
                                 ))}
@@ -513,10 +540,10 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         {isLoading ? (
             <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
         ) : !dbError && events.length > 0 ? events.map(event => (
-            <div key={event.id} className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in">
+            <div key={event.id} className={`bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
                 <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
                 <div className="text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
-                {userRole === 'editor' && (
+                {userRole === 'editor' && event.type !== 'event' && (
                   <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
                       <button onClick={() => handleOpenEditModal(event)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
                       <button onClick={() => handleDeleteEvent(event.id)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>

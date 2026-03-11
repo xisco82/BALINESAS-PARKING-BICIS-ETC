@@ -240,6 +240,18 @@ export const deleteBalineseBooking = async (bedId: number, date: string) => {
 };
 
 // --- Service Bookings (Restaurant & Sky Dinner) ---
+export const getAllServiceBookings = (tableName: string, callback: (bookings: RestaurantBooking[]) => void) => {
+  const path = tableName;
+  const q = query(collection(db, path), orderBy('startDate', 'asc'));
+  return onSnapshot(q, (snapshot) => {
+    const bookings = snapshot.docs.map(doc => ({
+      id: doc.id as any,
+      ...doc.data()
+    })) as RestaurantBooking[];
+    callback(bookings);
+  }, (err) => handleFirestoreError(err, OperationType.GET, path));
+};
+
 export const getServiceBookings = (tableName: string, date: string, callback: (bookings: RestaurantBooking[]) => void) => {
   const path = tableName;
   // Using only one where clause to avoid composite index requirement.

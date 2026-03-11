@@ -25,6 +25,7 @@ export interface NewsEvent {
   roomNumber?: string;
   email?: string;
   phone?: string;
+  type?: 'news' | 'event';
 }
 
 export interface ParkingBooking {
