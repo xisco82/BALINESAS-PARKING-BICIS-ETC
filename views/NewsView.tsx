@@ -73,6 +73,50 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const [selectedDate, setSelectedDate] = useState(formatDateToYYYYMMDD(new Date()));
   const [monthlyEvents, setMonthlyEvents] = useState<NewsEvent[]>([]);
   const editorRef = useRef<HTMLDivElement>(null);
+  const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleDayInteraction = (dateStr: string, dayEvents: NewsEvent[]) => {
+    if (userRole !== 'editor') {
+        setSelectedDate(dateStr);
+        return;
+    }
+
+    if (clickTimeoutRef.current) {
+        // Double click detected
+        clearTimeout(clickTimeoutRef.current);
+        clickTimeoutRef.current = null;
+        
+        setSelectedDate(dateStr);
+        if (dayEvents.length > 0) {
+            const newsItem = dayEvents.find(ev => ev.type !== 'event') || dayEvents[0];
+            handleOpenEditModal(newsItem);
+        } else {
+            // If no events, just open add modal
+            setFormData({
+                title: '',
+                description: '',
+                startDate: dateStr,
+                endDate: dateStr,
+            });
+            setEditingEvent(null);
+            setIsModalOpen(true);
+        }
+    } else {
+        // Single click started
+        clickTimeoutRef.current = setTimeout(() => {
+            clickTimeoutRef.current = null;
+            setSelectedDate(dateStr);
+            setFormData({
+                title: '',
+                description: '',
+                startDate: dateStr,
+                endDate: dateStr,
+            });
+            setEditingEvent(null);
+            setIsModalOpen(true);
+        }, 250);
+    }
+  };
 
   const [toolbarState, setToolbarState] = useState({
     bold: false,
@@ -503,7 +547,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     }
 
                     return (
-                        <div key={d.key} onClick={() => setSelectedDate(formatDateToYYYYMMDD(d.date))} className={dayClasses}>
+                        <div key={d.key} onClick={() => handleDayInteraction(formatDateToYYYYMMDD(d.date), d.events)} className={dayClasses}>
                             <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
                              <div className="w-full space-y-0.5 text-left">
                                 {d.events.slice(0, 2).map((event: NewsEvent) => (
