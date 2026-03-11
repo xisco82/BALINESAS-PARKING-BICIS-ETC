@@ -255,10 +255,10 @@ const App: React.FC = () => {
                 }
               />
 
-              <div className="fixed bottom-4 right-4 z-20">
+              <div className="fixed bottom-24 right-4 z-40">
                   <button 
                     onClick={handleLogout} 
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-3 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                     title="Cerrar Sesión"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
