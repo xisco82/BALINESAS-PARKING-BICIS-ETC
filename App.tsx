@@ -19,6 +19,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LoginView from './views/LoginView';
 import { 
     NewsIcon,
+    EventsIcon,
     ParkingIcon,
     ExtrasIcon, 
     BalineseIcon, 
@@ -162,6 +163,7 @@ const App: React.FC = () => {
 
   const allNavItems = [
     { view: View.News, label: 'Novedades', icon: <NewsIcon /> },
+    { view: View.Events, label: 'Eventos', icon: <EventsIcon /> },
     { view: View.Parking, label: 'Parking', icon: <ParkingIcon /> },
     { view: View.Bikes, label: 'Bicis', icon: <BikeIcon /> },
     { view: View.Balinese, label: 'Balinesas', icon: <BalineseIcon /> },
@@ -191,6 +193,8 @@ const App: React.FC = () => {
                   gapiError={gapiError}
                   {...commonProps}
                 />;
+      case View.Events:
+        return <ServicesView {...commonProps} title="Eventos" tableName="events_bookings" />;
       case View.Parking:
         return <ParkingView {...commonProps} />;
       case View.Bikes:

@@ -1,6 +1,7 @@
 // FIX: Removed self-import of 'View' which was causing a declaration conflict.
 export enum View {
   News,
+  Events,
   Parking,
   Bikes,
   Balinese,

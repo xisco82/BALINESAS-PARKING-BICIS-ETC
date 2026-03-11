@@ -46,6 +46,14 @@
   }
   .animate-grow-in-float { animation: grow-in-float 1s ease-in-out; }
   
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
   .font-fancy {
     font-family: 'Brush Script MT', 'Brush Script Std', cursive;
     font-weight: normal;

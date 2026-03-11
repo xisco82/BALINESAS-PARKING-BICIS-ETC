@@ -172,6 +172,13 @@ service cloud.firestore {
       allow delete: if isAuthenticated();
     }
 
+    match /events_bookings/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow update: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
     match /day_pass_bookings/{id} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidDayPassBooking(request.resource.data);
