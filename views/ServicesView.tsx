@@ -265,9 +265,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             
                             <div className="overflow-hidden transition-all duration-300">
                                 {booking.origin === 'news' ? (
-                                    <div className="text-gray-700 dark:text-gray-200 text-base my-1 whitespace-pre-wrap line-clamp-1 group-hover:line-clamp-none" dangerouslySetInnerHTML={{ __html: booking.description }} />
+                                    <div className="text-black text-base my-1 whitespace-pre-wrap line-clamp-1 group-hover:line-clamp-none" dangerouslySetInnerHTML={{ __html: booking.description }} />
                                 ) : (
-                                    <p className="text-gray-700 dark:text-gray-200 text-base my-1 line-clamp-1 group-hover:line-clamp-none">{booking.description}</p>
+                                    <p className="text-black text-base my-1 line-clamp-1 group-hover:line-clamp-none">{booking.description}</p>
                                 )}
                             </div>
                             

@@ -545,7 +545,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 {events.map(event => (
                     <div key={event.id} className={`w-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
-                        <div className="text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
+                        <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
                         {userRole === 'editor' && event.type !== 'event' && (
                           <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
                               <button onClick={() => handleOpenEditModal(event)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
@@ -561,7 +561,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         </div>
       </div>
 
-       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="">
+       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="" maxWidth="max-w-6xl">
           <div className="old-paper-modal-content">
             <h3 className="text-xl font-bold text-center">{editingEvent ? "Editar Novedad" : "Escribir Novedad"}</h3>
             <form onSubmit={handleFormSubmit}>
