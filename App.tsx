@@ -226,7 +226,7 @@ const App: React.FC = () => {
         <div className="min-h-screen text-gray-900 dark:text-gray-100 font-sans">
           {isAuthenticated && userRole ? (
             <>
-              <main className="pb-24 max-w-2xl mx-auto">
+              <main className="pb-24 max-w-7xl mx-auto">
                 {renderView()}
               </main>
               <BottomNav 

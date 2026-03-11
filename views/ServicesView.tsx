@@ -6,9 +6,11 @@ import Modal from '../components/Modal';
 import { useToast } from '../components/Toast';
 import { 
   getServiceBookings, 
+  getAllServiceBookings,
   addServiceBooking, 
   deleteServiceBooking, 
-  updateServiceBooking 
+  updateServiceBooking,
+  getNewsEvents
 } from '../services/firebaseService';
 
 type UserRole = 'editor' | 'balinese_editor';
@@ -30,6 +32,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingBooking, setEditingBooking] = useState<RestaurantBooking | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [newBooking, setNewBooking] = useState({ 
         guestName: '', 
         roomNumber: '', 
@@ -41,12 +44,57 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     useEffect(() => {
         if (!isAuthReady) return;
         setIsLoading(true);
-        const unsubscribe = getServiceBookings(tableName, selectedDate, (allBookings) => {
+
+        let serviceBookings: RestaurantBooking[] = [];
+        let newsBookings: RestaurantBooking[] = [];
+
+        const updateCombinedBookings = () => {
+            const allBookings = [...serviceBookings, ...newsBookings];
+            if (tableName === 'events_bookings') {
+                allBookings.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+            }
             setBookings(allBookings);
             setIsLoading(false);
-        });
-        return () => unsubscribe();
-    }, [isAuthReady, tableName, selectedDate]);
+        };
+
+        let unsubscribeServices: () => void = () => {};
+        if (tableName === 'events_bookings') {
+            unsubscribeServices = getAllServiceBookings(tableName, (allBookings) => {
+                serviceBookings = allBookings
+                    .filter(b => b.startDate.startsWith(selectedYear.toString()) || b.endDate.startsWith(selectedYear.toString()))
+                    .map(b => ({ ...b, origin: 'service' as const }));
+                updateCombinedBookings();
+            });
+        } else {
+            unsubscribeServices = getServiceBookings(tableName, selectedDate, (allBookings) => {
+                serviceBookings = allBookings.map(b => ({ ...b, origin: 'service' as const }));
+                updateCombinedBookings();
+            });
+        }
+
+        let unsubscribeNews: () => void = () => {};
+        if (tableName === 'events_bookings') {
+            unsubscribeNews = getNewsEvents((allEvents) => {
+                newsBookings = allEvents
+                    .filter(e => e.startDate.startsWith(selectedYear.toString()) || e.endDate.startsWith(selectedYear.toString()))
+                    .map(e => ({
+                        id: e.id,
+                        guestName: e.title,
+                        roomNumber: '',
+                        description: e.description,
+                        startDate: e.startDate,
+                        endDate: e.endDate,
+                        origin: 'news' as const
+                    }));
+                updateCombinedBookings();
+            });
+        }
+
+        return () => {
+            unsubscribeServices();
+            unsubscribeNews();
+        };
+    }, [isAuthReady, tableName, selectedDate, selectedYear]);
 
     const handleOpenModal = (booking?: RestaurantBooking) => {
         if (booking && typeof booking === 'object') {
@@ -159,14 +207,33 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
             <div className="p-4 space-y-2">
                  <div className="mb-4">
-                    <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
-                    <input 
-                        type="date"
-                        id="service-date-picker"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                    />
+                    {tableName === 'events_bookings' ? (
+                        <>
+                            <label htmlFor="service-year-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Año:</label>
+                            <select 
+                                id="service-year-picker"
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            >
+                                {[...Array(5)].map((_, i) => {
+                                    const year = new Date().getFullYear() - 2 + i;
+                                    return <option key={year} value={year}>{year}</option>;
+                                })}
+                            </select>
+                        </>
+                    ) : (
+                        <>
+                            <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
+                            <input 
+                                type="date"
+                                id="service-date-picker"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            />
+                        </>
+                    )}
                 </div>
                 
                 {dbError && (
@@ -184,14 +251,19 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 {isLoading ? (
                      <div className="text-center py-10">Cargando...</div>
                 ) : !dbError && bookings.length > 0 ? (
-                    bookings.map(booking => (
-                        <div key={booking.id} className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-md animate-fade-in">
+                    <div className={tableName === 'events_bookings' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" : "space-y-2"}>
+                    {bookings.map(booking => (
+                        <div key={booking.id} className={`bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-md animate-fade-in border-l-4 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
                             <div className="flex justify-between items-center">
                                 <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
-                                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>
+                                {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
                             </div>
                             
-                            <p className="text-gray-700 dark:text-gray-200 text-base my-1">{booking.description}</p>
+                            {booking.origin === 'news' ? (
+                                <div className="text-gray-700 dark:text-gray-200 text-base my-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: booking.description }} />
+                            ) : (
+                                <p className="text-gray-700 dark:text-gray-200 text-base my-1">{booking.description}</p>
+                            )}
                             
                             <div className="flex justify-between items-end text-xs">
                                 <div className="text-black dark:text-gray-300 font-medium">
@@ -199,7 +271,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="mx-1">-</span>
                                     <span>{formatDate(booking.endDate)}</span>
                                 </div>
-                                {userRole === 'editor' && (
+                                {userRole === 'editor' && booking.origin !== 'news' && (
                                     <div className="flex gap-2">
                                         <button 
                                             onClick={() => handleOpenModal(booking)} 
@@ -218,10 +290,11 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 )}
                             </div>
                         </div>
-                    ))
+                    ))}
+                    </div>
                 ) : (
                     !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
-                        No hay servicios activos para esta fecha.
+                        {tableName === 'events_bookings' ? 'No hay eventos registrados para este año.' : 'No hay servicios activos para esta fecha.'}
                     </div>
                 )}
             </div>

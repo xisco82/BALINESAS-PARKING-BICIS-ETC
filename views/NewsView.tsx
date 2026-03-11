@@ -478,9 +478,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             )}
         </div>
       </Header>
-      <div className="p-4 space-y-4">
+      <div className="p-4 flex flex-col gap-6">
         {/* Calendar */}
-        <div className="p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-sm">
+        <div className="w-full p-4 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-sm h-fit">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={goToPreviousMonth} className="no-print p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
                 <h2 className="text-lg font-bold text-center">{getHeaderTitle()}</h2>
@@ -491,9 +491,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             </div>
             <div className="grid grid-cols-7 gap-1 md:gap-2">
                 {calendarDays.map(d => {
-                    if (d.isEmpty) return <div key={d.key} className="h-28 rounded-lg"></div>;
+                    if (d.isEmpty) return <div key={d.key} className="h-24 rounded-lg"></div>;
                     
-                    let dayClasses = "h-28 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 overflow-hidden ";
+                    let dayClasses = "h-24 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 overflow-hidden ";
                     if (d.isSelected) {
                         dayClasses += "bg-blue-200/70 dark:bg-blue-800/50 ring-2 ring-blue-500 ring-inset";
                     } else if (d.isToday) {
@@ -524,7 +524,8 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         </div>
 
         {/* News for selected day */}
-        <h3 className="text-xl font-bold pt-4">Novedades para el {new Date(selectedDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
+        <div className="w-full flex flex-col space-y-4">
+            <h3 className="text-xl font-bold">Novedades para el {new Date(selectedDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
         {dbError && (
             <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
                 <p className="font-bold text-red-700 dark:text-red-200">Error de Conexión</p>
@@ -539,20 +540,25 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         )}
         {isLoading ? (
             <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
-        ) : !dbError && events.length > 0 ? events.map(event => (
-            <div key={event.id} className={`bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
-                <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
-                <div className="text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
-                {userRole === 'editor' && event.type !== 'event' && (
-                  <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
-                      <button onClick={() => handleOpenEditModal(event)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
-                      <button onClick={() => handleDeleteEvent(event.id)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
-                  </div>
-                )}
+        ) : !dbError && events.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {events.map(event => (
+                    <div key={event.id} className={`bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
+                        <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
+                        <div className="text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
+                        {userRole === 'editor' && event.type !== 'event' && (
+                          <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
+                              <button onClick={() => handleOpenEditModal(event)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
+                              <button onClick={() => handleDeleteEvent(event.id)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+                          </div>
+                        )}
+                    </div>
+                ))}
             </div>
-        )) : (
+        ) : (
            !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">No hay novedades registradas para esta fecha.</div>
         )}
+        </div>
       </div>
 
        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="">
