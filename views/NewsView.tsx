@@ -541,9 +541,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         {isLoading ? (
             <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
         ) : !dbError && events.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="flex flex-col space-y-4">
                 {events.map(event => (
-                    <div key={event.id} className={`bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
+                    <div key={event.id} className={`w-full bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
                         <div className="text-sm text-gray-600 dark:text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
                         {userRole === 'editor' && event.type !== 'event' && (
