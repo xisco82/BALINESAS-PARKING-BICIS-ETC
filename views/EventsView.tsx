@@ -137,12 +137,17 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
     if (!driveName.trim() || !driveLink.trim()) return;
 
     let finalUrl = driveLink;
-    const driveRegex = /[-\/]([a-zA-Z0-9_-]{25,})|id=([a-zA-Z0-9_-]{25,})/;
-    const match = driveLink.match(driveRegex);
     
-    if (match) {
-      const fileId = match[1] || match[2];
-      finalUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+    // Detect if it's a folder or a file
+    const folderMatch = driveLink.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    const fileMatch = driveLink.match(/\/d\/([a-zA-Z0-9_-]+)/) || driveLink.match(/id=([a-zA-Z0-9_-]+)/);
+    
+    if (folderMatch) {
+      // It's a Drive folder, use the embedded folder view
+      finalUrl = `https://drive.google.com/embeddedfolderview?id=${folderMatch[1]}#list`;
+    } else if (fileMatch) {
+      // It's a Drive file, use the preview view
+      finalUrl = `https://drive.google.com/file/d/${fileMatch[1]}/preview`;
     } else if (driveLink.includes('drive.google.com')) {
       finalUrl = driveLink.replace(/\/view.*$/, '/preview');
     }
@@ -297,16 +302,24 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                           </div>
                         </div>
                       ))}
-                      {activeMonthPdfs.map(pdf => (
+                      {activeMonthPdfs.map(pdf => {
+                        const isFolder = pdf.pdfUrl.includes('embeddedfolderview');
+                        return (
                         <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl group border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
                           <button 
                             onClick={() => setSelectedPdf({ pdfUrl: pdf.pdfUrl, fileName: pdf.fileName })}
                             className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow text-left"
                           >
-                            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg shrink-0">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                              </svg>
+                            <div className={`${isFolder ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'} p-2 rounded-lg shrink-0`}>
+                              {isFolder ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                </svg>
+                              )}
                             </div>
                             <div className="flex flex-col overflow-hidden">
                               <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
@@ -330,7 +343,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                             </button>
                           )}
                         </div>
-                      ))}
+                      )})}
                     </div>
                   )}
                 </div>
@@ -438,12 +451,12 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enlace de Google Drive</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enlace de Google Drive (Archivo o Carpeta)</label>
                     <input
                       type="url"
                       value={driveLink}
                       onChange={(e) => setDriveLink(e.target.value)}
-                      placeholder="https://drive.google.com/file/d/..."
+                      placeholder="https://drive.google.com/..."
                       className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Asegúrate de que el enlace tenga permisos de lectura ("Cualquier persona con el enlace").</p>
