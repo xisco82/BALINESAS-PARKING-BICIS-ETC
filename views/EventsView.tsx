@@ -355,42 +355,22 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
 
       {selectedPdf && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 w-full h-full flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate pr-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                </svg>
-                {selectedPdf.fileName}
-              </h3>
-              <div className="flex items-center gap-2">
-                <a 
-                  href={selectedPdf.pdfUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800"
-                  title="Abrir en nueva pestaña"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                  </svg>
-                </a>
-                <button
-                  onClick={() => setSelectedPdf(null)}
-                  className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800"
-                  title="Cerrar"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className="flex-grow w-full h-full bg-gray-100 dark:bg-gray-950">
+          <div className="w-full h-full flex flex-col overflow-hidden relative">
+            {/* Floating Close Button */}
+            <button
+              onClick={() => setSelectedPdf(null)}
+              className="absolute top-4 right-4 z-50 p-3 bg-black/50 hover:bg-red-600 text-white rounded-full backdrop-blur-md transition-all shadow-lg"
+              title="Cerrar"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="flex-grow w-full h-full relative overflow-hidden">
               <iframe
                 src={selectedPdf.pdfUrl.includes('drive.google.com') ? selectedPdf.pdfUrl : `${selectedPdf.pdfUrl}#view=FitH`}
-                className="w-full h-full border-0"
+                className={`w-full border-0 ${selectedPdf.pdfUrl.includes('drive.google.com') ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' : 'h-full'}`}
                 title={selectedPdf.fileName}
                 allow="autoplay"
               />
