@@ -524,7 +524,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       </Header>
       <div className="p-4 flex flex-col gap-6">
         {/* Calendar */}
-        <div className="w-full p-4 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md rounded-xl shadow-sm h-fit">
+        <div className="w-full p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-xl shadow-sm h-fit">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={goToPreviousMonth} className="no-print p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
                 <h2 className="text-lg font-bold text-center">{getHeaderTitle()}</h2>
@@ -543,7 +543,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     } else if (d.isToday) {
                         dayClasses += "bg-blue-100/60 dark:bg-blue-900/40";
                     } else {
-                        dayClasses += "bg-white/60 dark:bg-gray-800/60 hover:bg-gray-200/80 dark:hover:bg-gray-700/80";
+                        dayClasses += "bg-white/20 dark:bg-gray-800/20 hover:bg-gray-200/50 dark:hover:bg-gray-700/50";
                     }
 
                     return (
