@@ -56,7 +56,6 @@ const HIGHLIGHT_COLORS = [
 
 const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
   const { showToast, confirm } = useToast();
-  const [events, setEvents] = useState<NewsEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<NewsEvent | null>(null);
@@ -71,7 +70,20 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateToYYYYMMDD(new Date()));
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const [monthlyEvents, setMonthlyEvents] = useState<NewsEvent[]>([]);
+  
+  const displayDate = hoveredDate || selectedDate;
+
+  const events = useMemo(() => {
+      return monthlyEvents.filter(e => {
+        const start = new Date(e.startDate);
+        const end = new Date(e.endDate);
+        const current = new Date(displayDate);
+        return current >= start && current <= end;
+      });
+  }, [monthlyEvents, displayDate]);
+
   const editorRef = useRef<HTMLDivElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -186,12 +198,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
     const updateCombinedEvents = () => {
       const allEvents = [...newsEvents, ...serviceEvents];
-      setEvents(allEvents.filter(e => {
-        const start = new Date(e.startDate);
-        const end = new Date(e.endDate);
-        const current = new Date(selectedDate);
-        return current >= start && current <= end;
-      }));
       setMonthlyEvents(allEvents);
       setIsLoading(false);
     };
@@ -217,7 +223,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       unsubscribeNews();
       unsubscribeServices();
     };
-  }, [isAuthReady, selectedDate]);
+  }, [isAuthReady]);
 
   const calendarDays = useMemo(() => {
     const eventsByDate = new Map<string, NewsEvent[]>();
@@ -344,7 +350,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   
   const getHeaderTitle = () => {
     const monthName = currentDate.toLocaleString('es-ES', { month: 'long' });
-    return `Novedades del mes de ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`;
+    return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} novedades`;
   };
   
   const handlePrepareEmailNotification = async (eventsToNotify: NewsEvent[]) => {
@@ -524,11 +530,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       </Header>
       <div className="p-4 flex flex-col gap-6">
         {/* Calendar */}
-        <div className="w-full p-4 bg-white/40 dark:bg-gray-800/40 backdrop-blur-md rounded-xl shadow-sm h-fit">
-            <div className="flex justify-between items-center mb-4">
-                <button onClick={goToPreviousMonth} className="no-print p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
-                <h2 className="text-lg font-bold text-center">{getHeaderTitle()}</h2>
-                <button onClick={goToNextMonth} className="no-print p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&gt;</button>
+        <div className="w-full p-4 bg-white/20 dark:bg-gray-800/20 backdrop-blur-md rounded-xl shadow-sm h-fit">
+            <div className="flex justify-between items-center mb-4 px-2">
+                <button onClick={goToPreviousMonth} className="no-print px-4 py-2 text-2xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
+                <h2 className="text-2xl font-bold text-center">{getHeaderTitle()}</h2>
+                <button onClick={goToNextMonth} className="no-print px-4 py-2 text-2xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&gt;</button>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm mb-2 text-gray-600 dark:text-gray-300">
                 {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => <div key={d}>{d}</div>)}
@@ -543,11 +549,17 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     } else if (d.isToday) {
                         dayClasses += "bg-blue-100/60 dark:bg-blue-900/40";
                     } else {
-                        dayClasses += "bg-white/20 dark:bg-gray-800/20 hover:bg-gray-200/50 dark:hover:bg-gray-700/50";
+                        dayClasses += "bg-white/10 dark:bg-gray-800/10 hover:bg-gray-200/40 dark:hover:bg-gray-700/40";
                     }
 
                     return (
-                        <div key={d.key} onClick={() => handleDayInteraction(formatDateToYYYYMMDD(d.date), d.events)} className={dayClasses}>
+                        <div 
+                            key={d.key} 
+                            onClick={() => handleDayInteraction(formatDateToYYYYMMDD(d.date), d.events)} 
+                            onMouseEnter={() => setHoveredDate(formatDateToYYYYMMDD(d.date))}
+                            onMouseLeave={() => setHoveredDate(null)}
+                            className={dayClasses}
+                        >
                             <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
                              <div className="w-full space-y-0.5 text-left">
                                 {d.events.slice(0, 2).map((event: NewsEvent) => (
@@ -567,9 +579,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             </div>
         </div>
 
-        {/* News for selected day */}
+        {/* News for selected/hovered day */}
         <div className="w-full flex flex-col space-y-4">
-            <h3 className="text-xl font-bold">Novedades para el {new Date(selectedDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
+            <h3 className="text-xl font-bold">Novedades para el {new Date(displayDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
         {dbError && (
             <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
                 <p className="font-bold text-red-700 dark:text-red-200">Error de Conexión</p>
@@ -587,13 +599,21 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         ) : !dbError && events.length > 0 ? (
             <div className="flex flex-col space-y-4">
                 {events.map(event => (
-                    <div key={event.id} className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'}`}>
+                    <div 
+                        key={event.id} 
+                        onClick={() => {
+                            if (userRole === 'editor' && event.type !== 'event') {
+                                handleOpenEditModal(event);
+                            }
+                        }}
+                        className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'} ${userRole === 'editor' && event.type !== 'event' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
+                    >
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
                         <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
                         {userRole === 'editor' && event.type !== 'event' && (
                           <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
-                              <button onClick={() => handleOpenEditModal(event)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
-                              <button onClick={() => handleDeleteEvent(event.id)} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+                              <button onClick={(e) => { e.stopPropagation(); handleOpenEditModal(event); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
                           </div>
                         )}
                     </div>
