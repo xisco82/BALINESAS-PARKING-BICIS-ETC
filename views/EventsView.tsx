@@ -23,6 +23,13 @@ interface EventPdf {
   uploadedAt: string;
 }
 
+interface UploadingPdf {
+  id: string;
+  month: string;
+  fileName: string;
+  localUrl: string;
+}
+
 const MONTHS = [
   'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre'
 ];
@@ -30,8 +37,9 @@ const MONTHS = [
 const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
   const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('pdfs');
   const [pdfs, setPdfs] = useState<EventPdf[]>([]);
+  const [uploadingPdfs, setUploadingPdfs] = useState<UploadingPdf[]>([]);
+  const [selectedPdf, setSelectedPdf] = useState<{pdfUrl: string, fileName: string} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [uploadingMonth, setUploadingMonth] = useState<string | null>(null);
   const [activeMonth, setActiveMonth] = useState<string>(MONTHS[0]);
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,14 +71,23 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       return;
     }
 
-    setUploadingMonth(activeMonth);
+    const currentMonth = activeMonth;
+    const localUrl = URL.createObjectURL(file);
+    const tempId = `temp_${Date.now()}`;
+
+    setUploadingPdfs(prev => [...prev, { id: tempId, month: currentMonth, fileName: file.name, localUrl }]);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+
     try {
-      const storageRef = ref(storage, `event_pdfs/${activeMonth}_${Date.now()}_${file.name}`);
+      const storageRef = ref(storage, `event_pdfs/${currentMonth}_${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
 
       await addDoc(collection(db, 'event_pdfs'), {
-        month: activeMonth,
+        month: currentMonth,
         pdfUrl: downloadURL,
         fileName: file.name,
         uploadedAt: new Date().toISOString()
@@ -81,10 +98,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       console.error("Error uploading PDF:", error);
       showToast('Error al subir el PDF', 'error');
     } finally {
-      setUploadingMonth(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      setUploadingPdfs(prev => prev.filter(p => p.id !== tempId));
     }
   };
 
@@ -113,6 +127,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
   };
 
   const activeMonthPdfs = pdfs.filter(p => p.month === activeMonth);
+  const activeUploadingPdfs = uploadingPdfs.filter(p => p.month === activeMonth);
+  const hasPdfs = activeMonthPdfs.length > 0 || activeUploadingPdfs.length > 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -197,47 +213,60 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                   {userRole === 'editor' && (
                     <button 
                       onClick={triggerFileInput}
-                      disabled={uploadingMonth === activeMonth}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center space-x-2"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
                     >
-                      {uploadingMonth === activeMonth ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <span>Subiendo...</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                          </svg>
-                          <span>Añadir PDF</span>
-                        </>
-                      )}
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                      </svg>
+                      <span>Añadir PDF</span>
                     </button>
                   )}
                 </div>
 
                 <div className="flex-grow flex flex-col space-y-3">
-                  {activeMonthPdfs.length === 0 ? (
+                  {!hasPdfs ? (
                     <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400 italic">
                       No hay documentos PDF para {activeMonth}.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeMonthPdfs.map(pdf => (
-                        <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl group border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
-                          <a 
-                            href={pdf.pdfUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow"
+                      {activeUploadingPdfs.map(pdf => (
+                        <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-600 opacity-70">
+                          <button 
+                            onClick={() => setSelectedPdf({ pdfUrl: pdf.localUrl, fileName: pdf.fileName })}
+                            className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow text-left"
                           >
                             <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg shrink-0">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
+                                {pdf.fileName}
+                              </span>
+                              <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">
+                                Subiendo...
+                              </span>
+                            </div>
+                          </button>
+                          <div className="shrink-0 ml-2 p-2">
+                            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          </div>
+                        </div>
+                      ))}
+                      {activeMonthPdfs.map(pdf => (
+                        <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl group border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
+                          <button 
+                            onClick={() => setSelectedPdf({ pdfUrl: pdf.pdfUrl, fileName: pdf.fileName })}
+                            className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow text-left"
+                          >
+                            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                               </svg>
                             </div>
                             <div className="flex flex-col overflow-hidden">
@@ -248,7 +277,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                                 {new Date(pdf.uploadedAt).toLocaleDateString('es-ES')}
                               </span>
                             </div>
-                          </a>
+                          </button>
                           
                           {userRole === 'editor' && (
                             <button 
@@ -271,6 +300,51 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           </>
         )}
       </div>
+
+      {selectedPdf && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 sm:p-6 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800">
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate pr-4 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                </svg>
+                {selectedPdf.fileName}
+              </h3>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={selectedPdf.pdfUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800"
+                  title="Abrir en nueva pestaña"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                    <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                  </svg>
+                </a>
+                <button
+                  onClick={() => setSelectedPdf(null)}
+                  className="p-2 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800"
+                  title="Cerrar"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex-grow w-full h-full bg-gray-100 dark:bg-gray-950">
+              <iframe
+                src={`${selectedPdf.pdfUrl}#view=FitH`}
+                className="w-full h-full border-0"
+                title={selectedPdf.fileName}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
