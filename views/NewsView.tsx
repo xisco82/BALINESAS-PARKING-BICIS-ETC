@@ -543,7 +543,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 {calendarDays.map(d => {
                     if (d.isEmpty) return <div key={d.key} className="h-24 rounded-lg"></div>;
                     
-                    let dayClasses = "h-24 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 overflow-hidden ";
+                    let dayClasses = "h-24 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 ";
                     if (d.isSelected) {
                         dayClasses += "bg-blue-200/70 dark:bg-blue-800/50 ring-2 ring-blue-500 ring-inset";
                     } else if (d.isToday) {
@@ -558,7 +558,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             onClick={() => handleDayInteraction(formatDateToYYYYMMDD(d.date), d.events)} 
                             onMouseEnter={() => setHoveredDate(formatDateToYYYYMMDD(d.date))}
                             onMouseLeave={() => setHoveredDate(null)}
-                            className={dayClasses}
+                            className={`${dayClasses} group`}
                         >
                             <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
                              <div className="w-full space-y-0.5 text-left">
@@ -573,6 +573,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                     </div>
                                 )}
                             </div>
+                            {userRole === 'editor' && (
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-gray-900 text-white text-xs rounded py-1 px-2 text-center z-50 shadow-lg pointer-events-none">
+                                    1 clic para añadir novedad.<br/>2 clics para editar.
+                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                            )}
                         </div>
                     );
                 })}
