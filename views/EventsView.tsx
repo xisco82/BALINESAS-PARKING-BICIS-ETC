@@ -137,13 +137,13 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             onClick={() => setActiveTab('pdfs')} 
             className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'pdfs' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
           >
-            PDFs Mensuales
+            Resumen de eventos mensuales
           </button>
           <button 
             onClick={() => setActiveTab('summary')} 
             className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'summary' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
           >
-            Resumen Anual
+            Eventos Anuales
           </button>
         </div>
 
@@ -154,7 +154,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               isDbInitialized={isDbInitialized}
               isAuthReady={isAuthReady}
               userRole={userRole}
-              title="Resumen Anual"
+              title="Eventos Anuales"
               tableName="events_bookings"
               onRetryAuth={onRetryAuth}
               hideHeader={true}
