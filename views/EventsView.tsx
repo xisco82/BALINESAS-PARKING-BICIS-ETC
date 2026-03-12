@@ -354,8 +354,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       </div>
 
       {selectedPdf && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 sm:p-6 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-900 w-full h-full flex flex-col overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate pr-4 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
