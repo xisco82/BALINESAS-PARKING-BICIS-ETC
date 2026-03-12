@@ -3,6 +3,7 @@ import { View } from './types';
 import BottomNav from './components/BottomNav';
 import BalineseView from './views/BalineseView';
 import ServicesView from './views/ServicesView';
+import EventsView from './views/EventsView';
 import NewsView from './views/NewsView';
 import ParkingView from './views/ParkingView';
 import DisabilityView from './views/DisabilityView';
@@ -194,7 +195,7 @@ const App: React.FC = () => {
                   {...commonProps}
                 />;
       case View.Events:
-        return <ServicesView {...commonProps} title="Eventos" tableName="events_bookings" />;
+        return <EventsView {...commonProps} />;
       case View.Parking:
         return <ParkingView {...commonProps} />;
       case View.Bikes:

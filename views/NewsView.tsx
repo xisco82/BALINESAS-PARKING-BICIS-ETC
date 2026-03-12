@@ -87,46 +87,31 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const editorRef = useRef<HTMLDivElement>(null);
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const handleDayInteraction = (dateStr: string, dayEvents: NewsEvent[]) => {
+  const handleDayClick = (dateStr: string) => {
     if (userRole !== 'editor') {
         setSelectedDate(dateStr);
         return;
     }
+    setSelectedDate(dateStr);
+    setFormData({
+        title: '',
+        description: '',
+        startDate: dateStr,
+        endDate: dateStr,
+    });
+    setEditingEvent(null);
+    setIsModalOpen(true);
+  };
 
-    if (clickTimeoutRef.current) {
-        // Double click detected
-        clearTimeout(clickTimeoutRef.current);
-        clickTimeoutRef.current = null;
-        
+  const handleEventClick = (e: React.MouseEvent, event: NewsEvent, dateStr: string) => {
+    e.stopPropagation();
+    if (userRole !== 'editor') {
         setSelectedDate(dateStr);
-        if (dayEvents.length > 0) {
-            const newsItem = dayEvents.find(ev => ev.type !== 'event') || dayEvents[0];
-            handleOpenEditModal(newsItem);
-        } else {
-            // If no events, just open add modal
-            setFormData({
-                title: '',
-                description: '',
-                startDate: dateStr,
-                endDate: dateStr,
-            });
-            setEditingEvent(null);
-            setIsModalOpen(true);
-        }
-    } else {
-        // Single click started
-        clickTimeoutRef.current = setTimeout(() => {
-            clickTimeoutRef.current = null;
-            setSelectedDate(dateStr);
-            setFormData({
-                title: '',
-                description: '',
-                startDate: dateStr,
-                endDate: dateStr,
-            });
-            setEditingEvent(null);
-            setIsModalOpen(true);
-        }, 250);
+        return;
+    }
+    setSelectedDate(dateStr);
+    if (event.type !== 'event') {
+        handleOpenEditModal(event);
     }
   };
 
@@ -532,9 +517,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         {/* Calendar */}
         <div className="w-full p-4 bg-white/20 dark:bg-gray-800/20 backdrop-blur-md rounded-xl shadow-sm h-fit">
             <div className="flex justify-between items-center mb-4 px-2">
-                <button onClick={goToPreviousMonth} className="no-print px-4 py-2 text-2xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
+                <button onClick={goToPreviousMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
                 <h2 className="text-2xl font-bold text-center">{getHeaderTitle()}</h2>
-                <button onClick={goToNextMonth} className="no-print px-4 py-2 text-2xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&gt;</button>
+                <button onClick={goToNextMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&gt;</button>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm mb-2 text-gray-600 dark:text-gray-300">
                 {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => <div key={d}>{d}</div>)}
@@ -555,7 +540,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     return (
                         <div 
                             key={d.key} 
-                            onClick={() => handleDayInteraction(formatDateToYYYYMMDD(d.date), d.events)} 
+                            onClick={() => handleDayClick(formatDateToYYYYMMDD(d.date))} 
                             onMouseEnter={() => setHoveredDate(formatDateToYYYYMMDD(d.date))}
                             onMouseLeave={() => setHoveredDate(null)}
                             className={`${dayClasses} group`}
@@ -563,7 +548,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
                              <div className="w-full space-y-0.5 text-left">
                                 {d.events.slice(0, 2).map((event: NewsEvent) => (
-                                    <div key={event.id} className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm ${event.type === 'event' ? 'bg-purple-400' : 'bg-red-400'}`}>
+                                    <div 
+                                        key={event.id} 
+                                        onClick={(e) => handleEventClick(e, event, formatDateToYYYYMMDD(d.date))}
+                                        className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm transition-transform hover:scale-[1.02] ${event.type === 'event' ? 'bg-purple-400' : 'bg-red-400 hover:bg-red-300'}`}
+                                        title={event.type !== 'event' && userRole === 'editor' ? 'Clic para editar' : ''}
+                                    >
                                         {event.title}
                                     </div>
                                 ))}
@@ -575,7 +565,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             </div>
                             {userRole === 'editor' && (
                                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-gray-900 text-white text-xs rounded py-1 px-2 text-center z-50 shadow-lg pointer-events-none">
-                                    1 clic para añadir novedad.<br/>2 clics para editar.
+                                    Clic en el día para añadir novedad.<br/>Clic en la novedad para editarla.
                                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                                 </div>
                             )}

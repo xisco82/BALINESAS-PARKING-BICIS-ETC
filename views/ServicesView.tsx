@@ -23,9 +23,10 @@ interface ServicesViewProps {
   title: string;
   tableName: string;
   onRetryAuth: () => void;
+  hideHeader?: boolean;
 }
 
-const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName, onRetryAuth }) => {
+const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName, onRetryAuth, hideHeader }) => {
     const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<RestaurantBooking[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -201,17 +202,20 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
     return (
         <div>
-            <Header title={title}>
-              {userRole === 'editor' && (
-                <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-                    Añadir {title}
-                </button>
-              )}
-            </Header>
+            {!hideHeader && (
+                <Header title={title}>
+                  {userRole === 'editor' && (
+                    <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        Añadir {title}
+                    </button>
+                  )}
+                </Header>
+            )}
 
             <div className="p-4 space-y-2">
-                 <div className="mb-4">
-                    {tableName === 'events_bookings' ? (
+                 <div className="mb-4 flex justify-between items-center">
+                    <div>
+                        {tableName === 'events_bookings' ? (
                         <>
                             <label htmlFor="service-year-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Año:</label>
                             <select 
@@ -237,6 +241,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                             />
                         </>
+                    )}
+                    </div>
+                    {hideHeader && userRole === 'editor' && (
+                        <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors h-fit">
+                            Añadir {title}
+                        </button>
                     )}
                 </div>
                 

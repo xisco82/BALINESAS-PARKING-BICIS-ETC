@@ -123,6 +123,18 @@
         "email": { "type": "string", "format": "email" }
       },
       "required": ["department", "email"]
+    },
+    "EventPdf": {
+      "title": "Event PDF",
+      "description": "A PDF document uploaded for a specific month in the Events tab.",
+      "type": "object",
+      "properties": {
+        "month": { "type": "string" },
+        "pdfUrl": { "type": "string" },
+        "fileName": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["month", "pdfUrl", "fileName", "uploadedAt"]
     }
   },
   "firestore": {
@@ -169,6 +181,10 @@
     "email_recipients": {
       "schema": "EmailRecipient",
       "description": "Collection of email recipients for different departments."
+    },
+    "event_pdfs": {
+      "schema": "EventPdf",
+      "description": "Collection of PDF documents for events by month."
     }
   }
 }

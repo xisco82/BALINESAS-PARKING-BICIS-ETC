@@ -1,0 +1,278 @@
+import React, { useState, useEffect, useRef } from 'react';
+import Header from '../components/Header';
+import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { db, storage } from '../services/firebase';
+import { useToast } from '../components/Toast';
+import ServicesView from './ServicesView';
+import { UserRole } from '../types';
+
+interface EventsViewProps {
+  dbError: string | null;
+  isDbInitialized: boolean;
+  isAuthReady: boolean;
+  userRole: UserRole;
+  onRetryAuth: () => void;
+}
+
+interface EventPdf {
+  id: string;
+  month: string;
+  pdfUrl: string;
+  fileName: string;
+  uploadedAt: string;
+}
+
+const MONTHS = [
+  'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre'
+];
+
+const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
+  const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('pdfs');
+  const [pdfs, setPdfs] = useState<EventPdf[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [uploadingMonth, setUploadingMonth] = useState<string | null>(null);
+  const [activeMonth, setActiveMonth] = useState<string>(MONTHS[0]);
+  const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isDbInitialized || !isAuthReady) return;
+
+    const unsubscribe = onSnapshot(collection(db, 'event_pdfs'), (snapshot) => {
+      const pdfData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as EventPdf[];
+      setPdfs(pdfData);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Error fetching PDFs:", error);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [isDbInitialized, isAuthReady]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      showToast('Solo se permiten archivos PDF', 'error');
+      return;
+    }
+
+    setUploadingMonth(activeMonth);
+    try {
+      const storageRef = ref(storage, `event_pdfs/${activeMonth}_${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      await addDoc(collection(db, 'event_pdfs'), {
+        month: activeMonth,
+        pdfUrl: downloadURL,
+        fileName: file.name,
+        uploadedAt: new Date().toISOString()
+      });
+
+      showToast('PDF subido correctamente', 'success');
+    } catch (error) {
+      console.error("Error uploading PDF:", error);
+      showToast('Error al subir el PDF', 'error');
+    } finally {
+      setUploadingMonth(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const triggerFileInput = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleDeletePdf = async (pdf: EventPdf) => {
+    if (!window.confirm(`¿Estás seguro de que quieres eliminar el PDF "${pdf.fileName}"?`)) return;
+
+    try {
+      await deleteDoc(doc(db, 'event_pdfs', pdf.id));
+      try {
+        const fileRef = ref(storage, pdf.pdfUrl);
+        await deleteObject(fileRef);
+      } catch (storageError) {
+        console.warn("Could not delete file from storage", storageError);
+      }
+      showToast('PDF eliminado correctamente', 'success');
+    } catch (error) {
+      console.error("Error deleting PDF:", error);
+      showToast('Error al eliminar el PDF', 'error');
+    }
+  };
+
+  const activeMonthPdfs = pdfs.filter(p => p.month === activeMonth);
+
+  return (
+    <div className="flex flex-col h-full">
+      <Header title="Eventos" />
+
+      <div className="p-4 max-w-5xl mx-auto w-full flex-grow flex flex-col">
+        {dbError && (
+            <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                <p className="font-bold">Error de Conexión</p>
+                <p className="whitespace-pre-line">{dbError}</p>
+                <button 
+                    onClick={onRetryAuth} 
+                    className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                >
+                    Reintentar Conexión
+                </button>
+            </div>
+        )}
+
+        <div className="flex space-x-4 mb-6 justify-center">
+          <button 
+            onClick={() => setActiveTab('pdfs')} 
+            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'pdfs' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            PDFs Mensuales
+          </button>
+          <button 
+            onClick={() => setActiveTab('summary')} 
+            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'summary' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            Resumen Anual
+          </button>
+        </div>
+
+        {activeTab === 'summary' ? (
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-md border border-gray-200/50 dark:border-gray-700/50 flex-grow">
+            <ServicesView 
+              dbError={dbError}
+              isDbInitialized={isDbInitialized}
+              isAuthReady={isAuthReady}
+              userRole={userRole}
+              title="Resumen Anual"
+              tableName="events_bookings"
+              onRetryAuth={onRetryAuth}
+              hideHeader={true}
+            />
+          </div>
+        ) : (
+          <>
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+              accept="application/pdf" 
+              className="hidden" 
+            />
+
+            <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex space-x-2 min-w-max">
+                {MONTHS.map(month => (
+                  <button
+                    key={month}
+                    onClick={() => setActiveMonth(month)}
+                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                      activeMonth === month 
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : 'bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80'
+                    }`}
+                  >
+                    {month}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
+            ) : (
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-md p-6 border border-gray-200/50 dark:border-gray-700/50 flex-grow flex flex-col">
+                <div className="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Documentos de {activeMonth}</h2>
+                  {userRole === 'editor' && (
+                    <button 
+                      onClick={triggerFileInput}
+                      disabled={uploadingMonth === activeMonth}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 flex items-center space-x-2"
+                    >
+                      {uploadingMonth === activeMonth ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>Subiendo...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                          <span>Añadir PDF</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-grow flex flex-col space-y-3">
+                  {activeMonthPdfs.length === 0 ? (
+                    <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400 italic">
+                      No hay documentos PDF para {activeMonth}.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {activeMonthPdfs.map(pdf => (
+                        <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl group border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
+                          <a 
+                            href={pdf.pdfUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow"
+                          >
+                            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
+                                {pdf.fileName}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(pdf.uploadedAt).toLocaleDateString('es-ES')}
+                              </span>
+                            </div>
+                          </a>
+                          
+                          {userRole === 'editor' && (
+                            <button 
+                              onClick={() => handleDeletePdf(pdf)}
+                              className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all shrink-0 ml-2"
+                              title="Eliminar PDF"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default EventsView;

@@ -121,9 +121,25 @@ service cloud.firestore {
              isValidEmail(data.email);
     }
 
+    function isValidEventPdf(data) {
+      return hasRequiredFields(['month', 'pdfUrl', 'fileName', 'uploadedAt']) &&
+             hasOnlyAllowedFields(['month', 'pdfUrl', 'fileName', 'uploadedAt']) &&
+             data.month is string && data.month.size() > 0 && data.month.size() < 20 &&
+             data.pdfUrl is string && data.pdfUrl.size() > 0 && data.pdfUrl.size() < 1000 &&
+             data.fileName is string && data.fileName.size() > 0 && data.fileName.size() < 200 &&
+             data.uploadedAt is string;
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
+
+    match /event_pdfs/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidEventPdf(request.resource.data);
+      allow update: if isAuthenticated() && isValidEventPdf(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
 
     match /news_events/{id} {
       allow read: if isAuthenticated();
