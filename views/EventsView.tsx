@@ -45,7 +45,6 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
   const [addType, setAddType] = useState<'file' | 'drive'>('file');
   const [driveLink, setDriveLink] = useState('');
   const [driveName, setDriveName] = useState('');
-  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'>('date-desc');
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -171,20 +170,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
     }
   };
 
-  const activeMonthPdfs = pdfs
-    .sort((a, b) => {
-      if (sortBy === 'date-desc') {
-        return new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime();
-      } else if (sortBy === 'date-asc') {
-        return new Date(a.uploadedAt).getTime() - new Date(b.uploadedAt).getTime();
-      } else if (sortBy === 'name-asc') {
-        return a.fileName.localeCompare(b.fileName);
-      } else if (sortBy === 'name-desc') {
-        return b.fileName.localeCompare(a.fileName);
-      }
-      return 0;
-    });
-  const activeUploadingPdfs = uploadingPdfs;
+  const activeMonthPdfs = pdfs.filter(p => p.month === activeMonth);
+  const activeUploadingPdfs = uploadingPdfs.filter(p => p.month === activeMonth);
   const hasPdfs = activeMonthPdfs.length > 0 || activeUploadingPdfs.length > 0;
 
   return (
@@ -243,49 +230,47 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               className="hidden" 
             />
 
+            <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex space-x-2 min-w-max">
+                {MONTHS.map(month => (
+                  <button
+                    key={month}
+                    onClick={() => setActiveMonth(month)}
+                    className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+                      activeMonth === month 
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : 'bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80'
+                    }`}
+                  >
+                    {month}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {isLoading ? (
               <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
             ) : (
               <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-md p-6 border border-gray-200/50 dark:border-gray-700/50 flex-grow flex flex-col">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-4 gap-4">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Documentos y Carpetas</h2>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex items-center bg-gray-100 dark:bg-gray-700/50 rounded-lg px-3 py-1.5 border border-gray-200 dark:border-gray-600">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500 dark:text-gray-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M3 3a1 1 0 000 2h11a1 1 0 100-2H3zM3 7a1 1 0 000 2h7a1 1 0 100-2H3zM3 11a1 1 0 100 2h4a1 1 0 100-2H3zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z" />
+                <div className="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Documentos de {activeMonth}</h2>
+                  {userRole === 'editor' && (
+                    <button 
+                      onClick={() => setIsAddModalOpen(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value as any)}
-                        className="bg-transparent text-sm text-gray-700 dark:text-gray-300 focus:outline-none cursor-pointer"
-                      >
-                        <option value="date-desc">Más recientes primero</option>
-                        <option value="date-asc">Más antiguos primero</option>
-                        <option value="name-asc">Nombre (A-Z)</option>
-                        <option value="name-desc">Nombre (Z-A)</option>
-                      </select>
-                    </div>
-                    {userRole === 'editor' && (
-                      <button 
-                        onClick={() => setIsAddModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                        </svg>
-                        <span>Añadir Documento</span>
-                      </button>
-                    )}
-                  </div>
+                      <span>Añadir Documento</span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="flex-grow flex flex-col space-y-3">
                   {!hasPdfs ? (
-                    <div className="flex-grow flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mb-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                      </svg>
-                      <span className="text-lg font-medium">Carpeta vacía</span>
+                    <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400 italic">
+                      No hay documentos PDF para {activeMonth}.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -403,7 +388,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Añadir Documento</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Añadir Documento a {activeMonth}</h3>
                 <button onClick={() => setIsAddModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
