@@ -367,10 +367,14 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               </svg>
             </button>
 
-            <div className="flex-grow w-full h-full relative overflow-hidden">
+            <div className="flex-grow w-full h-full relative overflow-hidden bg-white">
               <iframe
                 src={selectedPdf.pdfUrl.includes('drive.google.com') ? selectedPdf.pdfUrl : `${selectedPdf.pdfUrl}#view=FitH`}
-                className={`w-full border-0 ${selectedPdf.pdfUrl.includes('drive.google.com') ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' : 'h-full'}`}
+                className={`w-full border-0 bg-white ${
+                  selectedPdf.pdfUrl.includes('drive.google.com') && !selectedPdf.pdfUrl.includes('embeddedfolderview')
+                    ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' 
+                    : 'h-full'
+                }`}
                 title={selectedPdf.fileName}
                 allow="autoplay"
               />
