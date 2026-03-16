@@ -166,6 +166,10 @@
       "schema": "ServiceBooking",
       "description": "Collection of sky dinner bookings."
     },
+    "events_bookings": {
+      "schema": "ServiceBooking",
+      "description": "Collection of annual events bookings."
+    },
     "day_pass_bookings": {
       "schema": "DayPassBooking",
       "description": "Collection of day pass bookings."

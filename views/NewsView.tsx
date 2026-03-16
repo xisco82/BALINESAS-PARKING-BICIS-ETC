@@ -624,6 +624,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title="" maxWidth="max-w-6xl">
           <div className="old-paper-modal-content">
             <h3 className="text-xl font-bold text-center">{editingEvent ? "Editar Novedad" : "Escribir Novedad"}</h3>
+            <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-4 italic">
+              Se enviará una notificación automática 2 días y 1 día antes del inicio del evento.
+            </p>
             <form onSubmit={handleFormSubmit}>
                 <div className="space-y-6">
                     <input type="text" placeholder="Título..." value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="paper-input" required />

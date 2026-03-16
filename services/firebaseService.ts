@@ -79,6 +79,29 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 };
 
 // --- News Events ---
+const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86tawbawVXvdmJPlr_4V5z0RlDKaQ-zx5FnL8oaNe40m1W_Nc665TgpAxWjwbARE6ag/exec';
+
+const sendEventNotification = async (eventData: any, action: 'create' | 'update') => {
+  try {
+    // Using no-cors because Google Apps Script redirects often cause CORS issues in browsers
+    // but the request still reaches the server.
+    await fetch(NOTIFICATION_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...eventData,
+        action,
+        timestamp: new Date().toISOString()
+      }),
+    });
+  } catch (error) {
+    console.error('Error sending event notification:', error);
+  }
+};
+
 export const getNewsEvents = (callback: (events: NewsEvent[]) => void) => {
   const path = 'news_events';
   const q = query(collection(db, path), orderBy('startDate', 'asc'));
@@ -95,6 +118,7 @@ export const addNewsEvent = async (event: Omit<NewsEvent, 'id'>) => {
   const path = 'news_events';
   try {
     const docRef = await addDoc(collection(db, path), event);
+    await sendEventNotification(event, 'create');
     return docRef.id;
   } catch (err) {
     handleFirestoreError(err, OperationType.CREATE, path);
@@ -114,6 +138,7 @@ export const updateNewsEvent = async (id: string, event: Partial<Omit<NewsEvent,
   const path = `news_events/${id}`;
   try {
     await updateDoc(doc(db, 'news_events', id), event);
+    await sendEventNotification({ id, ...event }, 'update');
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
   }
@@ -277,6 +302,14 @@ export const addServiceBooking = async (tableName: string, booking: Omit<Restaur
   const path = tableName;
   try {
     const docRef = await addDoc(collection(db, path), booking);
+    if (tableName === 'events_bookings') {
+      await sendEventNotification({
+        title: booking.guestName,
+        description: booking.description,
+        startDate: booking.startDate,
+        endDate: booking.endDate
+      }, 'create');
+    }
     return docRef.id;
   } catch (err) {
     handleFirestoreError(err, OperationType.CREATE, path);
@@ -296,6 +329,15 @@ export const updateServiceBooking = async (tableName: string, id: string, bookin
   const path = `${tableName}/${id}`;
   try {
     await updateDoc(doc(db, tableName, id), booking);
+    if (tableName === 'events_bookings') {
+      await sendEventNotification({
+        id,
+        title: booking.guestName,
+        description: booking.description,
+        startDate: booking.startDate,
+        endDate: booking.endDate
+      }, 'update');
+    }
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
   }
