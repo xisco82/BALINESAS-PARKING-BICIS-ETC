@@ -195,7 +195,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     const unsubscribeServices = getAllServiceBookings('events_bookings', (bookings) => {
       serviceEvents = bookings.map(b => ({
         id: b.id,
-        title: `Evento: ${b.guestName}`,
+        title: b.guestName,
         description: b.description,
         startDate: b.startDate,
         endDate: b.endDate,
