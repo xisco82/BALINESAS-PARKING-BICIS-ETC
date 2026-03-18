@@ -172,7 +172,7 @@ const App: React.FC = () => {
     { view: View.Restaurant, label: 'Restaurante', icon: <ExtrasIcon /> },
     { view: View.DayPass, label: 'Day Pass', icon: <DayPassIcon /> },
     { view: View.SkyDinner, label: 'Cena Sky', icon: <SkyDinnerIcon /> },
-    { view: View.Disability, label: 'Accesibilidad', icon: <DisabilityIcon /> },
+    { view: View.Disability, label: 'Minusvalías', icon: <DisabilityIcon /> },
   ];
 
   const visibleNavItems = allNavItems;

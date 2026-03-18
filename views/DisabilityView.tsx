@@ -147,7 +147,7 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
     
     return (
         <div>
-            <Header title="Accesibilidad">
+            <Header title="Minusvalías">
                 {userRole === 'editor' && (
                   <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                       Añadir Huésped
@@ -175,11 +175,11 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
                     ))
                 ) : (
                     !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
-                        No hay registros de accesibilidad en este momento.
+                        No hay registros de minusvalías en este momento.
                     </div>
                 )}
             </div>
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Añadir Registro de Accesibilidad">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Añadir Registro de Minusvalía">
                 <form onSubmit={handleAddBooking}>
                     <div className="space-y-4">
                         <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
