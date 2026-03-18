@@ -82,21 +82,25 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86tawbawVXvdmJPlr_4V5z0RlDKaQ-zx5FnL8oaNe40m1W_Nc665TgpAxWjwbARE6ag/exec';
 
 const sendEventNotification = async (eventData: any, action: 'create' | 'update') => {
+  console.log(`Intentando enviar notificación de evento (${action}):`, eventData.title);
   try {
     // Using no-cors because Google Apps Script redirects often cause CORS issues in browsers
     // but the request still reaches the server.
+    // Using text/plain to ensure it's a "simple request" in no-cors mode.
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain',
       },
       body: JSON.stringify({
         ...eventData,
         action,
+        sendImmediate: true,
         timestamp: new Date().toISOString()
       }),
     });
+    console.log('Solicitud de notificación enviada (no-cors).');
   } catch (error) {
     console.error('Error sending event notification:', error);
   }
