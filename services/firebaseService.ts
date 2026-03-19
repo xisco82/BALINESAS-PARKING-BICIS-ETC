@@ -95,6 +95,7 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
       },
       body: JSON.stringify({
         ...eventData,
+        subject: eventData.title,
         action,
         sendImmediate: true,
         timestamp: new Date().toISOString()

@@ -303,10 +303,10 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       try {
         if (editingEvent) {
              await updateNewsEvent(editingEvent.id, { ...formData });
-             showToast("Novedad actualizada correctamente", "success");
+             showToast(`Novedad "${formData.title}" actualizada correctamente`, "success");
         } else {
             await addNewsEvent({ ...formData });
-            showToast("Novedad guardada correctamente", "success");
+            showToast(`Novedad "${formData.title}" guardada correctamente`, "success");
         }
       } catch (error: any) {
         console.error("Error saving event:", error);
@@ -320,12 +320,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     handleSaveEvent();
   };
 
-  const handleDeleteEvent = async (id: string) => {
-    const confirmed = await confirm("¿Seguro que quieres eliminar esta novedad?");
+  const handleDeleteEvent = async (event: NewsEvent) => {
+    const confirmed = await confirm(`¿Seguro que quieres eliminar la novedad "${event.title}"?`);
     if (confirmed) {
       try {
-        await deleteNewsEvent(id);
-        showToast("Novedad eliminada correctamente", "success");
+        await deleteNewsEvent(event.id);
+        showToast(`Novedad "${event.title}" eliminada correctamente`, "success");
       } catch (error: any) {
         console.error("Error deleting event:", error);
         showToast(`No se pudo eliminar la novedad: ${error.message}`, "error");
@@ -357,7 +357,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     const date = new Date(selectedDate + 'T00:00:00Z');
     const formattedDate = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
     
-    const subject = `Novedades del ${formattedDate}`;
+    const subject = eventsToNotify.length === 1 
+        ? `Novedad: ${eventsToNotify[0].title}`
+        : `Novedades del ${formattedDate}`;
     
     const bodyPlainText = eventsToNotify.map(event => {
         const title = `*${event.title}*`;
@@ -609,7 +611,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                         {userRole === 'editor' && event.type !== 'event' && (
                           <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
                               <button onClick={(e) => { e.stopPropagation(); handleOpenEditModal(event); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
-                              <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+                              <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
                           </div>
                         )}
                     </div>
