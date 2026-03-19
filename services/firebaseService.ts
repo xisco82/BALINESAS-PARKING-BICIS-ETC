@@ -84,31 +84,41 @@ const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxECHfA
 const sendEventNotification = async (eventData: any, action: 'create' | 'update' | 'delete') => {
   const payload = {
     ...eventData,
-    subject: eventData.title,
+    subject: eventData.title || eventData.guestName || 'Sin título',
     action,
     sendImmediate: true,
     notificationSchedule: action === 'delete' ? [] : ['2_days_before', 'day_of_0800'],
     timestamp: new Date().toISOString()
   };
   
-  console.log(`Intentando enviar notificación de evento (${action}):`, eventData.title);
-  console.log('Payload de notificación:', JSON.stringify(payload, null, 2));
+  console.log(`[Notificación] Intentando enviar (${action}):`, payload.subject);
   
+  const jsonPayload = JSON.stringify(payload);
+
   try {
-    // Using no-cors because Google Apps Script redirects often cause CORS issues in browsers
-    // but the request still reaches the server.
-    // Using text/plain to ensure it's a "simple request" in no-cors mode.
+    // Intentar primero con sendBeacon (más fiable para notificaciones en segundo plano)
+    if (navigator.sendBeacon) {
+      const blob = new Blob([jsonPayload], { type: 'text/plain' });
+      const queued = navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
+      if (queued) {
+        console.log('[Notificación] Encolada mediante sendBeacon.');
+        return;
+      }
+    }
+
+    // Fallback a fetch con keepalive
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
+      keepalive: true,
       headers: {
         'Content-Type': 'text/plain',
       },
-      body: JSON.stringify(payload),
+      body: jsonPayload,
     });
-    console.log('Solicitud de notificación enviada (no-cors).');
+    console.log('[Notificación] Enviada mediante fetch.');
   } catch (error) {
-    console.error('Error sending event notification:', error);
+    console.error('[Notificación] Error al enviar:', error);
   }
 };
 
@@ -154,7 +164,12 @@ export const updateNewsEvent = async (id: string, event: Partial<Omit<NewsEvent,
   const path = `news_events/${id}`;
   try {
     await updateDoc(doc(db, 'news_events', id), event);
-    await sendEventNotification({ id, ...event, type: 'news' }, 'update');
+    
+    // Obtener el documento completo para asegurar que la notificación tenga todos los campos
+    const docSnap = await getDoc(doc(db, 'news_events', id));
+    if (docSnap.exists()) {
+      await sendEventNotification({ ...docSnap.data(), id, type: 'news' }, 'update');
+    }
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
   }
@@ -362,14 +377,19 @@ export const updateServiceBooking = async (tableName: string, id: string, bookin
   try {
     await updateDoc(doc(db, tableName, id), booking);
     if (tableName === 'events_bookings') {
-      await sendEventNotification({
-        id,
-        title: booking.guestName,
-        description: booking.description,
-        startDate: booking.startDate,
-        endDate: booking.endDate,
-        type: 'event'
-      }, 'update');
+      // Aseguramos datos completos para la notificación
+      const docSnap = await getDoc(doc(db, tableName, id));
+      if (docSnap.exists()) {
+        const fullBooking = docSnap.data();
+        await sendEventNotification({
+          id,
+          title: fullBooking.guestName,
+          description: fullBooking.description,
+          startDate: fullBooking.startDate,
+          endDate: fullBooking.endDate,
+          type: 'event'
+        }, 'update');
+      }
     }
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
