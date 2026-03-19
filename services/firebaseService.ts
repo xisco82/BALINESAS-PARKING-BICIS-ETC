@@ -88,9 +88,7 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
     action: 'manual',
     sendImmediate: true,
     timestamp: new Date().toISOString(),
-    subject: events.length === 1 
-      ? (events[0].title || 'Sin título') 
-      : `Resumen de novedades y eventos (${events.length})`
+    subject: events.length === 1 ? `Novedad: ${events[0].title}` : `Resumen de novedades (${events.length})`
   };
 
   console.log(`[Notificación Manual] Intentando enviar ${events.length} novedades`);
@@ -117,11 +115,9 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
 };
 
 const sendEventNotification = async (eventData: any, action: 'create' | 'update' | 'delete') => {
-  const title = eventData.title || eventData.guestName || 'Sin título';
   const payload = {
     ...eventData,
-    title, // Ensure title is explicitly present
-    subject: title,
+    subject: eventData.title || eventData.guestName || 'Sin título',
     action,
     sendImmediate: true,
     notificationSchedule: action === 'delete' ? [] : ['2_days_before', 'day_of_0800'],
