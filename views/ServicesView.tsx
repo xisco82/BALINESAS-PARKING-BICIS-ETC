@@ -318,7 +318,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? `Editar ${title}` : `Añadir Nuevo ${title}`}>
                 {tableName === 'events_bookings' && (
                     <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-4 italic">
-                        Se enviará una notificación automática 2 días y 1 día antes del inicio del evento.
+                        Se enviará una notificación automática 2 días antes y el mismo día del evento a las 08:00.
                     </p>
                 )}
                 <form onSubmit={handleAddBooking}>

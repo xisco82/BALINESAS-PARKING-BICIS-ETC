@@ -79,7 +79,7 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 };
 
 // --- News Events ---
-const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw86tawbawVXvdmJPlr_4V5z0RlDKaQ-zx5FnL8oaNe40m1W_Nc665TgpAxWjwbARE6ag/exec';
+const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxECHfA5AkJNZ4y03s8_zovxiJLQPicRlzUylRIpYRWyk-IcPwfh7HpVEDToMmBP2NFhg/exec';
 
 const sendEventNotification = async (eventData: any, action: 'create' | 'update') => {
   console.log(`Intentando enviar notificación de evento (${action}):`, eventData.title);
@@ -98,6 +98,7 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
         subject: eventData.title,
         action,
         sendImmediate: true,
+        notificationSchedule: ['2_days_before', 'day_of_0800'],
         timestamp: new Date().toISOString()
       }),
     });
