@@ -81,6 +81,39 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 // --- News Events ---
 const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxECHfA5AkJNZ4y03s8_zovxiJLQPicRlzUylRIpYRWyk-IcPwfh7HpVEDToMmBP2NFhg/exec';
 
+export const sendManualNotification = async (events: NewsEvent[]) => {
+  const path = 'manual_notification';
+  const payload = {
+    events,
+    action: 'manual',
+    sendImmediate: true,
+    timestamp: new Date().toISOString(),
+    subject: events.length === 1 ? `Novedad: ${events[0].title}` : `Resumen de novedades (${events.length})`
+  };
+
+  console.log(`[Notificación Manual] Intentando enviar ${events.length} novedades`);
+  const jsonPayload = JSON.stringify(payload);
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([jsonPayload], { type: 'text/plain' });
+      navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
+    } else {
+      await fetch(NOTIFICATION_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain' },
+        body: jsonPayload,
+      });
+    }
+    return true;
+  } catch (error) {
+    console.error("Error sending manual notification:", error);
+    return false;
+  }
+};
+
 const sendEventNotification = async (eventData: any, action: 'create' | 'update' | 'delete') => {
   const payload = {
     ...eventData,
