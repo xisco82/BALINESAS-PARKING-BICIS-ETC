@@ -6,6 +6,7 @@ import { db, storage } from '../services/firebase';
 import { useToast } from '../components/Toast';
 import ServicesView from './ServicesView';
 import { UserRole } from '../types';
+import { sendPdfNotification } from '../services/firebaseService';
 
 interface EventsViewProps {
   dbError: string | null;
@@ -97,6 +98,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         uploadedAt: new Date().toISOString()
       });
 
+      await sendPdfNotification({ fileName: file.name, url: downloadURL }, 'create');
+
       showToast('PDF subido correctamente', 'success');
     } catch (error) {
       console.error("Error uploading PDF:", error);
@@ -117,6 +120,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
 
     try {
       await deleteDoc(doc(db, 'event_pdfs', pdf.id));
+      await sendPdfNotification({ fileName: pdf.fileName }, 'delete');
       
       if (pdf.pdfUrl.includes('firebasestorage.googleapis.com')) {
         try {
@@ -159,6 +163,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         fileName: driveName.trim(),
         uploadedAt: new Date().toISOString()
       });
+
+      await sendPdfNotification({ fileName: driveName.trim(), url: finalUrl }, 'create');
 
       showToast('Enlace añadido correctamente', 'success');
       setIsAddModalOpen(false);

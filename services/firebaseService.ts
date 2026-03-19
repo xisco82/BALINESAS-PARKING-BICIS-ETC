@@ -88,9 +88,7 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
     action: 'manual',
     sendImmediate: true,
     timestamp: new Date().toISOString(),
-    subject: events.length === 1 
-      ? (events[0].title || 'Sin título') 
-      : `Resumen de novedades y eventos (${events.length})`
+    subject: events.length === 1 ? `Novedad: ${events[0].title}` : `Resumen de novedades (${events.length})`
   };
 
   console.log(`[Notificación Manual] Intentando enviar ${events.length} novedades`);
@@ -117,11 +115,9 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
 };
 
 const sendEventNotification = async (eventData: any, action: 'create' | 'update' | 'delete') => {
-  const title = eventData.title || eventData.guestName || 'Sin título';
   const payload = {
     ...eventData,
-    title, // Ensure title is explicitly present
-    subject: title,
+    subject: eventData.title || eventData.guestName || 'Sin título',
     action,
     sendImmediate: true,
     notificationSchedule: action === 'delete' ? [] : ['2_days_before', 'day_of_0800'],
@@ -156,6 +152,39 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
     console.log('[Notificación] Enviada mediante fetch.');
   } catch (error) {
     console.error('[Notificación] Error al enviar:', error);
+  }
+};
+
+export const sendPdfNotification = async (pdfData: { fileName: string, url?: string }, action: 'create' | 'delete') => {
+  const payload = {
+    title: pdfData.fileName,
+    description: pdfData.url ? `Nuevo PDF disponible: ${pdfData.url}` : 'PDF eliminado',
+    subject: `PDF Eventos: ${pdfData.fileName}`,
+    action,
+    type: 'pdf_event',
+    sendImmediate: true,
+    timestamp: new Date().toISOString()
+  };
+  
+  console.log(`[Notificación PDF] Intentando enviar (${action}):`, payload.subject);
+  
+  const jsonPayload = JSON.stringify(payload);
+
+  try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([jsonPayload], { type: 'text/plain' });
+      navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
+    } else {
+      await fetch(NOTIFICATION_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        keepalive: true,
+        headers: { 'Content-Type': 'text/plain' },
+        body: jsonPayload,
+      });
+    }
+  } catch (error) {
+    console.error('[Notificación PDF] Error al enviar:', error);
   }
 };
 
