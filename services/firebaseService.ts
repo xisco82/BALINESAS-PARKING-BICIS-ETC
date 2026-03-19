@@ -81,13 +81,13 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 // --- News Events ---
 const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxECHfA5AkJNZ4y03s8_zovxiJLQPicRlzUylRIpYRWyk-IcPwfh7HpVEDToMmBP2NFhg/exec';
 
-const sendEventNotification = async (eventData: any, action: 'create' | 'update') => {
+const sendEventNotification = async (eventData: any, action: 'create' | 'update' | 'delete') => {
   const payload = {
     ...eventData,
     subject: eventData.title,
     action,
     sendImmediate: true,
-    notificationSchedule: ['2_days_before', 'day_of_0800'],
+    notificationSchedule: action === 'delete' ? [] : ['2_days_before', 'day_of_0800'],
     timestamp: new Date().toISOString()
   };
   
@@ -138,7 +138,13 @@ export const addNewsEvent = async (event: Omit<NewsEvent, 'id'>) => {
 export const deleteNewsEvent = async (id: string) => {
   const path = `news_events/${id}`;
   try {
-    await deleteDoc(doc(db, 'news_events', id));
+    const docRef = doc(db, 'news_events', id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const eventData = docSnap.data();
+      await sendEventNotification({ ...eventData, id, type: 'news' }, 'delete');
+    }
+    await deleteDoc(docRef);
   } catch (err) {
     handleFirestoreError(err, OperationType.DELETE, path);
   }
@@ -330,7 +336,22 @@ export const addServiceBooking = async (tableName: string, booking: Omit<Restaur
 export const deleteServiceBooking = async (tableName: string, id: string) => {
   const path = `${tableName}/${id}`;
   try {
-    await deleteDoc(doc(db, tableName, id));
+    const docRef = doc(db, tableName, id);
+    if (tableName === 'events_bookings') {
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const booking = docSnap.data();
+        await sendEventNotification({
+          id,
+          title: booking.guestName,
+          description: booking.description,
+          startDate: booking.startDate,
+          endDate: booking.endDate,
+          type: 'event'
+        }, 'delete');
+      }
+    }
+    await deleteDoc(docRef);
   } catch (err) {
     handleFirestoreError(err, OperationType.DELETE, path);
   }
