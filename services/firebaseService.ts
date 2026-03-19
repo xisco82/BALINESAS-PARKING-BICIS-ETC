@@ -82,7 +82,18 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxECHfA5AkJNZ4y03s8_zovxiJLQPicRlzUylRIpYRWyk-IcPwfh7HpVEDToMmBP2NFhg/exec';
 
 const sendEventNotification = async (eventData: any, action: 'create' | 'update') => {
+  const payload = {
+    ...eventData,
+    subject: eventData.title,
+    action,
+    sendImmediate: true,
+    notificationSchedule: ['2_days_before', 'day_of_0800'],
+    timestamp: new Date().toISOString()
+  };
+  
   console.log(`Intentando enviar notificación de evento (${action}):`, eventData.title);
+  console.log('Payload de notificación:', JSON.stringify(payload, null, 2));
+  
   try {
     // Using no-cors because Google Apps Script redirects often cause CORS issues in browsers
     // but the request still reaches the server.
@@ -93,14 +104,7 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
       headers: {
         'Content-Type': 'text/plain',
       },
-      body: JSON.stringify({
-        ...eventData,
-        subject: eventData.title,
-        action,
-        sendImmediate: true,
-        notificationSchedule: ['2_days_before', 'day_of_0800'],
-        timestamp: new Date().toISOString()
-      }),
+      body: JSON.stringify(payload),
     });
     console.log('Solicitud de notificación enviada (no-cors).');
   } catch (error) {
@@ -124,7 +128,7 @@ export const addNewsEvent = async (event: Omit<NewsEvent, 'id'>) => {
   const path = 'news_events';
   try {
     const docRef = await addDoc(collection(db, path), event);
-    await sendEventNotification(event, 'create');
+    await sendEventNotification({ ...event, type: 'news' }, 'create');
     return docRef.id;
   } catch (err) {
     handleFirestoreError(err, OperationType.CREATE, path);
@@ -144,7 +148,7 @@ export const updateNewsEvent = async (id: string, event: Partial<Omit<NewsEvent,
   const path = `news_events/${id}`;
   try {
     await updateDoc(doc(db, 'news_events', id), event);
-    await sendEventNotification({ id, ...event }, 'update');
+    await sendEventNotification({ id, ...event, type: 'news' }, 'update');
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
   }
@@ -313,7 +317,8 @@ export const addServiceBooking = async (tableName: string, booking: Omit<Restaur
         title: booking.guestName,
         description: booking.description,
         startDate: booking.startDate,
-        endDate: booking.endDate
+        endDate: booking.endDate,
+        type: 'event'
       }, 'create');
     }
     return docRef.id;
@@ -341,7 +346,8 @@ export const updateServiceBooking = async (tableName: string, id: string, bookin
         title: booking.guestName,
         description: booking.description,
         startDate: booking.startDate,
-        endDate: booking.endDate
+        endDate: booking.endDate,
+        type: 'event'
       }, 'update');
     }
   } catch (err) {
