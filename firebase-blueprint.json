@@ -125,8 +125,8 @@
       "required": ["department", "email"]
     },
     "EventPdf": {
-      "title": "Event PDF",
-      "description": "A PDF document uploaded for a specific month in the Events tab.",
+      "title": "Event Document",
+      "description": "A Google Drive link to a document or folder for a specific month in the Events tab.",
       "type": "object",
       "properties": {
         "month": { "type": "string" },

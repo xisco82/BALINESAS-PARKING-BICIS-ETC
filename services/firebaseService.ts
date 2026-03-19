@@ -219,7 +219,7 @@ export const addNewsEvent = async (event: Omit<NewsEvent, 'id'>) => {
   const path = 'news_events';
   try {
     const docRef = await addDoc(collection(db, path), event);
-    await sendEventNotification({ ...event, type: 'news' }, 'create');
+    sendEventNotification({ ...event, type: 'news' }, 'create');
     return docRef.id;
   } catch (err) {
     handleFirestoreError(err, OperationType.CREATE, path);
@@ -233,7 +233,7 @@ export const deleteNewsEvent = async (id: string) => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const eventData = docSnap.data();
-      await sendEventNotification({ ...eventData, id, type: 'news' }, 'delete');
+      sendEventNotification({ ...eventData, id, type: 'news' }, 'delete');
     }
     await deleteDoc(docRef);
   } catch (err) {
@@ -249,7 +249,7 @@ export const updateNewsEvent = async (id: string, event: Partial<Omit<NewsEvent,
     // Obtener el documento completo para asegurar que la notificación tenga todos los campos
     const docSnap = await getDoc(doc(db, 'news_events', id));
     if (docSnap.exists()) {
-      await sendEventNotification({ ...docSnap.data(), id, type: 'news' }, 'update');
+      sendEventNotification({ ...docSnap.data(), id, type: 'news' }, 'update');
     }
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
@@ -415,7 +415,7 @@ export const addServiceBooking = async (tableName: string, booking: Omit<Restaur
   try {
     const docRef = await addDoc(collection(db, path), booking);
     if (tableName === 'events_bookings') {
-      await sendEventNotification({
+      sendEventNotification({
         title: booking.guestName,
         description: booking.description,
         startDate: booking.startDate,
@@ -437,7 +437,7 @@ export const deleteServiceBooking = async (tableName: string, id: string) => {
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const booking = docSnap.data();
-        await sendEventNotification({
+        sendEventNotification({
           id,
           title: booking.guestName,
           description: booking.description,
@@ -462,7 +462,7 @@ export const updateServiceBooking = async (tableName: string, id: string, bookin
       const docSnap = await getDoc(doc(db, tableName, id));
       if (docSnap.exists()) {
         const fullBooking = docSnap.data();
-        await sendEventNotification({
+        sendEventNotification({
           id,
           title: fullBooking.guestName,
           description: fullBooking.description,

@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../services/firebase';
+import { db } from '../services/firebase';
 import { useToast } from '../components/Toast';
 import ServicesView from './ServicesView';
 import { UserRole } from '../types';
@@ -24,13 +23,6 @@ interface EventPdf {
   uploadedAt: string;
 }
 
-interface UploadingPdf {
-  id: string;
-  month: string;
-  fileName: string;
-  localUrl: string;
-}
-
 const MONTHS = [
   'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre'
 ];
@@ -38,16 +30,13 @@ const MONTHS = [
 const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
   const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('summary');
   const [pdfs, setPdfs] = useState<EventPdf[]>([]);
-  const [uploadingPdfs, setUploadingPdfs] = useState<UploadingPdf[]>([]);
   const [selectedPdf, setSelectedPdf] = useState<{pdfUrl: string, fileName: string} | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMonth, setActiveMonth] = useState<string>(MONTHS[0]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [addType, setAddType] = useState<'file' | 'drive'>('file');
   const [driveLink, setDriveLink] = useState('');
   const [driveName, setDriveName] = useState('');
   const { showToast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isDbInitialized || !isAuthReady) return;
@@ -67,69 +56,12 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
     return () => unsubscribe();
   }, [isDbInitialized, isAuthReady]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== 'application/pdf') {
-      showToast('Solo se permiten archivos PDF', 'error');
-      return;
-    }
-
-    const currentMonth = activeMonth;
-    const localUrl = URL.createObjectURL(file);
-    const tempId = `temp_${Date.now()}`;
-
-    setUploadingPdfs(prev => [...prev, { id: tempId, month: currentMonth, fileName: file.name, localUrl }]);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-
-    try {
-      const storageRef = ref(storage, `event_pdfs/${currentMonth}_${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-
-      await addDoc(collection(db, 'event_pdfs'), {
-        month: currentMonth,
-        pdfUrl: downloadURL,
-        fileName: file.name,
-        uploadedAt: new Date().toISOString()
-      });
-
-      await sendPdfNotification({ fileName: file.name, url: downloadURL }, 'create');
-
-      showToast('PDF subido correctamente', 'success');
-    } catch (error) {
-      console.error("Error uploading PDF:", error);
-      showToast('Error al subir el PDF', 'error');
-    } finally {
-      setUploadingPdfs(prev => prev.filter(p => p.id !== tempId));
-    }
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   const handleDeletePdf = async (pdf: EventPdf) => {
     if (!window.confirm(`¿Estás seguro de que quieres eliminar el documento "${pdf.fileName}"?`)) return;
 
     try {
       await deleteDoc(doc(db, 'event_pdfs', pdf.id));
       await sendPdfNotification({ fileName: pdf.fileName }, 'delete');
-      
-      if (pdf.pdfUrl.includes('firebasestorage.googleapis.com')) {
-        try {
-          const fileRef = ref(storage, pdf.pdfUrl);
-          await deleteObject(fileRef);
-        } catch (storageError) {
-          console.warn("Could not delete file from storage", storageError);
-        }
-      }
       showToast('Documento eliminado correctamente', 'success');
     } catch (error) {
       console.error("Error deleting PDF:", error);
@@ -164,7 +96,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         uploadedAt: new Date().toISOString()
       });
 
-      await sendPdfNotification({ fileName: driveName.trim(), url: finalUrl }, 'create');
+      sendPdfNotification({ fileName: driveName.trim(), url: finalUrl }, 'create');
 
       showToast('Enlace añadido correctamente', 'success');
       setIsAddModalOpen(false);
@@ -177,8 +109,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
   };
 
   const activeMonthPdfs = pdfs.filter(p => p.month === activeMonth);
-  const activeUploadingPdfs = uploadingPdfs.filter(p => p.month === activeMonth);
-  const hasPdfs = activeMonthPdfs.length > 0 || activeUploadingPdfs.length > 0;
+  const hasPdfs = activeMonthPdfs.length > 0;
 
   return (
     <div className="flex flex-col h-full">
@@ -228,14 +159,6 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           </div>
         ) : (
           <>
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              onChange={handleFileChange} 
-              accept="application/pdf" 
-              className="hidden" 
-            />
-
             <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
               <div className="flex space-x-2 min-w-max">
                 {MONTHS.map(month => (
@@ -276,38 +199,10 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                 <div className="flex-grow flex flex-col space-y-3">
                   {!hasPdfs ? (
                     <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400 italic">
-                      No hay documentos PDF para {activeMonth}.
+                      No hay documentos para {activeMonth}.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeUploadingPdfs.map(pdf => (
-                        <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl border border-gray-100 dark:border-gray-600 opacity-70">
-                          <button 
-                            onClick={() => setSelectedPdf({ pdfUrl: pdf.localUrl, fileName: pdf.fileName })}
-                            className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow text-left"
-                          >
-                            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg shrink-0">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-600 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col overflow-hidden">
-                              <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
-                                {pdf.fileName}
-                              </span>
-                              <span className="text-xs text-blue-500 dark:text-blue-400 font-medium">
-                                Subiendo...
-                              </span>
-                            </div>
-                          </button>
-                          <div className="shrink-0 ml-2 p-2">
-                            <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                          </div>
-                        </div>
-                      ))}
                       {activeMonthPdfs.map(pdf => {
                         const isFolder = pdf.pdfUrl.includes('embeddedfolderview');
                         return (
@@ -400,74 +295,44 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                 </button>
               </div>
               
-              <div className="flex space-x-2 mb-6">
-                <button
-                  onClick={() => setAddType('file')}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${addType === 'file' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                >
-                  Subir PDF
-                </button>
-                <button
-                  onClick={() => setAddType('drive')}
-                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${addType === 'drive' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
-                >
-                  Enlace Drive
-                </button>
-              </div>
-
-              {addType === 'file' ? (
-                <div className="text-center py-6">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Sube un archivo PDF directamente desde tu dispositivo.</p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del documento</label>
+                  <input
+                    type="text"
+                    value={driveName}
+                    onChange={(e) => setDriveName(e.target.value)}
+                    placeholder="Ej: Menú Especial"
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enlace de Google Drive (Archivo o Carpeta)</label>
+                  <input
+                    type="url"
+                    value={driveLink}
+                    onChange={(e) => setDriveLink(e.target.value)}
+                    placeholder="https://drive.google.com/..."
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Asegúrate de que el enlace tenga permisos de lectura ("Cualquier persona con el enlace").</p>
+                </div>
+                <div className="flex justify-end space-x-3 pt-4">
                   <button
-                    onClick={() => {
-                      setIsAddModalOpen(false);
-                      triggerFileInput();
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-semibold transition-colors w-full"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
                   >
-                    Seleccionar Archivo
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleAddDriveLink}
+                    disabled={!driveName.trim() || !driveLink.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Añadir Enlace
                   </button>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del documento</label>
-                    <input
-                      type="text"
-                      value={driveName}
-                      onChange={(e) => setDriveName(e.target.value)}
-                      placeholder="Ej: Menú Especial"
-                      className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enlace de Google Drive (Archivo o Carpeta)</label>
-                    <input
-                      type="url"
-                      value={driveLink}
-                      onChange={(e) => setDriveLink(e.target.value)}
-                      placeholder="https://drive.google.com/..."
-                      className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Asegúrate de que el enlace tenga permisos de lectura ("Cualquier persona con el enlace").</p>
-                  </div>
-                  <div className="flex justify-end space-x-3 pt-4">
-                    <button
-                      onClick={() => setIsAddModalOpen(false)}
-                      className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      onClick={handleAddDriveLink}
-                      disabled={!driveName.trim() || !driveLink.trim()}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Añadir Enlace
-                    </button>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
