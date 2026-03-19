@@ -72,6 +72,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const [selectedDate, setSelectedDate] = useState(formatDateToYYYYMMDD(new Date()));
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const [monthlyEvents, setMonthlyEvents] = useState<NewsEvent[]>([]);
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, event: NewsEvent } | null>(null);
   
   const displayDate = hoveredDate || selectedDate;
 
@@ -114,6 +115,25 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         handleOpenEditModal(event);
     }
   };
+
+  const handleContextMenu = (e: React.MouseEvent, event: NewsEvent) => {
+    if (userRole !== 'editor' || event.type === 'event') return;
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      event
+    });
+  };
+
+  const closeContextMenu = () => setContextMenu(null);
+
+  useEffect(() => {
+    const handleGlobalClick = () => closeContextMenu();
+    window.addEventListener('click', handleGlobalClick);
+    return () => window.removeEventListener('click', handleGlobalClick);
+  }, []);
 
   const [toolbarState, setToolbarState] = useState({
     bold: false,
@@ -545,6 +565,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             onClick={() => handleDayClick(formatDateToYYYYMMDD(d.date))} 
                             onMouseEnter={() => setHoveredDate(formatDateToYYYYMMDD(d.date))}
                             onMouseLeave={() => setHoveredDate(null)}
+                            onContextMenu={(e) => {
+                                if (userRole === 'editor') {
+                                    e.preventDefault();
+                                    // No context menu for the day itself, just for events
+                                }
+                            }}
                             className={`${dayClasses} group`}
                         >
                             <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
@@ -553,8 +579,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                     <div 
                                         key={event.id} 
                                         onClick={(e) => handleEventClick(e, event, formatDateToYYYYMMDD(d.date))}
+                                        onContextMenu={(e) => handleContextMenu(e, event)}
                                         className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm transition-transform hover:scale-[1.02] ${event.type === 'event' ? 'bg-purple-400' : 'bg-red-400 hover:bg-red-300'}`}
-                                        title={event.type !== 'event' && userRole === 'editor' ? 'Clic para editar' : ''}
+                                        title={event.type !== 'event' && userRole === 'editor' ? 'Clic para editar, clic derecho para eliminar' : ''}
                                     >
                                         {event.title}
                                     </div>
@@ -604,6 +631,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                 handleOpenEditModal(event);
                             }
                         }}
+                        onContextMenu={(e) => handleContextMenu(e, event)}
                         className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'} ${userRole === 'editor' && event.type !== 'event' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
                     >
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
@@ -811,6 +839,50 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 </div>
             </form>
        </Modal>
+      {/* Context Menu */}
+      {contextMenu && (
+        <div 
+          className="fixed z-[100] bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-700 py-1 min-w-[180px] animate-fade-in"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 mb-1">
+            Opciones
+          </div>
+          <button 
+            onClick={() => {
+              handleOpenEditModal(contextMenu.event);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Editar Novedad
+          </button>
+          <button 
+            onClick={() => {
+              handleDeleteEvent(contextMenu.event);
+              closeContextMenu();
+            }}
+            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Eliminar Novedad
+          </button>
+          <div className="border-t border-gray-100 dark:border-gray-700 mt-1">
+            <button 
+              onClick={closeContextMenu}
+              className="w-full text-left px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
