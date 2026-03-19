@@ -88,7 +88,12 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
     action: 'manual',
     sendImmediate: true,
     timestamp: new Date().toISOString(),
-    subject: events.length === 1 ? `Novedad: ${events[0].title}` : `Resumen de novedades (${events.length})`
+    subject: events.length === 1 ? `Novedad: ${events[0].title}` : `Resumen de novedades (${events.length})`,
+    // Campos para el Apps Script de Google
+    asunto: events.length === 1 ? `📢 Novedad: ${events[0].title}` : `📢 Resumen de novedades (${events.length})`,
+    mensaje: events.length === 1 ? events[0].description : `Se han enviado ${events.length} novedades.`,
+    enlace: "https://balinesas-parking-bicis-etc.vercel.app",
+    autor: auth.currentUser?.displayName || "Recepción"
   };
 
   console.log(`[Notificación Manual] Intentando enviar ${events.length} novedades`);
@@ -121,7 +126,12 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
     action,
     sendImmediate: true,
     notificationSchedule: action === 'delete' ? [] : ['2_days_before', 'day_of_0800'],
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    // Campos para el Apps Script de Google
+    asunto: `📢 ${action === 'create' ? 'NUEVO' : action === 'update' ? 'ACTUALIZADO' : 'ELIMINADO'}: ${eventData.title || eventData.guestName || 'Sin título'}`,
+    mensaje: `${action === 'create' ? 'Se ha añadido' : action === 'update' ? 'Se ha actualizado' : 'Se ha eliminado'} un evento: ${eventData.title || eventData.guestName || 'Sin título'}. ${eventData.description || ''}`,
+    enlace: "https://balinesas-parking-bicis-etc.vercel.app",
+    autor: auth.currentUser?.displayName || "Recepción"
   };
   
   console.log(`[Notificación] Intentando enviar (${action}):`, payload.subject);
@@ -163,7 +173,12 @@ export const sendPdfNotification = async (pdfData: { fileName: string, url?: str
     action,
     type: 'pdf_event',
     sendImmediate: true,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    // Campos para el Apps Script de Google
+    asunto: `📄 PDF ${action === 'create' ? 'AÑADIDO' : 'ELIMINADO'}: ${pdfData.fileName}`,
+    mensaje: pdfData.url ? `Se ha subido un nuevo documento: ${pdfData.fileName}` : `Se ha eliminado el documento: ${pdfData.fileName}`,
+    enlace: pdfData.url || "https://balinesas-parking-bicis-etc.vercel.app",
+    autor: auth.currentUser?.displayName || "Recepción"
   };
   
   console.log(`[Notificación PDF] Intentando enviar (${action}):`, payload.subject);
