@@ -316,11 +316,6 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             </div>
             
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? `Editar ${title}` : `Añadir Nuevo ${title}`}>
-                {tableName === 'events_bookings' && (
-                    <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-4 italic">
-                        Se enviará una notificación automática 2 días antes y el mismo día del evento a las 08:00.
-                    </p>
-                )}
                 <form onSubmit={handleAddBooking}>
                     <div className="space-y-4">
                         <input type="text" placeholder={tableName === 'events_bookings' ? "Título" : "Nombre del Huésped"} value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />

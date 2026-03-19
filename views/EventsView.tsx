@@ -36,7 +36,7 @@ const MONTHS = [
 ];
 
 const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
-  const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('pdfs');
+  const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('summary');
   const [pdfs, setPdfs] = useState<EventPdf[]>([]);
   const [uploadingPdfs, setUploadingPdfs] = useState<UploadingPdf[]>([]);
   const [selectedPdf, setSelectedPdf] = useState<{pdfUrl: string, fileName: string} | null>(null);
@@ -200,16 +200,16 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
 
         <div className="flex space-x-4 mb-6 justify-center">
           <button 
-            onClick={() => setActiveTab('pdfs')} 
-            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'pdfs' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-          >
-            Resumen de eventos mensuales
-          </button>
-          <button 
             onClick={() => setActiveTab('summary')} 
             className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'summary' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
           >
             Eventos Anuales
+          </button>
+          <button 
+            onClick={() => setActiveTab('pdfs')} 
+            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'pdfs' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            Resumen de eventos mensuales
           </button>
         </div>
 
