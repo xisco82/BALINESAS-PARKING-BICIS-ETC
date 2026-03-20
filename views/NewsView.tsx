@@ -582,22 +582,22 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             )}
         </div>
       </Header>
-      <div className="p-4 flex flex-col gap-6">
+      <div className="p-4 print:p-0 flex flex-col gap-6 print:gap-2">
         {/* Calendar */}
-        <div className="w-full p-4 bg-white/20 dark:bg-gray-800/20 backdrop-blur-md rounded-xl shadow-sm h-fit">
-            <div className="flex justify-between items-center mb-4 px-2">
+        <div className="w-full p-4 bg-white/20 dark:bg-gray-800/20 backdrop-blur-md rounded-xl shadow-sm h-fit print:p-2 print:mt-0">
+            <div className="flex justify-between items-center mb-4 px-2 print:mb-2">
                 <button onClick={goToPreviousMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
-                <h2 className="text-2xl font-bold text-center">{getHeaderTitle()}</h2>
+                <h2 className="text-2xl print:text-lg font-bold text-center">{getHeaderTitle()}</h2>
                 <button onClick={goToNextMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&gt;</button>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm mb-2 text-gray-600 dark:text-gray-300">
+            <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm mb-2 print:mb-1 text-gray-600 dark:text-gray-300">
                 {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => <div key={d}>{d}</div>)}
             </div>
             <div className="grid grid-cols-7 gap-1 md:gap-2">
                 {calendarDays.map(d => {
                     if (d.isEmpty) return <div key={d.key} className="h-24 rounded-lg"></div>;
                     
-                    let dayClasses = "h-24 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 ";
+                    let dayClasses = "h-24 print:h-16 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 ";
                     if (d.isSelected) {
                         dayClasses += "bg-blue-200/70 dark:bg-blue-800/50 ring-2 ring-blue-500 ring-inset";
                     } else if (d.isToday) {
@@ -652,24 +652,24 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         </div>
 
         {/* Print only: All events of the month */}
-        <div className="hidden print:block w-full mt-8">
-            <h3 className="text-2xl font-bold mb-6 border-b-2 border-gray-800 pb-2 text-center">
+        <div className="hidden print:block w-full mt-2">
+            <h3 className="text-xl font-bold mb-2 border-b-2 border-gray-800 pb-1 text-center">
                 Resumen de Novedades - {getHeaderTitle()}
             </h3>
-            <div className="space-y-6">
+            <div className="space-y-2">
                 {monthlyUniqueEvents.length === 0 ? (
                     <p className="text-center italic text-gray-600">No hay novedades registradas para este mes.</p>
                 ) : (
                     monthlyUniqueEvents.map(event => (
-                        <div key={event.id} className="break-inside-avoid border-b border-gray-200 pb-4">
-                            <div className="flex justify-between items-start mb-1">
-                                <h4 className="font-bold text-lg text-gray-900">{event.title}</h4>
-                                <span className="text-sm font-medium text-gray-600">
+                        <div key={event.id} className="break-inside-avoid border-b border-gray-100 pb-1">
+                            <div className="flex justify-between items-start mb-0.5">
+                                <h4 className="font-bold text-base text-gray-900">{event.title}</h4>
+                                <span className="text-xs font-medium text-gray-600">
                                     {new Date(event.startDate + 'T00:00:00Z').toLocaleDateString('es-ES')} 
                                     {event.startDate !== event.endDate ? ` - ${new Date(event.endDate + 'T00:00:00Z').toLocaleDateString('es-ES')}` : ''}
                                 </span>
                             </div>
-                            <div className="text-sm text-gray-800 mt-1" dangerouslySetInnerHTML={{ __html: event.description }} />
+                            <div className="text-xs text-gray-800 leading-tight" dangerouslySetInnerHTML={{ __html: event.description }} />
                         </div>
                     ))
                 )}

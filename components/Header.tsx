@@ -55,9 +55,9 @@ const Header: React.FC<HeaderProps> = ({ title, children }) => {
   };
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-10 border-b border-white/50 dark:border-gray-700/50">
+    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md p-4 print:p-1 sticky top-0 z-10 border-b border-white/50 dark:border-gray-700/50">
       <div className="flex justify-between items-center max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{title}</h1>
+        <h1 className="text-2xl print:text-base font-bold text-gray-800 dark:text-white">{title}</h1>
         <div className="flex items-center space-x-2">
             {children}
             <button
