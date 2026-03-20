@@ -82,36 +82,32 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf1s3be5IlAAhGbIIbzr5jVYutiJMz5pSPIpYN-_768brC2Oq6TL4VyAweGppkCY42XA/exec';
 
 export const sendManualNotification = async (events: NewsEvent[]) => {
-  const path = 'manual_notification';
   const payload = {
-    events,
-    action: 'manual',
-    sendImmediate: true,
-    timestamp: new Date().toISOString(),
-    subject: events.length === 1 ? `Novedad: ${events[0].title}` : `Resumen de novedades (${events.length})`,
-    // Campos para el Apps Script de Google
     asunto: events.length === 1 ? `📢 Novedad: ${events[0].title}` : `📢 Resumen de novedades (${events.length})`,
-    mensaje: events.length === 1 ? events[0].description : `Se han enviado ${events.length} novedades.`,
+    mensaje: events.length === 1 
+      ? events[0].description.replace(/<[^>]*>?/gm, '') // Limpiar HTML para el mensaje de texto
+      : `Se han enviado ${events.length} novedades.`,
     enlace: "https://balinesas-parking-bicis-etc.vercel.app",
-    autor: auth.currentUser?.displayName || "Recepción"
+    autor: auth.currentUser?.displayName || "Recepción",
+    timestamp: new Date().toISOString()
   };
 
-  console.log(`[Notificación Manual] Intentando enviar ${events.length} novedades`);
+  console.log(`[Notificación Manual] Enviando a ${NOTIFICATION_SCRIPT_URL}`, payload);
   const jsonPayload = JSON.stringify(payload);
 
   try {
-    if (navigator.sendBeacon) {
-      const blob = new Blob([jsonPayload], { type: 'text/plain' });
-      navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
-    } else {
-      await fetch(NOTIFICATION_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        keepalive: true,
-        headers: { 'Content-Type': 'text/plain' },
-        body: jsonPayload,
-      });
-    }
+    // Usamos fetch con text/plain para evitar preflight CORS (es una "simple request")
+    // mode: 'no-cors' permite que la petición se envíe aunque no podamos leer la respuesta
+    const response = await fetch(NOTIFICATION_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: jsonPayload,
+    });
+    
+    console.log("[Notificación Manual] Petición enviada (respuesta opaca)");
     return true;
   } catch (error) {
     console.error("Error sending manual notification:", error);
@@ -121,45 +117,27 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
 
 const sendEventNotification = async (eventData: any, action: 'create' | 'update' | 'delete') => {
   const payload = {
-    ...eventData,
-    subject: eventData.title || eventData.guestName || 'Sin título',
-    action,
-    sendImmediate: true,
-    notificationSchedule: action === 'delete' ? [] : ['2_days_before', 'day_of_0800'],
-    timestamp: new Date().toISOString(),
-    // Campos para el Apps Script de Google
     asunto: `📢 ${action === 'create' ? 'NUEVO' : action === 'update' ? 'ACTUALIZADO' : 'ELIMINADO'}: ${eventData.title || eventData.guestName || 'Sin título'}`,
-    mensaje: `${action === 'create' ? 'Se ha añadido' : action === 'update' ? 'Se ha actualizado' : 'Se ha eliminado'} un evento: ${eventData.title || eventData.guestName || 'Sin título'}. ${eventData.description || ''}`,
+    mensaje: `${action === 'create' ? 'Se ha añadido' : action === 'update' ? 'Se ha actualizado' : 'Se ha eliminado'} un evento: ${eventData.title || eventData.guestName || 'Sin título'}.\n\n${(eventData.description || '').replace(/<[^>]*>?/gm, '')}`,
     enlace: "https://balinesas-parking-bicis-etc.vercel.app",
-    autor: auth.currentUser?.displayName || "Recepción"
+    autor: auth.currentUser?.displayName || "Recepción",
+    action,
+    timestamp: new Date().toISOString()
   };
   
-  console.log(`[Notificación] Intentando enviar (${action}):`, payload.subject);
-  
+  console.log(`[Notificación] Enviando (${action}):`, payload.asunto);
   const jsonPayload = JSON.stringify(payload);
 
   try {
-    // Intentar primero con sendBeacon (más fiable para notificaciones en segundo plano)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([jsonPayload], { type: 'text/plain' });
-      const queued = navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
-      if (queued) {
-        console.log('[Notificación] Encolada mediante sendBeacon.');
-        return;
-      }
-    }
-
-    // Fallback a fetch con keepalive
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      keepalive: true,
       headers: {
         'Content-Type': 'text/plain',
       },
       body: jsonPayload,
     });
-    console.log('[Notificación] Enviada mediante fetch.');
+    console.log('[Notificación] Enviada correctamente.');
   } catch (error) {
     console.error('[Notificación] Error al enviar:', error);
   }
@@ -167,37 +145,27 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
 
 export const sendPdfNotification = async (pdfData: { fileName: string, url?: string }, action: 'create' | 'delete') => {
   const payload = {
-    title: pdfData.fileName,
-    description: pdfData.url ? `Nuevo PDF disponible: ${pdfData.url}` : 'PDF eliminado',
-    subject: `PDF Eventos: ${pdfData.fileName}`,
-    action,
-    type: 'pdf_event',
-    sendImmediate: true,
-    timestamp: new Date().toISOString(),
-    // Campos para el Apps Script de Google
     asunto: `📄 PDF ${action === 'create' ? 'AÑADIDO' : 'ELIMINADO'}: ${pdfData.fileName}`,
     mensaje: pdfData.url ? `Se ha subido un nuevo documento: ${pdfData.fileName}` : `Se ha eliminado el documento: ${pdfData.fileName}`,
     enlace: pdfData.url || "https://balinesas-parking-bicis-etc.vercel.app",
-    autor: auth.currentUser?.displayName || "Recepción"
+    autor: auth.currentUser?.displayName || "Recepción",
+    action,
+    timestamp: new Date().toISOString()
   };
   
-  console.log(`[Notificación PDF] Intentando enviar (${action}):`, payload.subject);
-  
+  console.log(`[Notificación PDF] Enviando (${action}):`, payload.asunto);
   const jsonPayload = JSON.stringify(payload);
 
   try {
-    if (navigator.sendBeacon) {
-      const blob = new Blob([jsonPayload], { type: 'text/plain' });
-      navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
-    } else {
-      await fetch(NOTIFICATION_SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        keepalive: true,
-        headers: { 'Content-Type': 'text/plain' },
-        body: jsonPayload,
-      });
-    }
+    await fetch(NOTIFICATION_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+      body: jsonPayload,
+    });
+    console.log('[Notificación PDF] Enviada correctamente.');
   } catch (error) {
     console.error('[Notificación PDF] Error al enviar:', error);
   }
@@ -606,15 +574,14 @@ export const seedEmailRecipients = async () => {
   
   const path = 'email_recipients';
   const recipients = [
-    { department: 'Dirección', email: 'direcciongranfiesta@hmhotels.com', order: 1 },
-    { department: 'Subdirección', email: 'subdirgranfiesta@hmhotels.com', order: 2 },
-    { department: 'Back office', email: 'rec1granfiesta@hmhotels.com', order: 3 },
-    { department: 'Recepción', email: 'recepciongranfiesta@hmhotels.com', order: 4 },
-    { department: 'Pisos', email: 'pisosgranfiesta@hmhotels.com', order: 5 },
-    { department: 'Cocina', email: 'cocinagranfiesta@hmhotels.com', order: 6 },
-    { department: 'Mantenimiento', email: 'mantenimientogranfiesta@hmhotels.com', order: 7 },
-    { department: 'Bar salón y Restaurante', email: 'bargranfiesta@hmhotels.com', order: 9 },
-    { department: 'Economato', email: 'almgranfiesta@hmhotels.com', order: 10 }
+    { department: 'Administrador', email: 'xiscoquin@gmail.com', order: 1 },
+    { department: 'Dirección', email: 'dirgranfiesta@hmhotels.com', order: 2 },
+    { department: 'Subdirección', email: 'subdirgranfiesta@hmhotels.com', order: 3 },
+    { department: 'Recepción / Back office', email: 'rec1granfiesta@hmhotels.com', order: 4 },
+    { department: 'Recepción', email: 'recgranfiesta@hmhotels.com', order: 5 },
+    { department: 'Servicios Técnicos', email: 'ssttgranfiesta@hmhotels.com', order: 6 },
+    { department: 'Pisos', email: 'pisosgranfiesta@hmhotels.com', order: 7 },
+    { department: 'Cocina', email: 'cocinagranfiesta@hmhotels.com', order: 8 }
   ];
 
   try {

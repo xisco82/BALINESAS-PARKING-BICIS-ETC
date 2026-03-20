@@ -479,6 +479,8 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     const selectedEvents = events.filter(event => selectedNewsIds.has(event.id));
     
     setIsSendingScript(true);
+    showToast("Iniciando envío de notificación...", "info");
+    
     try {
       let success;
       if (selectedEvents.length === 0) {
@@ -496,13 +498,13 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       }
       
       if (success) {
-        showToast("Notificación enviada correctamente.", "success");
+        showToast("Petición enviada al servidor de Google. Verifica tu correo.", "success");
       } else {
-        showToast("Error al enviar la notificación.", "error");
+        showToast("El navegador no pudo completar la petición. Revisa la consola (F12).", "error");
       }
     } catch (error) {
       console.error("Error sending script notification:", error);
-      showToast("Error al enviar la notificación.", "error");
+      showToast("Error crítico al enviar la notificación.", "error");
     } finally {
       setIsSendingScript(false);
     }
