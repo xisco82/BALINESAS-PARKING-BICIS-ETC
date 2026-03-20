@@ -79,7 +79,7 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 };
 
 // --- News Events ---
-const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxECHfA5AkJNZ4y03s8_zovxiJLQPicRlzUylRIpYRWyk-IcPwfh7HpVEDToMmBP2NFhg/exec';
+const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf1s3be5IlAAhGbIIbzr5jVYutiJMz5pSPIpYN-_768brC2Oq6TL4VyAweGppkCY42XA/exec';
 
 export const sendManualNotification = async (events: NewsEvent[]) => {
   const path = 'manual_notification';
