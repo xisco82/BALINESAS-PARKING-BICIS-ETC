@@ -79,38 +79,36 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 };
 
 // --- News Events ---
-const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf1s3be5IlAAhGbIIbzr5jVYutiJMz5pSPIpYN-_768brC2Oq6TL4VyAweGppkCY42XA/exec';
+const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTr2ZKasHnVFZbBPZ0qLatcdR7dMWYcqJ3GTs3gVA_BMr3MNYQPGois_NfHaHjVvEX/exec';
 
 export const sendManualNotification = async (events: NewsEvent[]) => {
   const payload = {
     asunto: events.length === 1 ? `📢 Novedad: ${events[0].title}` : `📢 Resumen de novedades (${events.length})`,
     mensaje: events.length === 1 
-      ? events[0].description.replace(/<[^>]*>?/gm, '') // Limpiar HTML para el mensaje de texto
+      ? events[0].description.replace(/<[^>]*>?/gm, '') 
       : `Se han enviado ${events.length} novedades.`,
     enlace: "https://balinesas-parking-bicis-etc.vercel.app",
     autor: auth.currentUser?.displayName || "Recepción",
     timestamp: new Date().toISOString()
   };
 
-  console.log(`[Notificación Manual] Enviando a ${NOTIFICATION_SCRIPT_URL}`, payload);
+  console.log("[Notificación] Intentando envío a Google Apps Script...");
   const jsonPayload = JSON.stringify(payload);
 
   try {
-    // Usamos fetch con text/plain para evitar preflight CORS (es una "simple request")
-    // mode: 'no-cors' permite que la petición se envíe aunque no podamos leer la respuesta
-    const response = await fetch(NOTIFICATION_SCRIPT_URL, {
+    // Usamos fetch sin headers personalizados y con mode: 'no-cors'
+    // Esto evita el preflight OPTIONS que Google Apps Script NO soporta
+    await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {
-        'Content-Type': 'text/plain',
-      },
+      cache: 'no-cache',
       body: jsonPayload,
     });
     
-    console.log("[Notificación Manual] Petición enviada (respuesta opaca)");
+    console.log("[Notificación] Petición enviada correctamente al servidor de Google.");
     return true;
   } catch (error) {
-    console.error("Error sending manual notification:", error);
+    console.error("[Notificación] Error en el envío:", error);
     return false;
   }
 };
@@ -125,21 +123,14 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
     timestamp: new Date().toISOString()
   };
   
-  console.log(`[Notificación] Enviando (${action}):`, payload.asunto);
-  const jsonPayload = JSON.stringify(payload);
-
   try {
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-      body: jsonPayload,
+      body: JSON.stringify(payload),
     });
-    console.log('[Notificación] Enviada correctamente.');
   } catch (error) {
-    console.error('[Notificación] Error al enviar:', error);
+    console.error('[Notificación] Error:', error);
   }
 };
 
@@ -153,21 +144,14 @@ export const sendPdfNotification = async (pdfData: { fileName: string, url?: str
     timestamp: new Date().toISOString()
   };
   
-  console.log(`[Notificación PDF] Enviando (${action}):`, payload.asunto);
-  const jsonPayload = JSON.stringify(payload);
-
   try {
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-      body: jsonPayload,
+      body: JSON.stringify(payload),
     });
-    console.log('[Notificación PDF] Enviada correctamente.');
   } catch (error) {
-    console.error('[Notificación PDF] Error al enviar:', error);
+    console.error('[Notificación PDF] Error:', error);
   }
 };
 
