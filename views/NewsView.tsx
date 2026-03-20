@@ -276,6 +276,23 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     return days;
   }, [currentDate, selectedDate, monthlyEvents]);
 
+  const monthlyUniqueEvents = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Filter events that overlap with the current month
+    const filtered = monthlyEvents.filter(event => {
+      const start = new Date(event.startDate);
+      const end = new Date(event.endDate);
+      return start <= lastDay && end >= firstDay;
+    });
+
+    // Sort by start date
+    return filtered.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+  }, [monthlyEvents, currentDate]);
+
   const handleOpenAddModal = () => {
     setEditingEvent(null);
     setFormData(initialFormState);
@@ -634,8 +651,33 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             </div>
         </div>
 
-        {/* News for selected/hovered day */}
-        <div className="w-full flex flex-col space-y-4">
+        {/* Print only: All events of the month */}
+        <div className="hidden print:block w-full mt-8">
+            <h3 className="text-2xl font-bold mb-6 border-b-2 border-gray-800 pb-2 text-center">
+                Resumen de Novedades - {getHeaderTitle()}
+            </h3>
+            <div className="space-y-6">
+                {monthlyUniqueEvents.length === 0 ? (
+                    <p className="text-center italic text-gray-600">No hay novedades registradas para este mes.</p>
+                ) : (
+                    monthlyUniqueEvents.map(event => (
+                        <div key={event.id} className="break-inside-avoid border-b border-gray-200 pb-4">
+                            <div className="flex justify-between items-start mb-1">
+                                <h4 className="font-bold text-lg text-gray-900">{event.title}</h4>
+                                <span className="text-sm font-medium text-gray-600">
+                                    {new Date(event.startDate + 'T00:00:00Z').toLocaleDateString('es-ES')} 
+                                    {event.startDate !== event.endDate ? ` - ${new Date(event.endDate + 'T00:00:00Z').toLocaleDateString('es-ES')}` : ''}
+                                </span>
+                            </div>
+                            <div className="text-sm text-gray-800 mt-1" dangerouslySetInnerHTML={{ __html: event.description }} />
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+
+        {/* News for selected/hovered day (Hidden in print) */}
+        <div className="no-print w-full flex flex-col space-y-4">
             <h3 className="text-xl font-bold">Novedades para el {new Date(displayDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
         {dbError && (
             <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
