@@ -1,6 +1,6 @@
 const https = require('https');
 
-const url = 'https://script.google.com/macros/s/AKfycbwf1s3be5IlAAhGbIIbzr5jVYutiJMz5pSPIpYN-_768brC2Oq6TL4VyAweGppkCY42XA/exec';
+const url = 'https://script.google.com/macros/s/AKfycbzTr2ZKasHnVFZbBPZ0qLatcdR7dMWYcqJ3GTs3gVA_BMr3MNYQPGois_NfHaHjVvEX/exec';
 
 const data = JSON.stringify({
   asunto: "🧪 PRUEBA DE CONEXIÓN",

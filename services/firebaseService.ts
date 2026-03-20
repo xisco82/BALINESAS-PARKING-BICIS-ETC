@@ -92,23 +92,26 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
     timestamp: new Date().toISOString()
   };
 
-  console.log("[Notificación] Intentando envío a Google Apps Script...");
+  console.log(`[Notificación] Intentando envío a: ${NOTIFICATION_SCRIPT_URL}`);
   const jsonPayload = JSON.stringify(payload);
 
   try {
-    // Usamos fetch sin headers personalizados y con mode: 'no-cors'
-    // Esto evita el preflight OPTIONS que Google Apps Script NO soporta
-    await fetch(NOTIFICATION_SCRIPT_URL, {
+    // Usamos la forma más simple posible de fetch. 
+    // Al usar 'text/plain' y 'no-cors', el navegador lo trata como una "petición simple"
+    // que no requiere validación previa (CORS), asegurando que llegue al script.
+    fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
-      cache: 'no-cache',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
       body: jsonPayload,
     });
     
-    console.log("[Notificación] Petición enviada correctamente al servidor de Google.");
+    console.log("[Notificación] Petición enviada al script.");
     return true;
   } catch (error) {
-    console.error("[Notificación] Error en el envío:", error);
+    console.error("[Notificación] Error crítico:", error);
     return false;
   }
 };
@@ -127,6 +130,9 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
       body: JSON.stringify(payload),
     });
   } catch (error) {
@@ -148,6 +154,9 @@ export const sendPdfNotification = async (pdfData: { fileName: string, url?: str
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
       body: JSON.stringify(payload),
     });
   } catch (error) {
