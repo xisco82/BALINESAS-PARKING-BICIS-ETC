@@ -79,7 +79,7 @@ const handleFirestoreError = (error: any, operationType: OperationType, path: st
 };
 
 // --- News Events ---
-const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzTr2ZKasHnVFZbBPZ0qLatcdR7dMWYcqJ3GTs3gVA_BMr3MNYQPGois_NfHaHjVvEX/exec';
+const NOTIFICATION_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzen42pEYACVVlv2N266GS0-o-fhb6jns81lGSHsP43t1wzMwJaJifiTLyR5bJSxbfF7Q/exec';
 
 export const sendManualNotification = async (events: NewsEvent[]) => {
   const payload = {
@@ -87,7 +87,7 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
     mensaje: events.length === 1 
       ? events[0].description.replace(/<[^>]*>?/gm, '') 
       : `Se han enviado ${events.length} novedades.`,
-    enlace: "https://balinesas-parking-bicis-etc.vercel.app",
+    enlace: window.location.origin,
     autor: auth.currentUser?.displayName || "Recepción",
     timestamp: new Date().toISOString()
   };
@@ -96,19 +96,30 @@ export const sendManualNotification = async (events: NewsEvent[]) => {
   const jsonPayload = JSON.stringify(payload);
 
   try {
-    // Usamos la forma más simple posible de fetch. 
-    // Al usar 'text/plain' y 'no-cors', el navegador lo trata como una "petición simple"
-    // que no requiere validación previa (CORS), asegurando que llegue al script.
-    fetch(NOTIFICATION_SCRIPT_URL, {
+    // Intentamos usar navigator.sendBeacon si está disponible, ya que es más fiable
+    // para peticiones que no necesitan esperar respuesta y evita problemas de descarga.
+    if (navigator.sendBeacon) {
+      const blob = new Blob([jsonPayload], { type: 'text/plain' });
+      const success = navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob);
+      if (success) {
+        console.log("[Notificación] Petición enviada vía Beacon.");
+        return true;
+      }
+    }
+
+    // Fallback a fetch si sendBeacon falla o no está disponible
+    await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
+      cache: 'no-cache',
+      keepalive: true,
       headers: {
         'Content-Type': 'text/plain',
       },
       body: jsonPayload,
     });
     
-    console.log("[Notificación] Petición enviada al script.");
+    console.log("[Notificación] Petición enviada vía Fetch.");
     return true;
   } catch (error) {
     console.error("[Notificación] Error crítico:", error);
@@ -126,14 +137,22 @@ const sendEventNotification = async (eventData: any, action: 'create' | 'update'
     timestamp: new Date().toISOString()
   };
   
+  const jsonPayload = JSON.stringify(payload);
+  
   try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([jsonPayload], { type: 'text/plain' });
+      if (navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob)) return;
+    }
+
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
+      keepalive: true,
       headers: {
         'Content-Type': 'text/plain',
       },
-      body: JSON.stringify(payload),
+      body: jsonPayload,
     });
   } catch (error) {
     console.error('[Notificación] Error:', error);
@@ -150,14 +169,22 @@ export const sendPdfNotification = async (pdfData: { fileName: string, url?: str
     timestamp: new Date().toISOString()
   };
   
+  const jsonPayload = JSON.stringify(payload);
+
   try {
+    if (navigator.sendBeacon) {
+      const blob = new Blob([jsonPayload], { type: 'text/plain' });
+      if (navigator.sendBeacon(NOTIFICATION_SCRIPT_URL, blob)) return;
+    }
+
     await fetch(NOTIFICATION_SCRIPT_URL, {
       method: 'POST',
       mode: 'no-cors',
+      keepalive: true,
       headers: {
         'Content-Type': 'text/plain',
       },
-      body: JSON.stringify(payload),
+      body: jsonPayload,
     });
   } catch (error) {
     console.error('[Notificación PDF] Error:', error);
