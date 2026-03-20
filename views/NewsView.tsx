@@ -477,19 +477,32 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
   const handleSendScriptNotification = async () => {
     const selectedEvents = events.filter(event => selectedNewsIds.has(event.id));
-    if (selectedEvents.length === 0) return;
     
     setIsSendingScript(true);
     try {
-      const success = await sendManualNotification(selectedEvents);
-      if (success) {
-        showToast("Notificación automática enviada correctamente.", "success");
+      let success;
+      if (selectedEvents.length === 0) {
+        // Enviar prueba genérica si no hay nada seleccionado
+        success = await sendManualNotification([{
+          id: 'test',
+          title: 'PRUEBA DE SISTEMA',
+          description: 'Esta es una notificación de prueba para verificar que el Apps Script recibe los datos correctamente.',
+          startDate: new Date().toISOString(),
+          endDate: new Date().toISOString(),
+          type: 'news'
+        }]);
       } else {
-        showToast("Error al enviar la notificación automática.", "error");
+        success = await sendManualNotification(selectedEvents);
+      }
+      
+      if (success) {
+        showToast("Notificación enviada correctamente.", "success");
+      } else {
+        showToast("Error al enviar la notificación.", "error");
       }
     } catch (error) {
       console.error("Error sending script notification:", error);
-      showToast("Error al enviar la notificación automática.", "error");
+      showToast("Error al enviar la notificación.", "error");
     } finally {
       setIsSendingScript(false);
     }
@@ -564,6 +577,13 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
+                </button>
+                <button 
+                  onClick={handleSendScriptNotification} 
+                  disabled={isSendingScript}
+                  className="no-print bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center disabled:opacity-50"
+                >
+                  {isSendingScript ? 'Enviando...' : 'Probar Notificación'}
                 </button>
                 <button 
                   onClick={handleOpenEmailModal} 
