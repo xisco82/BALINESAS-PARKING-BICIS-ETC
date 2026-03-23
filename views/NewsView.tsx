@@ -581,13 +581,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   </svg>
                 </button>
                 <button 
-                  onClick={handleSendScriptNotification} 
-                  disabled={isSendingScript}
-                  className="no-print bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center disabled:opacity-50"
-                >
-                  {isSendingScript ? 'Enviando...' : 'Probar Notificación'}
-                </button>
-                <button 
                   onClick={handleOpenEmailModal} 
                   className="no-print bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center"
                 >
