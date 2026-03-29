@@ -255,30 +255,56 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       </div>
 
       {selectedPdf && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm">
-          <div className="w-full h-full flex flex-col overflow-hidden relative">
-            {/* Floating Close Button */}
-            <button
-              onClick={() => setSelectedPdf(null)}
-              className="absolute top-4 right-4 z-50 p-3 bg-black/50 hover:bg-red-600 text-white rounded-full backdrop-blur-md transition-all shadow-lg"
-              title="Cerrar"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+        <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-md">
+          {/* Header for the PDF Viewer */}
+          <div className="flex items-center justify-between p-4 bg-gray-900 text-white shadow-lg">
+            <div className="flex flex-col overflow-hidden mr-4">
+              <h3 className="font-bold truncate text-sm md:text-base">{selectedPdf.fileName}</h3>
+              <p className="text-[10px] md:text-xs text-gray-400">Vista previa del documento</p>
+            </div>
+            <div className="flex items-center space-x-2 shrink-0">
+              <a 
+                href={selectedPdf.pdfUrl.replace('/preview', '/view')} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 text-xs md:text-sm font-semibold"
+                title="Abrir en pestaña nueva para zoom completo"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                </svg>
+                <span className="hidden sm:inline">Abrir en pestaña nueva</span>
+                <span className="sm:hidden">Abrir</span>
+              </a>
+              <button
+                onClick={() => setSelectedPdf(null)}
+                className="p-2 bg-gray-700 hover:bg-red-600 text-white rounded-lg transition-colors"
+                title="Cerrar"
+              >
+                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
 
-            <div className="flex-grow w-full h-full relative overflow-hidden bg-white">
-              <iframe
-                src={selectedPdf.pdfUrl.includes('drive.google.com') ? selectedPdf.pdfUrl : `${selectedPdf.pdfUrl}#view=FitH`}
-                className={`w-full border-0 bg-white ${
-                  selectedPdf.pdfUrl.includes('drive.google.com') && !selectedPdf.pdfUrl.includes('embeddedfolderview')
-                    ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' 
-                    : 'h-full'
-                }`}
-                title={selectedPdf.fileName}
-                allow="autoplay"
-              />
+          {/* PDF Content Area */}
+          <div className="flex-grow w-full relative overflow-hidden bg-white">
+            <iframe
+              src={selectedPdf.pdfUrl.includes('drive.google.com') ? selectedPdf.pdfUrl : `${selectedPdf.pdfUrl}#view=FitH`}
+              className={`w-full h-full border-0 bg-white ${
+                selectedPdf.pdfUrl.includes('drive.google.com') && !selectedPdf.pdfUrl.includes('embeddedfolderview')
+                  ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' 
+                  : ''
+              }`}
+              title={selectedPdf.fileName}
+              allow="autoplay"
+            />
+            
+            {/* Mobile Zoom Hint */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[10px] px-3 py-1 rounded-full pointer-events-none sm:hidden">
+              Usa el botón superior para zoom completo
             </div>
           </div>
         </div>

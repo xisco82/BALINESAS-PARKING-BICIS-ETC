@@ -33,36 +33,51 @@ const formatDate = (dateString: string) => {
     });
 };
 
-const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id: string) => void, userRole: UserRole }> = ({ booking, onDelete, userRole }) => (
-    <div className="bg-white/30 dark:bg-gray-800/30 backdrop-blur-sm p-3 rounded-xl shadow-md animate-fade-in hover:shadow-lg transition-shadow duration-300">
-        <div className="flex justify-between items-start">
-            <div>
-                <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
-                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">Habitación {booking.roomNumber}</p>
-            </div>
-            <div className="text-right text-sm font-medium text-gray-700 dark:text-gray-300 flex-shrink-0 ml-2">
-                <p><span className="font-semibold">Llegada:</span> {formatDate(booking.arrivalDate)}</p>
-                <p><span className="font-semibold">Salida:</span> {formatDate(booking.departureDate)}</p>
-            </div>
-        </div>
+const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id: string) => void, userRole: UserRole }> = ({ booking, onDelete, userRole }) => {
+    const isCurrentlyActive = useMemo(() => {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
         
-        <div className="pt-2 mt-2 border-t border-gray-200/80 dark:border-gray-700/80">
-             <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{booking.disabilityInfo}</p>
-        </div>
+        const arrival = new Date(booking.arrivalDate);
+        arrival.setHours(0, 0, 0, 0);
         
-        {userRole === 'editor' && (
-          <div className="flex justify-end mt-2">
-              <button 
-                  onClick={() => onDelete(booking.id)} 
-                  className="bg-red-500 text-white px-3 py-1 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
-                  aria-label="Eliminar registro"
-              >
-                  Eliminar
-              </button>
-          </div>
-        )}
-    </div>
-);
+        const departure = new Date(booking.departureDate);
+        departure.setHours(0, 0, 0, 0);
+        
+        return now >= arrival && now <= departure;
+    }, [booking.arrivalDate, booking.departureDate]);
+
+    return (
+        <div className={`${isCurrentlyActive ? 'bg-red-500/90 dark:bg-red-600/90 text-white' : 'bg-white/30 dark:bg-gray-800/30'} backdrop-blur-sm p-3 rounded-xl shadow-md animate-fade-in hover:shadow-lg transition-shadow duration-300`}>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h3 className={`font-bold text-lg ${isCurrentlyActive ? 'text-white' : 'text-gray-900 dark:text-gray-100'}`}>{booking.guestName}</h3>
+                    <p className={`text-sm font-semibold ${isCurrentlyActive ? 'text-red-100' : 'text-blue-600 dark:text-blue-400'}`}>Habitación {booking.roomNumber}</p>
+                </div>
+                <div className={`text-right text-sm font-medium ${isCurrentlyActive ? 'text-red-50' : 'text-gray-700 dark:text-gray-300'} flex-shrink-0 ml-2`}>
+                    <p><span className="font-semibold">Llegada:</span> {formatDate(booking.arrivalDate)}</p>
+                    <p><span className="font-semibold">Salida:</span> {formatDate(booking.departureDate)}</p>
+                </div>
+            </div>
+            
+            <div className={`pt-2 mt-2 border-t ${isCurrentlyActive ? 'border-white/30' : 'border-gray-200/80 dark:border-gray-700/80'}`}>
+                 <p className={`${isCurrentlyActive ? 'text-white' : 'text-gray-600 dark:text-gray-300'} whitespace-pre-wrap`}>{booking.disabilityInfo}</p>
+            </div>
+            
+            {userRole === 'editor' && (
+              <div className="flex justify-end mt-2">
+                  <button 
+                      onClick={() => onDelete(booking.id)} 
+                      className={`${isCurrentlyActive ? 'bg-white text-red-600 hover:bg-red-50' : 'bg-red-500 text-white hover:bg-red-600'} px-3 py-1 text-xs rounded-md font-semibold transition-colors`}
+                      aria-label="Eliminar registro"
+                  >
+                      Eliminar
+                  </button>
+              </div>
+            )}
+        </div>
+    );
+};
 
 const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
     const { showToast, confirm } = useToast();
