@@ -107,6 +107,24 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, i
                 createdBy: userRole
             });
             showToast("Cama Balinesa reservada correctamente", "success");
+
+            // Send notification via server to Apps Script
+            try {
+              fetch('/api/notifications/novedad', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  bedId: currentBedId,
+                  date: selectedDate,
+                  guestName: newBooking.guestName,
+                  roomNumber: newBooking.roomNumber,
+                  title: `Cama ${currentBedId}: ${newBooking.guestName}`,
+                  collection: 'balinese_bookings'
+                })
+              }).catch(err => console.error("Notification trigger failed:", err));
+            } catch (e) {
+              console.error("Notification fetch failed:", e);
+            }
         } catch (error: any) {
             console.error("Error booking bed:", error);
             const errorMessage = error.message || 'Error desconocido. Revise la consola del navegador para más detalles.';

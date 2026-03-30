@@ -330,6 +330,17 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         } else {
             await addNewsEvent({ ...formData });
             showToast(`Novedad "${formData.title}" guardada correctamente`, "success");
+            
+            // Send notification via server to Apps Script
+            try {
+              fetch('/api/notifications/novedad', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+              }).catch(err => console.error("Notification trigger failed:", err));
+            } catch (e) {
+              console.error("Notification fetch failed:", e);
+            }
         }
       } catch (error: any) {
         console.error("Error saving event:", error);

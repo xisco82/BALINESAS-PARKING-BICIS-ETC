@@ -154,6 +154,21 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             } else {
                 await addServiceBooking(tableName, newBooking);
                 showToast("Servicio guardado correctamente", "success");
+                
+                // Send notification via server to Apps Script
+                try {
+                  fetch('/api/notifications/novedad', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      ...newBooking,
+                      title: newBooking.guestName, // Map guestName to title for consistency
+                      collection: tableName
+                    })
+                  }).catch(err => console.error("Notification trigger failed:", err));
+                } catch (e) {
+                  console.error("Notification fetch failed:", e);
+                }
             }
         } catch (error: any) {
             console.error(`Error saving ${tableName}:`, error);

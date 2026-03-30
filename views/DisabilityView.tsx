@@ -131,6 +131,23 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
         try {
             await addAccessibilityBooking(newBooking);
             showToast("Registro de accesibilidad guardado correctamente", "success");
+            
+            // Send notification via server to Apps Script
+            try {
+              fetch('/api/notifications/novedad', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...newBooking,
+                  title: newBooking.guestName, // Map guestName to title for consistency
+                  description: newBooking.disabilityInfo, // Map disabilityInfo to description
+                  collection: 'accessibility_bookings'
+                })
+              }).catch(err => console.error("Notification trigger failed:", err));
+            } catch (e) {
+              console.error("Notification fetch failed:", e);
+            }
+
             setIsModalOpen(false);
             setNewBooking({
                 guestName: '',

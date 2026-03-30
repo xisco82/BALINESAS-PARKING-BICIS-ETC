@@ -20,31 +20,88 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+async function notifyAppsScript(type: string, data: any): Promise<boolean> {
+  const appScriptUrl = (process.env.APPSCRIPT_URL || "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec").trim();
+  
+  console.log(`[Notification] Sending ${type} to Apps Script...`);
+
+  try {
+    const response = await fetch(appScriptUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      },
+      body: JSON.stringify({
+        type: type,
+        data: data,
+        secret: process.env.APPSCRIPT_SECRET || null
+      }),
+      redirect: "follow"
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "No error body");
+      console.error(`[Notification] Apps Script Error (${response.status}): ${errorText}`);
+      return false;
+    }
+
+    console.log(`[Notification] ${type} sent successfully.`);
+    return true;
+  } catch (error) {
+    console.error(`[Notification] Fetch Error:`, error);
+    return false;
+  }
+}
+
 async function checkUpcomingEvents() {
-  console.log("Checking for upcoming events (2 days ahead)...");
+  console.log("Checking for upcoming events (1 and 2 days ahead)...");
   
   try {
     const today = new Date();
+    
+    // Check for 1 day ahead
+    const oneDayFromNow = new Date(today);
+    oneDayFromNow.setDate(today.getDate() + 1);
+    const date1Str = oneDayFromNow.toISOString().split('T')[0];
+    
+    // Check for 2 days ahead
     const twoDaysFromNow = new Date(today);
     twoDaysFromNow.setDate(today.getDate() + 2);
-    
-    // Format to YYYY-MM-DD
-    const targetDateStr = twoDaysFromNow.toISOString().split('T')[0];
-    console.log(`Target date: ${targetDateStr}`);
+    const date2Str = twoDaysFromNow.toISOString().split('T')[0];
 
-    const eventsSnapshot = await db.collection("news_events")
-      .where("startDate", "==", targetDateStr)
-      .get();
+    const collectionsToCheck = [
+      { name: "news_events", dateField: "startDate" },
+      { name: "events_bookings", dateField: "startDate" },
+      { name: "restaurant_bookings", dateField: "startDate" },
+      { name: "sky_dinner_bookings", dateField: "startDate" },
+      { name: "parking_bookings", dateField: "date" },
+      { name: "bike_bookings", dateField: "date" },
+      { name: "balinese_bookings", dateField: "date" },
+      { name: "day_pass_bookings", dateField: "date" },
+      { name: "accessibility_bookings", dateField: "arrivalDate" },
+      { name: "sauna_bookings", dateField: "date" }
+    ];
 
-    if (eventsSnapshot.empty) {
-      console.log("No events found for this date.");
-      return;
+    for (const coll of collectionsToCheck) {
+      // Query for 1 day ahead
+      const events1Snapshot = await db.collection(coll.name)
+        .where(coll.dateField, "==", date1Str)
+        .get();
+      
+      for (const doc of events1Snapshot.docs) {
+        await notifyAppsScript("event_reminder_1d", { ...doc.data(), collection: coll.name });
+      }
+
+      // Query for 2 days ahead
+      const events2Snapshot = await db.collection(coll.name)
+        .where(coll.dateField, "==", date2Str)
+        .get();
+
+      for (const doc of events2Snapshot.docs) {
+        await notifyAppsScript("event_reminder_2d", { ...doc.data(), collection: coll.name });
+      }
     }
-
-    const events = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log(`Found ${events.length} events. Sending notification...`);
-
-    await sendNotificationEmail(events);
   } catch (error) {
     console.error("Error checking upcoming events:", error);
   }
@@ -111,6 +168,16 @@ async function startServer() {
   app.post("/api/notifications/check", async (req, res) => {
     await checkUpcomingEvents();
     res.json({ message: "Check triggered" });
+  });
+
+  app.post("/api/notifications/novedad", express.json(), async (req, res) => {
+    const event = req.body;
+    const success = await notifyAppsScript("new_novedad", event);
+    if (success) {
+      res.json({ message: "Notification sent" });
+    } else {
+      res.status(500).json({ error: "Failed to send notification to Apps Script" });
+    }
   });
 
   if (process.env.NODE_ENV !== "production") {
