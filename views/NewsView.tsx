@@ -9,18 +9,10 @@ import {
   deleteNewsEvent, 
   updateNewsEvent,
   deleteServiceBooking,
-  getEmailRecipients,
-  getAllServiceBookings,
-  sendManualNotification
+  getAllServiceBookings
 } from '../services/firebaseService';
 
 type UserRole = 'editor' | 'balinese_editor';
-
-interface EmailRecipient {
-  id: string;
-  department: string;
-  email: string;
-}
 
 interface NewsViewProps {
   isSignedIn: boolean;
@@ -61,14 +53,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<NewsEvent | null>(null);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [isNewsSelectionModalOpen, setIsNewsSelectionModalOpen] = useState(false);
-  const [selectedNewsIds, setSelectedNewsIds] = useState<Set<string>>(new Set());
-  const [emailContent, setEmailContent] = useState({ subject: '', bodyPlainText: '', bodyHtml: '' });
-  const [emailRecipients, setEmailRecipients] = useState<EmailRecipient[]>([]);
-  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
-  const [isFetchingRecipients, setIsFetchingRecipients] = useState(false);
-  const [copyButtonText, setCopyButtonText] = useState('Copiar Correo');
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(formatDateToYYYYMMDD(new Date()));
@@ -383,148 +367,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} novedades`;
   };
   
-  const handlePrepareEmailNotification = async (eventsToNotify: NewsEvent[]) => {
-    setIsEmailModalOpen(true);
-    setCopyButtonText('Copiar Correo');
-    setIsFetchingRecipients(true);
-    setSelectedRecipients([]);
-
-    try {
-        const recipientsResult = await getEmailRecipients();
-        setEmailRecipients(recipientsResult as any);
-    } catch (error) {
-        console.error("Error fetching email recipients:", error);
-        showToast("No se pudieron cargar los destinatarios de la base de datos.", "error");
-    } finally {
-        setIsFetchingRecipients(false);
-    }
-    
-    const date = new Date(selectedDate + 'T00:00:00Z');
-    const formattedDate = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-    
-    const subject = eventsToNotify.length === 1 
-        ? `Novedad: ${eventsToNotify[0].title}`
-        : `Novedades del ${formattedDate}`;
-    
-    const bodyPlainText = eventsToNotify.map(event => {
-        const title = `*${event.title}*`;
-        const description = event.description
-          .replace(/<br\s*\/?>/gi, '\n')
-          .replace(/<\/p>/gi, '\n')
-          .replace(/<[^>]*>?/gm, '');
-        return `${title}\n${description}`;
-    }).join('\n\n---\n\n');
-
-    const bodyHtml = eventsToNotify.map(event => {
-        return `
-            <h4 style="font-family: Georgia, serif; color: #8B4513; border-bottom: 1px solid #cdab7d; padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px;">
-                ${event.title}
-            </h4>
-            <div style="font-family: Georgia, serif; color: #5a4a3a; line-height: 1.6;">
-                ${event.description}
-            </div>
-        `;
-    }).join('');
-
-    setEmailContent({ subject, bodyPlainText, bodyHtml });
-  };
-  
-  const handleOpenEmailModal = () => {
-    if (events.length === 0) {
-      showToast("No hay novedades para notificar en la fecha seleccionada.", "info");
-      return;
-    }
-
-    if (events.length > 1) {
-        // Pre-select all events when opening the selection modal
-        setSelectedNewsIds(new Set(events.map(e => e.id)));
-        setIsNewsSelectionModalOpen(true);
-    } else {
-        // If only one event, proceed directly to preparing the email
-        handlePrepareEmailNotification(events);
-    }
-  };
-  
-  const handleProceedWithSelection = () => {
-    const selectedEvents = events.filter(event => selectedNewsIds.has(event.id));
-    if (selectedEvents.length === 0) {
-        showToast('Por favor, seleccione al menos una novedad para continuar.', "error");
-        return;
-    }
-    setIsNewsSelectionModalOpen(false);
-    handlePrepareEmailNotification(selectedEvents);
-  };
-
-  const handleNewsSelectionChange = (eventId: string) => {
-    setSelectedNewsIds(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(eventId)) {
-            newSet.delete(eventId);
-        } else {
-            newSet.add(eventId);
-        }
-        return newSet;
-    });
-  };
-
-  const handleSelectAllNews = (isChecked: boolean) => {
-    if (isChecked) {
-        setSelectedNewsIds(new Set(events.map(e => e.id)));
-    } else {
-        setSelectedNewsIds(new Set());
-    }
-  };
-
-  const handleSendScriptNotification = async () => {
-    const selectedEvents = events.filter(event => selectedNewsIds.has(event.id));
-    
-    setIsSendingScript(true);
-    showToast("Iniciando envío de notificación...", "info");
-    
-    try {
-      let success;
-      if (selectedEvents.length === 0) {
-        // Enviar prueba genérica si no hay nada seleccionado
-        success = await sendManualNotification([{
-          id: 'test',
-          title: 'PRUEBA DE SISTEMA',
-          description: 'Esta es una notificación de prueba para verificar que el Apps Script recibe los datos correctamente.',
-          startDate: new Date().toISOString(),
-          endDate: new Date().toISOString(),
-          type: 'news'
-        }]);
-      } else {
-        success = await sendManualNotification(selectedEvents);
-      }
-      
-      if (success) {
-        showToast("Petición enviada al servidor de Google. Verifica tu correo.", "success");
-      } else {
-        showToast("El navegador no pudo completar la petición. Revisa la consola (F12).", "error");
-      }
-    } catch (error) {
-      console.error("Error sending script notification:", error);
-      showToast("Error crítico al enviar la notificación.", "error");
-    } finally {
-      setIsSendingScript(false);
-    }
-  };
-
-  const handleSendMailto = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (selectedRecipients.length === 0) {
-        showToast("Por favor, seleccione al menos un destinatario.", "error");
-        return;
-    }
-    const to = selectedRecipients.join(';');
-    const { subject, bodyPlainText } = emailContent;
-    const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyPlainText)}`;
-    window.location.href = mailtoLink;
-    setIsEmailModalOpen(false);
-  };
-  
-  const [isSendingScript, setIsSendingScript] = useState(false);
-  
   const goToPreviousMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
@@ -542,26 +384,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   };
 
   const handleCopyEmail = async () => {
-    if (!emailContent.bodyHtml) return;
-    try {
-        const htmlBlob = new Blob([emailContent.bodyHtml], { type: 'text/html' });
-        const textBlob = new Blob([emailContent.bodyPlainText], { type: 'text/plain' });
-        const data = [new ClipboardItem({
-            'text/html': htmlBlob,
-            'text/plain': textBlob,
-        })];
-
-        await navigator.clipboard.write(data);
-        
-        showToast('Contenido copiado al portapapeles', 'success');
-        setCopyButtonText('¡Copiado!');
-        setTimeout(() => setCopyButtonText('Copiar Correo'), 2000);
-    } catch (error) {
-        console.error("Error copying to clipboard:", error);
-        showToast('No se pudo copiar el contenido. Por favor, cópielo manualmente (Ctrl+C).', 'error');
-        setCopyButtonText('Error al copiar');
-        setTimeout(() => setCopyButtonText('Copiar Correo'), 2000);
-    }
+    // Logic removed
   };
 
   return (
@@ -579,16 +402,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
-                </button>
-                <button 
-                  onClick={handleOpenEmailModal} 
-                  className="no-print bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                  </svg>
-                  Notificar
                 </button>
                 <button onClick={handleOpenAddModal} className="no-print bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                     Añadir Novedad
@@ -834,101 +647,8 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 </div>
             </form>
           </div>
-       </Modal>
-       
-       <Modal isOpen={isNewsSelectionModalOpen} onClose={() => setIsNewsSelectionModalOpen(false)} title="Seleccionar Novedades a Notificar">
-            <div className="space-y-4">
-                <div className="border-b pb-2 mb-2">
-                    <label className="flex items-center space-x-2 font-semibold cursor-pointer">
-                        <input
-                            type="checkbox"
-                            className="h-5 w-5 rounded"
-                            checked={selectedNewsIds.size === events.length}
-                            onChange={(e) => handleSelectAllNews(e.target.checked)}
-                        />
-                        <span>Seleccionar Todas</span>
-                    </label>
-                </div>
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                    {events.map(event => (
-                        <div key={event.id}>
-                            <label className="flex items-center space-x-2 cursor-pointer p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                                <input
-                                    type="checkbox"
-                                    className="h-5 w-5 rounded"
-                                    checked={selectedNewsIds.has(event.id)}
-                                    onChange={() => handleNewsSelectionChange(event.id)}
-                                />
-                                <span className="text-gray-800 dark:text-gray-200">{event.title}</span>
-                            </label>
-                        </div>
-                    ))}
-                </div>
-                <div className="flex justify-end space-x-3 pt-4">
-                    <button
-                        onClick={() => setIsNewsSelectionModalOpen(false)}
-                        className="px-4 py-2 rounded-lg font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500 transition-colors"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleProceedWithSelection}
-                        disabled={selectedNewsIds.size === 0}
-                        className="px-4 py-2 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    >
-                        Continuar
-                    </button>
-                </div>
-            </div>
         </Modal>
-
-       <Modal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} title="Preparar Notificación por Email">
-            <form onSubmit={handleSendMailto}>
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Destinatarios</label>
-                        {isFetchingRecipients ? (
-                            <div className="text-center p-4">Cargando...</div>
-                        ) : (
-                            <div className="mt-2 p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 max-h-48 overflow-y-auto">
-                                <div className="flex items-center border-b pb-2 mb-2"><input type="checkbox" id="select-all" onChange={(e) => setSelectedRecipients(e.target.checked ? emailRecipients.map(r => r.email) : [])} className="h-4 w-4" /><label htmlFor="select-all" className="ml-2 font-semibold">Seleccionar Todos</label></div>
-                                {emailRecipients.map(r => <div key={r.id} className="py-1"><input type="checkbox" id={`r-${r.id}`} value={r.email} checked={selectedRecipients.includes(r.email)} onChange={(e) => setSelectedRecipients(p => e.target.checked ? [...p, r.email] : p.filter(em => em !== r.email))} className="h-4 w-4" /><label htmlFor={`r-${r.id}`} className="ml-2">{r.department}</label></div>)}
-                            </div>
-                        )}
-                    </div>
-                     <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Asunto</label>
-                        <input type="text" value={emailContent.subject} onChange={(e) => setEmailContent({ ...emailContent, subject: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600" required />
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Contenido del Correo</label>
-                        <div className="mt-1 p-2 flex justify-between items-center text-sm bg-yellow-100/80 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-md">
-                           <p><strong>Importante:</strong> Para conservar el formato, copie este contenido.</p>
-                           <button
-                                type="button"
-                                onClick={handleCopyEmail}
-                                className="bg-yellow-700 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-yellow-800 transition-colors flex-shrink-0"
-                            >
-                                {copyButtonText}
-                            </button>
-                        </div>
-                        <div
-                          className="mt-2 w-full p-4 bg-white dark:bg-gray-100 rounded-lg border border-gray-300 dark:border-gray-600 min-h-[200px] max-h-60 overflow-y-auto"
-                          dangerouslySetInnerHTML={{ __html: emailContent.bodyHtml }}
-                        />
-                    </div>
-                    <div className="flex flex-col space-y-3">
-                        <button type="submit" className="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 flex items-center justify-center transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                                <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                            </svg>
-                            Abrir Cliente de Correo
-                        </button>
-                    </div>
-                </div>
-            </form>
-       </Modal>
+       
       {/* Context Menu */}
       {contextMenu && (
         <div 

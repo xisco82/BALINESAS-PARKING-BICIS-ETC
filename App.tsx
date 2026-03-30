@@ -14,7 +14,6 @@ import { initClient } from './services/googleSheetsService';
 import { auth } from './services/firebase';
 import firebaseConfig from './firebase-applet-config.json';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
-import { seedEmailRecipients } from './services/firebaseService';
 import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginView from './views/LoginView';
@@ -92,7 +91,6 @@ const App: React.FC = () => {
       if (user) {
         setIsAuthReady(true);
         setDbError(null);
-        seedEmailRecipients();
       } else {
         // Only attempt sign in if not already authenticated
         signInAnonymously(auth).catch(err => {
