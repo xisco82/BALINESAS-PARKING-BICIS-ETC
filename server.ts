@@ -177,47 +177,49 @@ cron.schedule("0 8 * * *", () => {
 // Also run it once on startup for testing/immediate check
 // checkUpcomingEvents();
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+const PORT = 3000;
 
-  // Global middleware
-  app.use(express.json());
+// Global middleware
+app.use(express.json());
 
-  // API routes
-  app.get("/api/health", (req, res) => {
-    res.json({ status: "ok" });
-  });
+// API routes
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
-  // Manual trigger for testing
-  app.post("/api/notifications/check", async (req, res) => {
-    await checkUpcomingEvents();
-    res.json({ message: "Check triggered" });
-  });
+// Manual trigger for testing
+app.post("/api/notifications/check", async (req, res) => {
+  await checkUpcomingEvents();
+  res.json({ message: "Check triggered" });
+});
 
-  app.post("/api/notifications/novedad", async (req, res) => {
-    try {
-      const event = req.body;
-      const type = event.type || "new_novedad";
-      console.log(`[API] Received notification request for: ${event.title || 'Untitled'} (Type: ${type})`);
-      
-      if (!event || Object.keys(event).length === 0) {
-        console.warn("[API] Received empty body in notification request");
-        return res.status(400).json({ error: "Empty request body" });
-      }
-
-      const result = await notifyAppsScript(type, event);
-      if (result.success) {
-        res.json({ message: "Notification sent" });
-      } else {
-        res.status(500).json({ error: result.error || "Failed to send notification to Apps Script." });
-      }
-    } catch (err: any) {
-      console.error("[API] Error in notification endpoint:", err);
-      res.status(500).json({ error: err.message || "Internal server error" });
+app.post("/api/notifications/novedad", async (req, res) => {
+  try {
+    const event = req.body;
+    const type = event.type || "new_novedad";
+    console.log(`[API] Received notification request for: ${event.title || 'Untitled'} (Type: ${type})`);
+    
+    if (!event || Object.keys(event).length === 0) {
+      console.warn("[API] Received empty body in notification request");
+      return res.status(400).json({ error: "Empty request body" });
     }
-  });
 
+    const result = await notifyAppsScript(type, event);
+    if (result.success) {
+      res.json({ message: "Notification sent" });
+    } else {
+      res.status(500).json({ error: result.error || "Failed to send notification to Apps Script." });
+    }
+  } catch (err: any) {
+    console.error("[API] Error in notification endpoint:", err);
+    res.status(500).json({ error: err.message || "Internal server error" });
+  }
+});
+
+async function startServer() {
+  console.log("[Server] Starting server...");
+  
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -233,8 +235,15 @@ async function startServer() {
   }
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`[Server] Server running on http://0.0.0.0:${PORT}`);
+    console.log(`[Server] API Routes: /api/health, /api/notifications/check, /api/notifications/novedad`);
   });
 }
 
-startServer();
+// Export for Vercel
+export default app;
+
+// Only start if not on Vercel
+if (process.env.VERCEL !== '1') {
+  startServer();
+}
