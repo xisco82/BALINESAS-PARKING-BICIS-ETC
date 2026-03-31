@@ -22,7 +22,7 @@ const db = admin.firestore();
 
 async function notifyAppsScript(type: string, data: any): Promise<boolean> {
   const appScriptUrl = (process.env.APPSCRIPT_URL || "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec").trim();
-  const recipients = ["recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
+  const recipients = ["xiscoquin@gmail.com", "recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
   
   if (!appScriptUrl) {
     console.error("[Notification] Apps Script URL is empty. Skipping notification.");
@@ -106,7 +106,7 @@ async function checkUpcomingEvents() {
 }
 
 async function sendNotificationEmail(events: any[]) {
-  const recipients = ["recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
+  const recipients = ["xiscoquin@gmail.com", "recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
   
   // SMTP Configuration from environment variables
   const smtpConfig = {
@@ -170,8 +170,9 @@ async function startServer() {
 
   app.post("/api/notifications/novedad", express.json(), async (req, res) => {
     const event = req.body;
-    console.log(`[API] Received notification request for: ${event.title || 'Untitled'}`);
-    const success = await notifyAppsScript("new_novedad", event);
+    const type = event.type || "new_novedad";
+    console.log(`[API] Received notification request for: ${event.title || 'Untitled'} (Type: ${type})`);
+    const success = await notifyAppsScript(type, event);
     if (success) {
       res.json({ message: "Notification sent" });
     } else {

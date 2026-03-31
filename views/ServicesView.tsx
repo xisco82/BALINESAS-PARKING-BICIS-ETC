@@ -163,7 +163,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                     body: JSON.stringify({
                       ...newBooking,
                       title: newBooking.guestName, // Map guestName to title for consistency
-                      collection: tableName
+                      collection: tableName,
+                      type: 'new_novedad'
                     })
                   });
                   if (!response.ok) {

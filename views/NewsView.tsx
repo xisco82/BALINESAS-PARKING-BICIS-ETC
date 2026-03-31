@@ -336,7 +336,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
               const response = await fetch('/api/notifications/novedad', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({ ...formData, type: 'new_novedad' })
               });
               if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
