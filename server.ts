@@ -33,10 +33,17 @@ function getDb() {
 
 async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
   const envUrl = process.env.APPSCRIPT_URL;
-  const defaultUrl = "https://script.google.com/macros/s/AKfycbyDrxsZiCuYyF-dW4mOYazWygYTOeTCGZ6fpINA3p-TdhxYtHmePLAN3GjB-nD0tI8O/exec";
+  const defaultUrl = "https://script.google.com/macros/s/AKfycbyeRNxuBtgSU3ia4XgFbG6pyIayR8cD7nw58CJMJ_ShQ1utcElfTACn7o_8zTRYAP7u/exec";
   const appScriptUrl = (envUrl || defaultUrl).trim();
   
-  const defaultRecipients = ["xiscoquin@gmail.com", "recgranfiesta@hmhotels.com", "rec1granfiesta@hmhotels.com"];
+  const defaultRecipients = [
+    "xiscoquin@gmail.com", 
+    "recgranfiesta@hmhotels.com", 
+    "rec1granfiesta@hmhotels.com",
+    "cocinagranfiesta@hmhotels.com",
+    "pisosgranfiesta@hmhotels.com",
+    "subdirgranfiesta@hmhotels.com"
+  ];
   const recipients = process.env.NOTIFICATION_RECIPIENTS 
     ? process.env.NOTIFICATION_RECIPIENTS.split(',').map(r => r.trim())
     : defaultRecipients;
@@ -160,7 +167,14 @@ async function checkUpcomingEvents() {
 }
 
 async function sendNotificationEmail(events: any[]) {
-  const recipients = ["xiscoquin@gmail.com", "recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
+  const recipients = [
+    "xiscoquin@gmail.com", 
+    "recgranfiesta@hmhotels.com", 
+    "rec1granfiesta@hmhotels.com",
+    "cocinagranfiesta@hmhotels.com",
+    "pisosgranfiesta@hmhotels.com",
+    "subdirgranfiesta@hmhotels.com"
+  ];
   
   // SMTP Configuration from environment variables
   const smtpConfig = {
