@@ -157,7 +157,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 
                 // Send notification via server to Apps Script
                 try {
-                  fetch('/api/notifications/novedad', {
+                  const response = await fetch('/api/notifications/novedad', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -165,9 +165,15 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                       title: newBooking.guestName, // Map guestName to title for consistency
                       collection: tableName
                     })
-                  }).catch(err => console.error("Notification trigger failed:", err));
+                  });
+                  if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    console.error("Notification trigger failed:", errData);
+                    showToast("Servicio guardado, pero la notificación falló. Revisa el script.", "warning");
+                  }
                 } catch (e) {
                   console.error("Notification fetch failed:", e);
+                  showToast("Servicio guardado, pero hubo un error de red con la notificación.", "warning");
                 }
             }
         } catch (error: any) {

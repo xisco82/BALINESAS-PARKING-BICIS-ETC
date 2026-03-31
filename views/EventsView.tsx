@@ -20,6 +20,7 @@ interface EventPdf {
   pdfUrl: string;
   fileName: string;
   uploadedAt: string;
+  eventDate?: string; // YYYY-MM-DD
 }
 
 const MONTHS = [
@@ -35,6 +36,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [driveLink, setDriveLink] = useState('');
   const [driveName, setDriveName] = useState('');
+  const [eventDate, setEventDate] = useState('');
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -91,20 +93,29 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         month: activeMonth,
         pdfUrl: finalUrl,
         fileName: driveName.trim(),
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
+        eventDate: eventDate || null
       });
 
       showToast('Enlace añadido correctamente', 'success');
       setIsAddModalOpen(false);
       setDriveLink('');
       setDriveName('');
+      setEventDate('');
     } catch (error) {
       console.error("Error adding Drive link:", error);
       showToast('Error al añadir el enlace', 'error');
     }
   };
 
-  const activeMonthPdfs = pdfs.filter(p => p.month === activeMonth);
+  const activeMonthPdfs = pdfs
+    .filter(p => p.month === activeMonth)
+    .sort((a, b) => {
+      if (!a.eventDate && !b.eventDate) return 0;
+      if (!a.eventDate) return 1;
+      if (!b.eventDate) return -1;
+      return a.eventDate.localeCompare(b.eventDate);
+    });
   const hasPdfs = activeMonthPdfs.length > 0;
 
   return (
@@ -222,9 +233,16 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                               <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
                                 {pdf.fileName}
                               </span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(pdf.uploadedAt).toLocaleDateString('es-ES')}
-                              </span>
+                              <div className="flex items-center space-x-2">
+                                {pdf.eventDate && (
+                                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded">
+                                    {new Date(pdf.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                                  </span>
+                                )}
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  Subido: {new Date(pdf.uploadedAt).toLocaleDateString('es-ES')}
+                                </span>
+                              </div>
                             </div>
                           </button>
                           
@@ -327,6 +345,16 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     placeholder="Ej: Menú Especial"
                     className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha del evento (opcional)</label>
+                  <input
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Se usará para ordenar los eventos cronológicamente.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enlace de Google Drive (Archivo o Carpeta)</label>

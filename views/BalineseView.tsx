@@ -110,7 +110,7 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, i
 
             // Send notification via server to Apps Script
             try {
-              fetch('/api/notifications/novedad', {
+              const response = await fetch('/api/notifications/novedad', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -121,9 +121,15 @@ const BalineseView: React.FC<BalineseViewProps> = ({ dbError, isDbInitialized, i
                   title: `Cama ${currentBedId}: ${newBooking.guestName}`,
                   collection: 'balinese_bookings'
                 })
-              }).catch(err => console.error("Notification trigger failed:", err));
+              });
+              if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error("Notification trigger failed:", errData);
+                showToast("Reserva guardada, pero la notificación falló. Revisa el script.", "warning");
+              }
             } catch (e) {
               console.error("Notification fetch failed:", e);
+              showToast("Reserva guardada, pero hubo un error de red con la notificación.", "warning");
             }
         } catch (error: any) {
             console.error("Error booking bed:", error);

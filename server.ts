@@ -23,7 +23,12 @@ const db = admin.firestore();
 async function notifyAppsScript(type: string, data: any): Promise<boolean> {
   const appScriptUrl = (process.env.APPSCRIPT_URL || "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec").trim();
   
-  console.log(`[Notification] Sending ${type} to Apps Script...`);
+  if (!appScriptUrl) {
+    console.error("[Notification] Apps Script URL is empty. Skipping notification.");
+    return false;
+  }
+
+  console.log(`[Notification] Sending ${type} to: ${appScriptUrl}`);
 
   try {
     const response = await fetch(appScriptUrl, {
@@ -172,11 +177,12 @@ async function startServer() {
 
   app.post("/api/notifications/novedad", express.json(), async (req, res) => {
     const event = req.body;
+    console.log(`[API] Received notification request for: ${event.title || 'Untitled'}`);
     const success = await notifyAppsScript("new_novedad", event);
     if (success) {
       res.json({ message: "Notification sent" });
     } else {
-      res.status(500).json({ error: "Failed to send notification to Apps Script" });
+      res.status(500).json({ error: "Failed to send notification to Apps Script. Check server logs." });
     }
   });
 
