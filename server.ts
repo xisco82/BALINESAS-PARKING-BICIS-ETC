@@ -1,5 +1,4 @@
 import express from "express";
-import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
 import cron from "node-cron";
@@ -11,14 +10,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Initialize Firebase Admin
-const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
-const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
-
-admin.initializeApp({
-  projectId: firebaseConfig.projectId,
-});
-
-const db = admin.firestore();
+let db: admin.firestore.Firestore | null = null;
+function getDb() {
+  if (db) return db;
+  try {
+    const firebaseConfigPath = path.join(process.cwd(), "firebase-applet-config.json");
+    if (fs.existsSync(firebaseConfigPath)) {
+      const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
+      if (admin.apps.length === 0) {
+        admin.initializeApp({
+          projectId: firebaseConfig.projectId,
+        });
+      }
+      db = admin.firestore();
+      return db;
+    }
+  } catch (err) {
+    console.error("[Firebase] Initialization error:", err);
+  }
+  return null;
+}
 
 async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
   const envUrl = process.env.APPSCRIPT_URL;
@@ -85,6 +96,11 @@ async function notifyAppsScript(type: string, data: any): Promise<{ success: boo
 }
 
 async function checkUpcomingEvents() {
+  const firestore = getDb();
+  if (!firestore) {
+    console.warn("[Cron] Firestore not initialized. Skipping check.");
+    return;
+  }
   console.log("Checking for upcoming events (1 and 2 days ahead)...");
   
   try {
@@ -107,7 +123,7 @@ async function checkUpcomingEvents() {
 
     for (const coll of collectionsToCheck) {
       // Query for 1 day ahead
-      const events1Snapshot = await db.collection(coll.name)
+      const events1Snapshot = await firestore.collection(coll.name)
         .where(coll.dateField, "==", date1Str)
         .get();
       
@@ -116,7 +132,7 @@ async function checkUpcomingEvents() {
       }
 
       // Query for 2 days ahead
-      const events2Snapshot = await db.collection(coll.name)
+      const events2Snapshot = await firestore.collection(coll.name)
         .where(coll.dateField, "==", date2Str)
         .get();
 
@@ -169,10 +185,12 @@ async function sendNotificationEmail(events: any[]) {
   }
 }
 
-// Schedule the task to run every day at 08:00 AM
-cron.schedule("0 8 * * *", () => {
-  checkUpcomingEvents();
-});
+// Only schedule cron if not on Vercel
+if (process.env.VERCEL !== '1') {
+  cron.schedule("0 8 * * *", () => {
+    checkUpcomingEvents();
+  });
+}
 
 // Also run it once on startup for testing/immediate check
 // checkUpcomingEvents();
@@ -221,6 +239,7 @@ async function startServer() {
   console.log("[Server] Starting server...");
   
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -228,10 +247,14 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath));
+      app.get("*", (req, res) => {
+        res.sendFile(path.join(distPath, "index.html"));
+      });
+    } else {
+      console.warn("[Server] Dist folder not found. Static serving disabled.");
+    }
   }
 
   app.listen(PORT, "0.0.0.0", () => {
