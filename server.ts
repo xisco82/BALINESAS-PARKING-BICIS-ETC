@@ -33,9 +33,13 @@ function getDb() {
 
 async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
   const envUrl = process.env.APPSCRIPT_URL;
-  const defaultUrl = "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec";
+  const defaultUrl = "https://script.google.com/macros/s/AKfycbyDrxsZiCuYyF-dW4mOYazWygYTOeTCGZ6fpINA3p-TdhxYtHmePLAN3GjB-nD0tI8O/exec";
   const appScriptUrl = (envUrl || defaultUrl).trim();
-  const recipients = ["xiscoquin@gmail.com", "recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
+  
+  const defaultRecipients = ["xiscoquin@gmail.com", "recgranfiesta@hmhotels.com", "rec1granfiesta@hmhotels.com"];
+  const recipients = process.env.NOTIFICATION_RECIPIENTS 
+    ? process.env.NOTIFICATION_RECIPIENTS.split(',').map(r => r.trim())
+    : defaultRecipients;
   
   console.log(`[Notification] Env APPSCRIPT_URL: ${envUrl ? 'Configured' : 'Using Default'}`);
 
@@ -128,7 +132,12 @@ async function checkUpcomingEvents() {
         .get();
       
       for (const doc of events1Snapshot.docs) {
-        await notifyAppsScript("event_reminder_1d", { ...doc.data(), collection: coll.name });
+        const data = doc.data();
+        await notifyAppsScript("event_reminder_1d", { 
+          ...data, 
+          startDate: data.startDate || data.eventDate || "No especificada",
+          collection: coll.name 
+        });
       }
 
       // Query for 2 days ahead
@@ -137,7 +146,12 @@ async function checkUpcomingEvents() {
         .get();
 
       for (const doc of events2Snapshot.docs) {
-        await notifyAppsScript("event_reminder_2d", { ...doc.data(), collection: coll.name });
+        const data = doc.data();
+        await notifyAppsScript("event_reminder_2d", { 
+          ...data, 
+          startDate: data.startDate || data.eventDate || "No especificada",
+          collection: coll.name 
+        });
       }
     }
   } catch (error) {
