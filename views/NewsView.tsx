@@ -430,14 +430,25 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ title: "TEST", description: "Prueba de notificación", type: "new_novedad" })
                       });
-                      const data = await response.json();
-                      if (response.ok) {
-                        showToast("Notificación de prueba enviada con éxito", "success");
+                      
+                      const contentType = response.headers.get("content-type");
+                      if (contentType && contentType.includes("application/json")) {
+                        const data = await response.json();
+                        if (response.ok) {
+                          showToast("Notificación de prueba enviada con éxito", "success");
+                        } else {
+                          showToast(`Error del servidor: ${data.error || 'Fallo desconocido'}`, "error");
+                        }
                       } else {
-                        showToast(`Error: ${data.error || 'Fallo desconocido'}`, "error");
+                        const text = await response.text();
+                        if (response.ok) {
+                          showToast("Notificación enviada (respuesta no JSON)", "success");
+                        } else {
+                          showToast(`Error ${response.status}: ${text.substring(0, 50)}...`, "error");
+                        }
                       }
                     } catch (e: any) {
-                      showToast(`Error de red: ${e.message}`, "error");
+                      showToast(`Error de conexión: ${e.message}`, "error");
                     }
                   }}
                   className="no-print bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-600 transition-colors"

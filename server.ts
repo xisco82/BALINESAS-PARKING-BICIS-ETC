@@ -181,6 +181,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Global middleware
+  app.use(express.json());
+
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
@@ -192,15 +195,26 @@ async function startServer() {
     res.json({ message: "Check triggered" });
   });
 
-  app.post("/api/notifications/novedad", express.json(), async (req, res) => {
-    const event = req.body;
-    const type = event.type || "new_novedad";
-    console.log(`[API] Received notification request for: ${event.title || 'Untitled'} (Type: ${type})`);
-    const result = await notifyAppsScript(type, event);
-    if (result.success) {
-      res.json({ message: "Notification sent" });
-    } else {
-      res.status(500).json({ error: result.error || "Failed to send notification to Apps Script. Check server logs." });
+  app.post("/api/notifications/novedad", async (req, res) => {
+    try {
+      const event = req.body;
+      const type = event.type || "new_novedad";
+      console.log(`[API] Received notification request for: ${event.title || 'Untitled'} (Type: ${type})`);
+      
+      if (!event || Object.keys(event).length === 0) {
+        console.warn("[API] Received empty body in notification request");
+        return res.status(400).json({ error: "Empty request body" });
+      }
+
+      const result = await notifyAppsScript(type, event);
+      if (result.success) {
+        res.json({ message: "Notification sent" });
+      } else {
+        res.status(500).json({ error: result.error || "Failed to send notification to Apps Script." });
+      }
+    } catch (err: any) {
+      console.error("[API] Error in notification endpoint:", err);
+      res.status(500).json({ error: err.message || "Internal server error" });
     }
   });
 
