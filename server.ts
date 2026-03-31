@@ -20,43 +20,67 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-async function notifyAppsScript(type: string, data: any): Promise<boolean> {
-  const appScriptUrl = (process.env.APPSCRIPT_URL || "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec").trim();
+async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
+  const envUrl = process.env.APPSCRIPT_URL;
+  const defaultUrl = "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec";
+  const appScriptUrl = (envUrl || defaultUrl).trim();
   const recipients = ["xiscoquin@gmail.com", "recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
   
-  if (!appScriptUrl) {
-    console.error("[Notification] Apps Script URL is empty. Skipping notification.");
-    return false;
+  console.log(`[Notification] Env APPSCRIPT_URL: ${envUrl ? 'Configured' : 'Using Default'}`);
+
+  if (!appScriptUrl || appScriptUrl === "TODO_APPSCRIPT_URL") {
+    return { success: false, error: "Apps Script URL not configured" };
   }
 
-  console.log(`[Notification] Sending ${type} to: ${appScriptUrl}`);
+  const payload = {
+    type: type,
+    data: { ...data, recipients },
+    secret: process.env.APPSCRIPT_SECRET || null
+  };
+
+  console.log(`[Notification] Attempting ${type} to: ${appScriptUrl}`);
+  // console.log(`[Notification] Payload: ${JSON.stringify(payload)}`);
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     const response = await fetch(appScriptUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-      },
-      body: JSON.stringify({
-        type: type,
-        data: { ...data, recipients },
-        secret: process.env.APPSCRIPT_SECRET || null
-      }),
-      redirect: "follow"
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      redirect: "follow",
+      signal: controller.signal
     });
 
+    clearTimeout(timeoutId);
+
+    const responseText = await response.text().catch(() => "No response body");
+    console.log(`[Notification] Status: ${response.status}, Body: ${responseText}`);
+    
     if (!response.ok) {
-      const errorText = await response.text().catch(() => "No error body");
-      console.error(`[Notification] Apps Script Error (${response.status}): ${errorText}`);
-      return false;
+      return { success: false, error: `Apps Script HTTP Error ${response.status}: ${responseText}` };
     }
 
-    console.log(`[Notification] ${type} sent successfully.`);
-    return true;
-  } catch (error) {
-    console.error(`[Notification] Fetch Error:`, error);
-    return false;
+    // Try to parse as JSON to check for internal script errors
+    try {
+      const json = JSON.parse(responseText);
+      if (json.status === "error") {
+        return { success: false, error: `Apps Script Logic Error: ${json.message || 'Unknown error'}` };
+      }
+    } catch (e) {
+      // Not JSON or other parse error, but response.ok was true, so we assume success
+      // unless the body is clearly an error message
+      if (responseText.toLowerCase().includes("error")) {
+        return { success: false, error: `Apps Script Response contains error: ${responseText}` };
+      }
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    const msg = error.name === 'AbortError' ? "Timeout after 30s" : (error.message || String(error));
+    console.error(`[Notification] Connection Error:`, msg);
+    return { success: false, error: `Connection Error: ${msg}` };
   }
 }
 
@@ -172,11 +196,11 @@ async function startServer() {
     const event = req.body;
     const type = event.type || "new_novedad";
     console.log(`[API] Received notification request for: ${event.title || 'Untitled'} (Type: ${type})`);
-    const success = await notifyAppsScript(type, event);
-    if (success) {
+    const result = await notifyAppsScript(type, event);
+    if (result.success) {
       res.json({ message: "Notification sent" });
     } else {
-      res.status(500).json({ error: "Failed to send notification to Apps Script. Check server logs." });
+      res.status(500).json({ error: result.error || "Failed to send notification to Apps Script. Check server logs." });
     }
   });
 
