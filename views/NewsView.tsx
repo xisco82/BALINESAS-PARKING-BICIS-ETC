@@ -336,7 +336,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
               const response = await fetch('/api/notifications/novedad', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...formData, type: 'new_novedad' })
+                body: JSON.stringify({ 
+                ...formData, 
+                description: `${formData.description}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
+                type: 'new_novedad' 
+              })
               });
               if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));

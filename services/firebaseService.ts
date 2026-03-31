@@ -409,4 +409,15 @@ export const deleteSaunaBooking = async (date: string, timeSlot: string) => {
   }
 };
 
+export const getEventPdfs = (callback: (pdfs: any[]) => void) => {
+  const path = 'event_pdfs';
+  return onSnapshot(collection(db, path), (snapshot) => {
+    const pdfs = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(pdfs);
+  }, (err) => handleFirestoreError(err, OperationType.GET, path));
+};
+
 // --- End of Service Functions ---

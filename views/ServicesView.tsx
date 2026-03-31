@@ -10,7 +10,8 @@ import {
   addServiceBooking, 
   deleteServiceBooking, 
   updateServiceBooking,
-  getNewsEvents
+  getNewsEvents,
+  getEventPdfs
 } from '../services/firebaseService';
 
 type UserRole = 'editor' | 'balinese_editor';
@@ -48,9 +49,10 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
         let serviceBookings: RestaurantBooking[] = [];
         let newsBookings: RestaurantBooking[] = [];
+        let pdfBookings: RestaurantBooking[] = [];
 
         const updateCombinedBookings = () => {
-            const allBookings = [...serviceBookings, ...newsBookings];
+            const allBookings = [...serviceBookings, ...newsBookings, ...pdfBookings];
             if (tableName === 'events_bookings') {
                 allBookings.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
             }
@@ -74,6 +76,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         }
 
         let unsubscribeNews: () => void = () => {};
+        let unsubscribePdfs: () => void = () => {};
         if (tableName === 'events_bookings') {
             unsubscribeNews = getNewsEvents((allEvents) => {
                 newsBookings = allEvents
@@ -89,11 +92,27 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                     }));
                 updateCombinedBookings();
             });
+
+            unsubscribePdfs = getEventPdfs((allPdfs) => {
+                pdfBookings = allPdfs
+                    .filter(p => p.eventDate && p.eventDate.startsWith(selectedYear.toString()))
+                    .map(p => ({
+                        id: p.id,
+                        guestName: p.fileName,
+                        roomNumber: '',
+                        description: `Documento PDF disponible: ${p.fileName}`,
+                        startDate: p.eventDate,
+                        endDate: p.eventDate,
+                        origin: 'pdf' as const
+                    }));
+                updateCombinedBookings();
+            });
         }
 
         return () => {
             unsubscribeServices();
             unsubscribeNews();
+            unsubscribePdfs();
         };
     }, [isAuthReady, tableName, selectedDate, selectedYear]);
 
@@ -163,6 +182,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                     body: JSON.stringify({
                       ...newBooking,
                       title: newBooking.guestName, // Map guestName to title for consistency
+                      description: `${newBooking.description}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
                       collection: tableName,
                       type: 'new_novedad'
                     })
@@ -289,14 +309,18 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 ) : !dbError && bookings.length > 0 ? (
                     <div className="flex flex-col space-y-4">
                     {bookings.map(booking => (
-                        <div key={booking.id} className={`group cursor-pointer w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : 'border-purple-500'}`}>
+                        <div key={booking.id} className={`group cursor-pointer w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : booking.origin === 'pdf' ? 'border-blue-500' : 'border-purple-500'}`}>
                             <div className="flex justify-between items-start mb-2">
                                 <div className="text-black dark:text-gray-300 font-medium text-xs bg-gray-200/60 dark:bg-gray-700/60 px-2 py-1 rounded-md w-fit">
                                     <span>{formatDate(booking.startDate)}</span>
-                                    <span className="mx-1">-</span>
-                                    <span>{formatDate(booking.endDate)}</span>
+                                    {booking.startDate !== booking.endDate && (
+                                      <>
+                                        <span className="mx-1">-</span>
+                                        <span>{formatDate(booking.endDate)}</span>
+                                      </>
+                                    )}
                                 </div>
-                                {userRole === 'editor' && booking.origin !== 'news' && (
+                                {userRole === 'editor' && booking.origin !== 'news' && booking.origin !== 'pdf' && (
                                     <div className="flex gap-2">
                                         <button 
                                             onClick={() => handleOpenModal(booking)} 

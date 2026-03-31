@@ -68,7 +68,7 @@ export interface RestaurantBooking {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
   description: string;
-  origin?: 'news' | 'service';
+  origin?: 'news' | 'service' | 'pdf';
 }
 
 export interface DayPassBooking {

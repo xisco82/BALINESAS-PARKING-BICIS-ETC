@@ -115,7 +115,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: driveName.trim(),
-              description: `Nuevo documento añadido para ${activeMonth}: ${driveName.trim()}`,
+              description: `Nuevo documento añadido para ${activeMonth}: ${driveName.trim()}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
               month: activeMonth,
               pdfUrl: finalUrl,
               eventDate: eventDate || null,
