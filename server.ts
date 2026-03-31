@@ -22,6 +22,7 @@ const db = admin.firestore();
 
 async function notifyAppsScript(type: string, data: any): Promise<boolean> {
   const appScriptUrl = (process.env.APPSCRIPT_URL || "https://script.google.com/macros/s/AKfycbyzRa4HUUFR5v4pKvfv_b--2-n-hCrDMQp-WG92ioNtElrb3YVPMZJMiKaZ3myNBDpC/exec").trim();
+  const recipients = ["recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
   
   if (!appScriptUrl) {
     console.error("[Notification] Apps Script URL is empty. Skipping notification.");
@@ -39,7 +40,7 @@ async function notifyAppsScript(type: string, data: any): Promise<boolean> {
       },
       body: JSON.stringify({
         type: type,
-        data: data,
+        data: { ...data, recipients },
         secret: process.env.APPSCRIPT_SECRET || null
       }),
       redirect: "follow"
@@ -77,15 +78,7 @@ async function checkUpcomingEvents() {
 
     const collectionsToCheck = [
       { name: "news_events", dateField: "startDate" },
-      { name: "events_bookings", dateField: "startDate" },
-      { name: "restaurant_bookings", dateField: "startDate" },
-      { name: "sky_dinner_bookings", dateField: "startDate" },
-      { name: "parking_bookings", dateField: "date" },
-      { name: "bike_bookings", dateField: "date" },
-      { name: "balinese_bookings", dateField: "date" },
-      { name: "day_pass_bookings", dateField: "date" },
-      { name: "accessibility_bookings", dateField: "arrivalDate" },
-      { name: "sauna_bookings", dateField: "date" }
+      { name: "event_pdfs", dateField: "eventDate" }
     ];
 
     for (const coll of collectionsToCheck) {
@@ -113,7 +106,7 @@ async function checkUpcomingEvents() {
 }
 
 async function sendNotificationEmail(events: any[]) {
-  const recipient = "rec1granfiesta@hmhotels.net";
+  const recipients = ["recGRANFIESTA@HMHOTELS.COM", "rec1GRANFIESTA@HMHOTELS.COM"];
   
   // SMTP Configuration from environment variables
   const smtpConfig = {
@@ -128,7 +121,7 @@ async function sendNotificationEmail(events: any[]) {
 
   if (!smtpConfig.host || !smtpConfig.auth.user || !smtpConfig.auth.pass) {
     console.warn("SMTP is not fully configured. Skipping email sending.");
-    console.log("Notification would have been sent to:", recipient);
+    console.log("Notification would have been sent to:", recipients.join(", "));
     console.log("Events:", JSON.stringify(events, null, 2));
     return;
   }
@@ -139,14 +132,14 @@ async function sendNotificationEmail(events: any[]) {
   
   const mailOptions = {
     from: process.env.SMTP_FROM || "noreply@hmhotels.net",
-    to: recipient,
+    to: recipients.join(", "),
     subject: `Recordatorio: Eventos en 2 días`,
     text: `Hola,\n\nEste es un recordatorio de que los siguientes eventos comenzarán en 2 días:\n\n${eventList}\n\nSaludos,\nSistema de Recepción`,
   };
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log(`Notification email sent to ${recipient}`);
+    console.log(`Notification email sent to ${recipients.join(", ")}`);
   } catch (error) {
     console.error("Error sending email:", error);
   }

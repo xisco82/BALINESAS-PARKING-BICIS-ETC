@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
-type ToastType = 'success' | 'error' | 'info';
+type ToastType = 'success' | 'error' | 'info' | 'warning';
 
 interface Toast {
   id: string;
@@ -71,11 +71,13 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
               className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md border ${
                 toast.type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' :
                 toast.type === 'error' ? 'bg-rose-500/90 border-rose-400 text-white' :
+                toast.type === 'warning' ? 'bg-amber-500/90 border-amber-400 text-white' :
                 'bg-blue-500/90 border-blue-400 text-white'
               }`}
             >
               {toast.type === 'success' && <CheckCircle className="w-5 h-5" />}
               {toast.type === 'error' && <AlertCircle className="w-5 h-5" />}
+              {toast.type === 'warning' && <AlertCircle className="w-5 h-5" />}
               {toast.type === 'info' && <Info className="w-5 h-5" />}
               <span className="text-sm font-medium">{toast.message}</span>
               <button 
