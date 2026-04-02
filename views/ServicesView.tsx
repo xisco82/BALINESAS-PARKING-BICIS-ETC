@@ -174,27 +174,29 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 await addServiceBooking(tableName, newBooking);
                 showToast("Servicio guardado correctamente", "success");
                 
-                // Send notification via server to Apps Script
-                try {
-                  const response = await fetch('/api/notifications/novedad', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      ...newBooking,
-                      title: newBooking.guestName, // Map guestName to title for consistency
-                      description: `${newBooking.description}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
-                      collection: tableName,
-                      type: 'new_novedad'
-                    })
-                  });
-                  if (!response.ok) {
-                    const errData = await response.json().catch(() => ({}));
-                    console.error("Notification trigger failed:", errData);
-                    showToast("Servicio guardado, pero la notificación falló. Revisa el script.", "warning");
+                // Send notification via server to Apps Script (ONLY for events_bookings)
+                if (tableName === 'events_bookings') {
+                  try {
+                    const response = await fetch('/api/notifications/novedad', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        ...newBooking,
+                        title: newBooking.guestName, // Map guestName to title for consistency
+                        description: `${newBooking.description}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
+                        collection: tableName,
+                        type: 'new_novedad'
+                      })
+                    });
+                    if (!response.ok) {
+                      const errData = await response.json().catch(() => ({}));
+                      console.error("Notification trigger failed:", errData);
+                      showToast("Servicio guardado, pero la notificación falló. Revisa el script.", "warning");
+                    }
+                  } catch (e) {
+                    console.error("Notification fetch failed:", e);
+                    showToast("Servicio guardado, pero hubo un error de red con la notificación.", "warning");
                   }
-                } catch (e) {
-                  console.error("Notification fetch failed:", e);
-                  showToast("Servicio guardado, pero hubo un error de red con la notificación.", "warning");
                 }
             }
         } catch (error: any) {
