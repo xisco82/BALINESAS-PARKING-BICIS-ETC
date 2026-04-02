@@ -55,6 +55,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             const allBookings = [...serviceBookings, ...newsBookings, ...pdfBookings];
             if (tableName === 'events_bookings') {
                 allBookings.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+            } else {
+                allBookings.sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }));
             }
             setBookings(allBookings);
             setIsLoading(false);
