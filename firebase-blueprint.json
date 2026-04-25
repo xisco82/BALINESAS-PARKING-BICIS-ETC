@@ -61,7 +61,8 @@
         "endDate": { "type": "string", "format": "date" },
         "description": { "type": "string" },
         "guestsCount": { "type": "integer" },
-        "mealType": { "type": "string", "enum": ["desayuno", "cena", "MP"] }
+        "mealType": { "type": "string", "enum": ["desayuno", "cena", "MP"] },
+        "checkedIn": { "type": "boolean" }
       },
       "required": ["guestName", "roomNumber", "startDate", "endDate", "description"]
     },

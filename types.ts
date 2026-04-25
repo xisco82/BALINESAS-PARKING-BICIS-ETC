@@ -71,6 +71,7 @@ export interface RestaurantBooking {
   origin?: 'news' | 'service' | 'pdf';
   guestsCount?: number;
   mealType?: 'desayuno' | 'cena' | 'MP';
+  checkedIn?: boolean;
 }
 
 export interface DayPassBooking {

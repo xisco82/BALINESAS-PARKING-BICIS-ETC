@@ -303,6 +303,15 @@ export const updateServiceBooking = async (tableName: string, id: string, bookin
   }
 };
 
+export const toggleServiceBookingCheckIn = async (tableName: string, id: string, currentStatus: boolean) => {
+  const path = `${tableName}/${id}`;
+  try {
+    await updateDoc(doc(db, tableName, id), { checkedIn: !currentStatus });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+};
+
 // --- Day Pass Bookings ---
 export const getDayPassBookings = (date: string, callback: (bookings: DayPassBooking[]) => void) => {
   const path = 'day_pass_bookings';
