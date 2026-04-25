@@ -181,7 +181,10 @@ service cloud.firestore {
     match /restaurant_bookings/{id} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidServiceBooking(request.resource.data);
-      allow update: if isAuthenticated() && isValidServiceBooking(request.resource.data);
+      allow update: if isAuthenticated() && (
+        isValidServiceBooking(request.resource.data) || 
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedIn']))
+      );
       allow delete: if isAuthenticated();
     }
 

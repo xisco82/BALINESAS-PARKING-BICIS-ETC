@@ -435,21 +435,27 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 {tableName === 'restaurant_bookings' && !isLoading && !dbError && (
                     <div className="space-y-2 mb-4">
                         <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg flex justify-between items-center shadow-sm">
-                            <span className="text-blue-800 dark:text-blue-200 font-bold">Total Personas:</span>
+                            <span className="text-blue-800 dark:text-blue-200 font-bold">
+                                {checkedInFilter === 'all' ? 'Total Personas:' : 'Personas Pendientes:'}
+                            </span>
                             <span className="text-4xl font-black text-blue-900 dark:text-blue-100">{totalGuests}</span>
                         </div>
                         {mealFilter === 'todos' && (
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                                    <span className="text-yellow-800 dark:text-yellow-300 text-xs uppercase font-bold tracking-wider mb-2">Desayuno (+MP)</span>
+                                    <span className="text-yellow-800 dark:text-yellow-300 text-xs uppercase font-bold tracking-wider mb-2">
+                                        {checkedInFilter === 'all' ? 'Total Desayuno (+MP)' : 'Pendientes Desayuno (+MP)'}
+                                    </span>
                                     <span className="text-6xl font-black text-yellow-900 dark:text-yellow-100">
-                                        {bookings.filter(b => b.mealType === 'desayuno' || b.mealType === 'MP').reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                        {bookings.filter(b => (b.mealType === 'desayuno' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : !b.checkedIn)).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                     </span>
                                 </div>
                                 <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/30 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                                    <span className="text-indigo-800 dark:text-indigo-300 text-xs uppercase font-bold tracking-wider mb-2">Cena (+MP)</span>
+                                    <span className="text-indigo-800 dark:text-indigo-300 text-xs uppercase font-bold tracking-wider mb-2">
+                                        {checkedInFilter === 'all' ? 'Total Cena (+MP)' : 'Pendientes Cena (+MP)'}
+                                    </span>
                                     <span className="text-6xl font-black text-indigo-900 dark:text-indigo-100">
-                                        {bookings.filter(b => b.mealType === 'cena' || b.mealType === 'MP').reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                        {bookings.filter(b => (b.mealType === 'cena' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : !b.checkedIn)).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                     </span>
                                 </div>
                             </div>
@@ -497,35 +503,38 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         </span>
                                     )}
                                 </div>
-                                        {userRole === 'editor' && booking.origin !== 'news' && booking.origin !== 'pdf' && (
-                                            <div className="flex gap-2">
-                                                {tableName === 'restaurant_bookings' && (
-                                                    <button 
-                                                        onClick={() => handleToggleCheckIn(booking)}
-                                                        className={`px-3 py-1 rounded-md text-xs font-bold font-mono shadow-sm transition-all transform active:scale-95 ${
-                                                            booking.checkedIn 
-                                                            ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
-                                                            : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
-                                                        }`}
-                                                    >
-                                                        {booking.checkedIn ? '✓ ENTRADO' : 'MARCAR ENTRADA'}
-                                                    </button>
-                                                )}
-                                                <button 
-                                                    onClick={() => handleOpenModal(booking)} 
-                                                    className="bg-blue-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-blue-600 transition-colors"
-                                                >
-                                                    Editar
-                                                </button>
-                                                <button 
-                                                    onClick={() => handleDeleteBooking(booking.id)} 
-                                                    className="bg-red-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
-                                                    aria-label="Cancelar servicio"
-                                                >
-                                                    Cancelar
-                                                </button>
-                                            </div>
-                                        )}
+                                <div className="flex gap-2">
+                                    {tableName === 'restaurant_bookings' && booking.origin !== 'news' && booking.origin !== 'pdf' && (
+                                        <button 
+                                            onClick={() => handleToggleCheckIn(booking)}
+                                            className={`px-3 py-1 rounded-md text-xs font-bold font-mono shadow-sm transition-all transform active:scale-95 ${
+                                                booking.checkedIn 
+                                                ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
+                                                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                            }`}
+                                        >
+                                            {booking.checkedIn ? '✓ ENTRADO' : 'MARCAR ENTRADA'}
+                                        </button>
+                                    )}
+
+                                    {userRole === 'editor' && booking.origin !== 'news' && booking.origin !== 'pdf' && (
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => handleOpenModal(booking)} 
+                                                className="bg-blue-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-blue-600 transition-colors"
+                                            >
+                                                Editar
+                                            </button>
+                                            <button 
+                                                onClick={() => handleDeleteBooking(booking.id)} 
+                                                className="bg-red-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
+                                                aria-label="Cancelar servicio"
+                                            >
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             
                             <div className="flex justify-between items-center">
