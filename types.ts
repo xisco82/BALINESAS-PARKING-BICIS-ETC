@@ -69,6 +69,8 @@ export interface RestaurantBooking {
   endDate: string; // YYYY-MM-DD
   description: string;
   origin?: 'news' | 'service' | 'pdf';
+  guestsCount?: number;
+  mealType?: 'desayuno' | 'cena';
 }
 
 export interface DayPassBooking {

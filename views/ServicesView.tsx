@@ -36,12 +36,15 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [showFullYear, setShowFullYear] = useState(false);
+    const [mealFilter, setMealFilter] = useState<'todos' | 'desayuno' | 'cena'>('todos');
     const [newBooking, setNewBooking] = useState({ 
         guestName: '', 
         roomNumber: '', 
         description: '',
         startDate: new Date().toISOString().split('T')[0],
-        endDate: ''
+        endDate: '',
+        guestsCount: 1,
+        mealType: 'cena' as 'desayuno' | 'cena'
     });
 
     useEffect(() => {
@@ -157,7 +160,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 roomNumber: booking.roomNumber,
                 description: booking.description,
                 startDate: booking.startDate,
-                endDate: booking.endDate
+                endDate: booking.endDate,
+                guestsCount: booking.guestsCount || 1,
+                mealType: booking.mealType || 'cena'
             });
         } else {
             setEditingBooking(null);
@@ -166,7 +171,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 roomNumber: '',
                 description: '',
                 startDate: selectedDate,
-                endDate: ''
+                endDate: '',
+                guestsCount: 1,
+                mealType: 'cena'
             });
         }
         setIsModalOpen(true);
@@ -180,7 +187,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             roomNumber: '', 
             description: '',
             startDate: new Date().toISOString().split('T')[0],
-            endDate: ''
+            endDate: '',
+            guestsCount: 1,
+            mealType: 'cena'
         });
     };
 
@@ -277,6 +286,13 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         });
     }
 
+    const filteredBookings = bookings.filter(b => {
+        if (tableName !== 'restaurant_bookings' || mealFilter === 'todos') return true;
+        return b.mealType === mealFilter;
+    });
+
+    const totalGuests = filteredBookings.reduce((sum, b) => sum + (b.guestsCount || 0), 0);
+
     return (
         <div>
             {!hideHeader && (
@@ -290,8 +306,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             )}
 
             <div className="p-4 space-y-2">
-                 <div className="mb-4 flex justify-between items-center">
-                    <div>
+                <div className="mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="w-full md:w-auto">
                         {tableName === 'events_bookings' ? (
                         <div className="flex flex-col sm:flex-row sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
                             <div className="w-full sm:w-auto">
@@ -322,24 +338,56 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             </div>
                         </div>
                     ) : (
-                        <>
-                            <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
-                            <input 
-                                type="date"
-                                id="service-date-picker"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                            />
-                        </>
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                            <div className="w-full sm:w-auto">
+                                <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
+                                <input 
+                                    type="date" 
+                                    id="service-date-picker"
+                                    value={selectedDate} 
+                                    onChange={(e) => setSelectedDate(e.target.value)} 
+                                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                />
+                            </div>
+                            
+                            {tableName === 'restaurant_bookings' && (
+                                <div className="flex bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300/50 rounded-lg overflow-hidden h-[42px] shadow-sm">
+                                    <button 
+                                        onClick={() => setMealFilter('todos')}
+                                        className={`px-4 py-2 text-sm font-semibold transition-all ${mealFilter === 'todos' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    >
+                                        Todos
+                                    </button>
+                                    <button 
+                                        onClick={() => setMealFilter('desayuno')}
+                                        className={`px-4 py-2 text-sm font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    >
+                                        Desayuno
+                                    </button>
+                                    <button 
+                                        onClick={() => setMealFilter('cena')}
+                                        className={`px-4 py-2 text-sm font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'cena' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                    >
+                                        Cena
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     )}
                     </div>
-                    {hideHeader && userRole === 'editor' && (
-                        <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors h-fit">
+                    {userRole === 'editor' && (
+                        <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md transform active:scale-95">
                             Añadir {title}
                         </button>
                     )}
                 </div>
+                
+                {tableName === 'restaurant_bookings' && !isLoading && !dbError && (
+                    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg mb-4 flex justify-between items-center">
+                        <span className="text-blue-800 dark:text-blue-200 font-semibold">Total Personas ({mealFilter === 'todos' ? 'Día completo' : mealFilter === 'desayuno' ? 'Desayuno' : 'Cena'}):</span>
+                        <span className="text-2xl font-bold text-blue-900 dark:text-blue-100">{totalGuests}</span>
+                    </div>
+                )}
                 
                 {dbError && (
                     <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
@@ -355,18 +403,29 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 )}
                 {isLoading ? (
                      <div className="text-center py-10">Cargando...</div>
-                ) : !dbError && bookings.length > 0 ? (
+                ) : !dbError && filteredBookings.length > 0 ? (
                     <div className="flex flex-col space-y-4">
-                    {bookings.map(booking => (
+                    {filteredBookings.map(booking => (
                         <div key={booking.id} className={`group cursor-pointer w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : booking.origin === 'pdf' ? 'border-blue-500' : 'border-purple-500'}`}>
                             <div className="flex justify-between items-start mb-2">
-                                <div className="text-black dark:text-gray-300 font-medium text-xs bg-gray-200/60 dark:bg-gray-700/60 px-2 py-1 rounded-md w-fit">
-                                    <span>{formatDate(booking.startDate)}</span>
-                                    {booking.startDate !== booking.endDate && (
-                                      <>
-                                        <span className="mx-1">-</span>
-                                        <span>{formatDate(booking.endDate)}</span>
-                                      </>
+                                <div className="flex items-center gap-2">
+                                    <div className="text-black dark:text-gray-300 font-medium text-xs bg-gray-200/60 dark:bg-gray-700/60 px-2 py-1 rounded-md w-fit">
+                                        <span>{formatDate(booking.startDate)}</span>
+                                        {booking.startDate !== booking.endDate && (
+                                          <>
+                                            <span className="mx-1">-</span>
+                                            <span>{formatDate(booking.endDate)}</span>
+                                          </>
+                                        )}
+                                    </div>
+                                    {tableName === 'restaurant_bookings' && booking.mealType && (
+                                        <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                                            booking.mealType === 'desayuno' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 
+                                            booking.mealType === 'cena' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 
+                                            'bg-gray-100 text-gray-800 border border-gray-200'
+                                        }`}>
+                                            {booking.mealType}
+                                        </span>
                                     )}
                                 </div>
                                 {userRole === 'editor' && booking.origin !== 'news' && booking.origin !== 'pdf' && (
@@ -390,7 +449,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             
                             <div className="flex justify-between items-center">
                                 <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
-                                {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
+                                <div className="flex flex-col items-end">
+                                    {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
+                                    {tableName === 'restaurant_bookings' && booking.guestsCount && (
+                                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{booking.guestsCount} {booking.guestsCount === 1 ? 'persona' : 'personas'}</p>
+                                    )}
+                                </div>
                             </div>
                             
                             <div className="overflow-hidden transition-all duration-300">
@@ -416,6 +480,32 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                         <input type="text" placeholder={tableName === 'events_bookings' ? "Título" : "Nombre del Huésped"} value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
                         {tableName !== 'events_bookings' && (
                             <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        )}
+                        {tableName === 'restaurant_bookings' && (
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Nº de Personas</label>
+                                    <input 
+                                        type="number" 
+                                        min="1"
+                                        value={newBooking.guestsCount} 
+                                        onChange={(e) => setNewBooking({ ...newBooking, guestsCount: parseInt(e.target.value) || 1 })} 
+                                        className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                        required 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Tipo de Servicio</label>
+                                    <select 
+                                        value={newBooking.mealType} 
+                                        onChange={(e) => setNewBooking({ ...newBooking, mealType: e.target.value as any })} 
+                                        className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="desayuno">Desayuno</option>
+                                        <option value="cena">Cena</option>
+                                    </select>
+                                </div>
+                            </div>
                         )}
                         <textarea placeholder="Descripción del servicio" value={newBooking.description} onChange={(e) => setNewBooking({ ...newBooking, description: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} required></textarea>
                         <div className="grid grid-cols-2 gap-4">
