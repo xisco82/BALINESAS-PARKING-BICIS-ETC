@@ -98,6 +98,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           eventDate: eventDate || null
         });
         showToast('Enlace actualizado correctamente', 'success');
+        setIsAddModalOpen(false);
       } else {
         await addDoc(collection(db, 'event_pdfs'), {
           month: activeMonth,
@@ -107,6 +108,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           eventDate: eventDate || null
         });
         showToast('Enlace añadido correctamente', 'success');
+        setIsAddModalOpen(false);
 
         // Send notification via server to Apps Script
         try {
@@ -126,8 +128,6 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           console.error("Notification fetch failed:", e);
         }
       }
-
-      setIsAddModalOpen(false);
       setEditingPdf(null);
       setDriveLink('');
       setDriveName('');

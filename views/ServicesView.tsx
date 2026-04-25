@@ -35,6 +35,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     const [editingBooking, setEditingBooking] = useState<RestaurantBooking | null>(null);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [showFullYear, setShowFullYear] = useState(false);
     const [newBooking, setNewBooking] = useState({ 
         guestName: '', 
         roomNumber: '', 
@@ -52,12 +53,42 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         let pdfBookings: RestaurantBooking[] = [];
 
         const updateCombinedBookings = () => {
-            const allBookings = [...serviceBookings, ...newsBookings, ...pdfBookings];
+            let allBookings = [...serviceBookings, ...newsBookings, ...pdfBookings];
+            
             if (tableName === 'events_bookings') {
+                const uniqueBookings = new Map<string, RestaurantBooking>();
+                
+                // We sort by origin priority: pdf (1) < news (2) < service (3)
+                // This way, if there's a match, the more "authoritative" or editable one (service) wins.
+                const priority = { 'service': 3, 'news': 2, 'pdf': 1 };
+                
+                // Sort allBookings by priority ascending so higher priority items are processed last and overwrite others in the Map
+                const sortedByPriority = [...allBookings].sort((a, b) => priority[a.origin] - priority[b.origin]);
+                
+                sortedByPriority.forEach(b => {
+                    // Create a unique key based on title (case-insensitive) and start date
+                    const key = `${b.guestName.toLowerCase().trim()}_${b.startDate}`;
+                    uniqueBookings.set(key, b);
+                });
+                
+                allBookings = Array.from(uniqueBookings.values());
+                
+                // Filter by date if not showing full year
+                if (!showFullYear) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    allBookings = allBookings.filter(b => {
+                        const eventDate = new Date(b.startDate);
+                        eventDate.setHours(0, 0, 0, 0);
+                        return eventDate >= today;
+                    });
+                }
+
                 allBookings.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
             } else {
                 allBookings.sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }));
             }
+            
             setBookings(allBookings);
             setIsLoading(false);
         };
@@ -172,9 +203,11 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             if (editingBooking) {
                 await updateServiceBooking(tableName, editingBooking.id, newBooking);
                 showToast("Servicio actualizado correctamente", "success");
+                handleCloseModal();
             } else {
                 await addServiceBooking(tableName, newBooking);
                 showToast("Servicio guardado correctamente", "success");
+                handleCloseModal();
                 
                 // Send notification via server to Apps Script (ONLY for events_bookings)
                 if (tableName === 'events_bookings') {
@@ -206,8 +239,6 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             const errorMessage = error.message || 'Error desconocido.';
             showToast(`No se pudo guardar el servicio: ${errorMessage}`, "error");
         }
-        
-        handleCloseModal();
     };
     
     const handleDeleteBooking = async (id: string) => {
@@ -262,20 +293,34 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                  <div className="mb-4 flex justify-between items-center">
                     <div>
                         {tableName === 'events_bookings' ? (
-                        <>
-                            <label htmlFor="service-year-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Año:</label>
-                            <select 
-                                id="service-year-picker"
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                            >
-                                {[...Array(5)].map((_, i) => {
-                                    const year = new Date().getFullYear() - 2 + i;
-                                    return <option key={year} value={year}>{year}</option>;
-                                })}
-                            </select>
-                        </>
+                        <div className="flex flex-col sm:flex-row sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
+                            <div className="w-full sm:w-auto">
+                                <label htmlFor="service-year-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Año:</label>
+                                <select 
+                                    id="service-year-picker"
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                >
+                                    {[...Array(5)].map((_, i) => {
+                                        const year = new Date().getFullYear() - 2 + i;
+                                        return <option key={year} value={year}>{year}</option>;
+                                    })}
+                                </select>
+                            </div>
+                            <div className="w-full sm:w-auto">
+                                <button
+                                    onClick={() => setShowFullYear(!showFullYear)}
+                                    className={`w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center justify-center space-x-2 ${
+                                        showFullYear 
+                                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                                            : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                    }`}
+                                >
+                                    <span>{showFullYear ? 'Ver solo próximos' : 'Ver año completo'}</span>
+                                </button>
+                            </div>
+                        </div>
                     ) : (
                         <>
                             <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>

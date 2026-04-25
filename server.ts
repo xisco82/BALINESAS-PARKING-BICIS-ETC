@@ -31,6 +31,24 @@ function getDb() {
   return null;
 }
 
+function stripHtml(html: string): string {
+  if (!html) return "";
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n\s*\n/g, '\n\n')
+    .trim();
+}
+
 async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
   const envUrl = process.env.APPSCRIPT_URL;
   const defaultUrl = "https://script.google.com/macros/s/AKfycbyeRNxuBtgSU3ia4XgFbG6pyIayR8cD7nw58CJMJ_ShQ1utcElfTACn7o_8zTRYAP7u/exec";
@@ -54,9 +72,15 @@ async function notifyAppsScript(type: string, data: any): Promise<{ success: boo
     return { success: false, error: "Apps Script URL not configured" };
   }
 
+  // Clean description if present
+  const cleanData = { ...data };
+  if (cleanData.description && typeof cleanData.description === 'string') {
+    cleanData.description = stripHtml(cleanData.description);
+  }
+
   const payload = {
     type: type,
-    data: { ...data, recipients },
+    data: { ...cleanData, recipients },
     secret: process.env.APPSCRIPT_SECRET || null
   };
 
@@ -196,7 +220,7 @@ async function sendNotificationEmail(events: any[]) {
 
   const transporter = nodemailer.createTransport(smtpConfig);
 
-  const eventList = events.map(e => `- ${e.title}: ${e.description.replace(/<[^>]*>?/gm, '')}`).join("\n");
+  const eventList = events.map(e => `- ${e.title}: ${stripHtml(e.description)}`).join("\n");
   
   const mailOptions = {
     from: process.env.SMTP_FROM || "noreply@hmhotels.net",

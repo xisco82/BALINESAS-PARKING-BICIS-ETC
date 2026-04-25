@@ -327,9 +327,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         if (editingEvent) {
              await updateNewsEvent(editingEvent.id, { ...formData });
              showToast(`Novedad "${formData.title}" actualizada correctamente`, "success");
+             handleCloseModal();
         } else {
             await addNewsEvent({ ...formData });
             showToast(`Novedad "${formData.title}" guardada correctamente`, "success");
+            handleCloseModal();
             
             // Send notification via server to Apps Script
             try {
@@ -356,7 +358,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         console.error("Error saving event:", error);
         showToast(`No se pudo guardar la novedad: ${error.message}`, "error");
       }
-      handleCloseModal();
   }
   
   const handleFormSubmit = (e: React.FormEvent) => {
