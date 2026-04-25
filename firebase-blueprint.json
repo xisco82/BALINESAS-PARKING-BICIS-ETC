@@ -59,7 +59,9 @@
         "roomNumber": { "type": "string" },
         "startDate": { "type": "string", "format": "date" },
         "endDate": { "type": "string", "format": "date" },
-        "description": { "type": "string" }
+        "description": { "type": "string" },
+        "guestsCount": { "type": "integer" },
+        "mealType": { "type": "string", "enum": ["desayuno", "cena", "MP"] }
       },
       "required": ["guestName", "roomNumber", "startDate", "endDate", "description"]
     },

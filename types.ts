@@ -70,7 +70,7 @@ export interface RestaurantBooking {
   description: string;
   origin?: 'news' | 'service' | 'pdf';
   guestsCount?: number;
-  mealType?: 'desayuno' | 'cena';
+  mealType?: 'desayuno' | 'cena' | 'MP';
 }
 
 export interface DayPassBooking {

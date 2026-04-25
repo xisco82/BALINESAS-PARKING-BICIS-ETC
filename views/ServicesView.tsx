@@ -44,7 +44,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
         guestsCount: 1,
-        mealType: 'cena' as 'desayuno' | 'cena'
+        mealType: 'cena' as 'desayuno' | 'cena' | 'MP'
     });
 
     useEffect(() => {
@@ -89,7 +89,15 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                 allBookings.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
             } else {
-                allBookings.sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }));
+                allBookings.sort((a, b) => {
+                    if (tableName === 'restaurant_bookings') {
+                        const mealPriority: Record<string, number> = { 'desayuno': 1, 'MP': 2, 'cena': 3 };
+                        const priorityA = mealPriority[a.mealType || ''] || 4;
+                        const priorityB = mealPriority[b.mealType || ''] || 4;
+                        if (priorityA !== priorityB) return priorityA - priorityB;
+                    }
+                    return a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true });
+                });
             }
             
             setBookings(allBookings);
@@ -288,7 +296,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
     const filteredBookings = bookings.filter(b => {
         if (tableName !== 'restaurant_bookings' || mealFilter === 'todos') return true;
-        return b.mealType === mealFilter;
+        return b.mealType === mealFilter || b.mealType === 'MP';
     });
 
     const totalGuests = filteredBookings.reduce((sum, b) => sum + (b.guestsCount || 0), 0);
@@ -383,9 +391,27 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 </div>
                 
                 {tableName === 'restaurant_bookings' && !isLoading && !dbError && (
-                    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg mb-4 flex justify-between items-center">
-                        <span className="text-blue-800 dark:text-blue-200 font-semibold">Total Personas ({mealFilter === 'todos' ? 'Día completo' : mealFilter === 'desayuno' ? 'Desayuno' : 'Cena'}):</span>
-                        <span className="text-2xl font-bold text-blue-900 dark:text-blue-100">{totalGuests}</span>
+                    <div className="space-y-2 mb-4">
+                        <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg flex justify-between items-center shadow-sm">
+                            <span className="text-blue-800 dark:text-blue-200 font-bold">Total Personas:</span>
+                            <span className="text-2xl font-black text-blue-900 dark:text-blue-100">{totalGuests}</span>
+                        </div>
+                        {mealFilter === 'todos' && (
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
+                                    <span className="text-yellow-800 dark:text-yellow-300 text-[10px] uppercase font-bold tracking-wider mb-1">Desayuno (+MP)</span>
+                                    <span className="text-xl font-bold text-yellow-900 dark:text-yellow-100">
+                                        {bookings.filter(b => b.mealType === 'desayuno' || b.mealType === 'MP').reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                    </span>
+                                </div>
+                                <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/30 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
+                                    <span className="text-indigo-800 dark:text-indigo-300 text-[10px] uppercase font-bold tracking-wider mb-1">Cena (+MP)</span>
+                                    <span className="text-xl font-bold text-indigo-900 dark:text-indigo-100">
+                                        {bookings.filter(b => b.mealType === 'cena' || b.mealType === 'MP').reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
                 
@@ -422,6 +448,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
                                             booking.mealType === 'desayuno' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' : 
                                             booking.mealType === 'cena' ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 
+                                            booking.mealType === 'MP' ? 'bg-green-100 text-green-800 border border-green-200' :
                                             'bg-gray-100 text-gray-800 border border-gray-200'
                                         }`}>
                                             {booking.mealType}
@@ -503,6 +530,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     >
                                         <option value="desayuno">Desayuno</option>
                                         <option value="cena">Cena</option>
+                                        <option value="MP">Media Pensión (MP)</option>
                                     </select>
                                 </div>
                             </div>

@@ -77,11 +77,13 @@ service cloud.firestore {
 
     function isValidServiceBooking(data) {
       return hasRequiredFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description']) &&
-             hasOnlyAllowedFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description']) &&
+             hasOnlyAllowedFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description', 'guestsCount', 'mealType']) &&
              data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
              data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
              isValidDate(data.startDate) && isValidDate(data.endDate) &&
-             data.description is string && data.description.size() < 500;
+             data.description is string && data.description.size() < 500 &&
+             (!('guestsCount' in data) || data.guestsCount is int) &&
+             (!('mealType' in data) || (data.mealType is string && (data.mealType == 'desayuno' || data.mealType == 'cena' || data.mealType == 'MP')));
     }
 
     function isValidDayPassBooking(data) {
