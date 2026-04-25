@@ -147,7 +147,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             unsubscribeNews();
             unsubscribePdfs();
         };
-    }, [isAuthReady, tableName, selectedDate, selectedYear]);
+    }, [isAuthReady, tableName, selectedDate, selectedYear, showFullYear]);
 
     const handleOpenModal = (booking?: RestaurantBooking) => {
         if (booking && typeof booking === 'object') {
