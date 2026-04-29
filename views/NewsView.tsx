@@ -60,14 +60,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const [monthlyEvents, setMonthlyEvents] = useState<NewsEvent[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, event: NewsEvent } | null>(null);
   
-  const displayDate = hoveredDate || selectedDate;
+  const displayDate = selectedDate;
+  const hoveredDisplayDate = hoveredDate || selectedDate;
 
   const events = useMemo(() => {
       return monthlyEvents.filter(e => {
-        const start = new Date(e.startDate);
-        const end = new Date(e.endDate);
-        const current = new Date(displayDate);
-        return current >= start && current <= end;
+        return displayDate >= e.startDate && displayDate <= e.endDate;
       });
   }, [monthlyEvents, displayDate]);
 
@@ -75,10 +73,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleDayClick = (dateStr: string) => {
-    if (userRole !== 'editor') {
-        setSelectedDate(dateStr);
-        return;
-    }
+    setSelectedDate(dateStr);
+  };
+
+  const handleAddForDate = (e: React.MouseEvent, dateStr: string) => {
+    e.stopPropagation();
     setSelectedDate(dateStr);
     setFormData({
         title: '',
@@ -498,16 +497,23 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             onClick={() => handleDayClick(formatDateToYYYYMMDD(d.date))} 
                             onMouseEnter={() => setHoveredDate(formatDateToYYYYMMDD(d.date))}
                             onMouseLeave={() => setHoveredDate(null)}
-                            onContextMenu={(e) => {
-                                if (userRole === 'editor') {
-                                    e.preventDefault();
-                                    // No context menu for the day itself, just for events
-                                }
-                            }}
-                            className={`${dayClasses} group`}
+                            className={`${dayClasses} group relative`}
                         >
-                            <span className={`font-semibold mb-1 text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
-                             <div className="w-full space-y-0.5 text-left">
+                            <div className="w-full flex justify-between items-start mb-0.5">
+                                <span className={`font-semibold text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
+                                {userRole === 'editor' && (
+                                    <button 
+                                        onClick={(e) => handleAddForDate(e, formatDateToYYYYMMDD(d.date))}
+                                        className="opacity-0 group-hover:opacity-100 bg-blue-500 text-white p-0.5 rounded-full hover:bg-blue-600 transition-opacity shadow-sm z-10"
+                                        title="Añadir novedad para este día"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
+                             <div className="w-full space-y-0.5 text-left overflow-hidden">
                                 {d.events.slice(0, 2).map((event: NewsEvent) => (
                                     <div 
                                         key={event.id} 
@@ -564,7 +570,12 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
         {/* News for selected/hovered day (Hidden in print) */}
         <div className="no-print w-full flex flex-col space-y-4">
-            <h3 className="text-xl font-bold">Novedades para el {new Date(displayDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}</h3>
+            <h3 className="text-xl font-bold flex items-center gap-2">
+                Novedades para el {(() => {
+                    const [y, m, day] = displayDate.split('-').map(Number);
+                    return new Date(y, m - 1, day).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+                })()}
+            </h3>
         {dbError && (
             <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
                 <p className="font-bold text-red-700 dark:text-red-200">Error de Conexión</p>
