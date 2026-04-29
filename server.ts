@@ -49,22 +49,47 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
-  const envUrl = process.env.APPSCRIPT_URL;
-  const defaultUrl = "https://script.google.com/macros/s/AKfycbyeRNxuBtgSU3ia4XgFbG6pyIayR8cD7nw58CJMJ_ShQ1utcElfTACn7o_8zTRYAP7u/exec";
-  const appScriptUrl = (envUrl || defaultUrl).trim();
-  
+async function fetchEmailRecipients(): Promise<string[]> {
   const defaultRecipients = [
     "xiscoquin@gmail.com", 
     "recgranfiesta@hmhotels.com", 
     "rec1granfiesta@hmhotels.com",
     "cocinagranfiesta@hmhotels.com",
     "pisosgranfiesta@hmhotels.com",
-    "subdirgranfiesta@hmhotels.com"
+    "subdirgranfiesta@hmhotels.com",
+    "bargranfiesta@hmhotels.com",
+    "ssttgranfiesta@hmhotels.com"
   ];
-  const recipients = process.env.NOTIFICATION_RECIPIENTS 
-    ? process.env.NOTIFICATION_RECIPIENTS.split(',').map(r => r.trim())
-    : defaultRecipients;
+
+  try {
+    const firestore = getDb();
+    if (!firestore) return defaultRecipients;
+
+    const snapshot = await firestore.collection("email_recipients").get();
+    if (snapshot.empty) return defaultRecipients;
+
+    const dbEmails = snapshot.docs
+      .map(doc => doc.data().email)
+      .filter(email => typeof email === 'string' && email.includes('@'));
+    
+    if (dbEmails.length === 0) return defaultRecipients;
+
+    // Combine default and DB emails, removing duplicates
+    const combined = Array.from(new Set([...defaultRecipients, ...dbEmails]));
+    return combined;
+  } catch (err) {
+    console.error("[Notification] Error fetching recipients from DB:", err);
+    return defaultRecipients;
+  }
+}
+
+async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
+  const envUrl = process.env.APPSCRIPT_URL;
+  const defaultUrl = "https://script.google.com/macros/s/AKfycbyeRNxuBtgSU3ia4XgFbG6pyIayR8cD7nw58CJMJ_ShQ1utcElfTACn7o_8zTRYAP7u/exec";
+  const appScriptUrl = (envUrl || defaultUrl).trim();
+  
+  // Use passed recipients if available, otherwise fetch all
+  const recipients = data.recipients || await fetchEmailRecipients();
   
   console.log(`[Notification] Env APPSCRIPT_URL: ${envUrl ? 'Configured' : 'Using Default'}`);
 
@@ -78,9 +103,12 @@ async function notifyAppsScript(type: string, data: any): Promise<{ success: boo
     cleanData.description = stripHtml(cleanData.description);
   }
 
+  // Remove recipients from data to avoid doubling up in the payload nested data
+  const { recipients: _, ...payloadData } = cleanData;
+
   const payload = {
     type: type,
-    data: { ...cleanData, recipients },
+    data: { ...payloadData, recipients },
     secret: process.env.APPSCRIPT_SECRET || null
   };
 
@@ -256,6 +284,15 @@ app.use(express.json());
 // API routes
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
+});
+
+app.get("/api/recipients", async (req, res) => {
+  try {
+    const recipients = await fetchEmailRecipients();
+    res.json(recipients);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Manual trigger for testing

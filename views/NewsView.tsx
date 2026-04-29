@@ -60,6 +60,13 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const [monthlyEvents, setMonthlyEvents] = useState<NewsEvent[]>([]);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, event: NewsEvent } | null>(null);
   
+  // Notification Recipients States
+  const [isRecipientModalOpen, setIsRecipientModalOpen] = useState(false);
+  const [availableRecipients, setAvailableRecipients] = useState<string[]>([]);
+  const [selectedRecipients, setSelectedRecipients] = useState<string[]>([]);
+  const [isSendingNotification, setIsSendingNotification] = useState(false);
+  const [notificationPayload, setNotificationPayload] = useState<{title: string, description: string} | null>(null);
+  
   const displayDate = selectedDate;
   const hoveredDisplayDate = hoveredDate || selectedDate;
 
@@ -390,6 +397,89 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   
   const goToPreviousMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const goToNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  
+  const handleOpenRecipientModal = async (payload?: {title: string, description: string}) => {
+    try {
+      const response = await fetch('/api/recipients');
+      if (response.ok) {
+        const data = await response.json();
+        setAvailableRecipients(data);
+        setSelectedRecipients(data); // Pre-select all by default
+        setNotificationPayload(payload || null);
+        setIsRecipientModalOpen(true);
+      } else {
+        showToast("Error al obtener la lista de contactos", "error");
+      }
+    } catch (e) {
+      showToast("Error al conectar con el servidor para obtener correos", "error");
+    }
+  };
+
+  const handleToggleRecipient = (email: string) => {
+    setSelectedRecipients(prev => 
+      prev.includes(email) ? prev.filter(r => r !== email) : [...prev, email]
+    );
+  };
+
+  const handleSendTargetedNotification = async () => {
+    if (selectedRecipients.length === 0) {
+      showToast("Selecciona al menos un destinatario", "warning");
+      return;
+    }
+
+    setIsSendingNotification(true);
+    try {
+      const payload = notificationPayload || { 
+        title: "AVISO GENERAL", 
+        description: "Notificación enviada manualmente desde el panel de novedades."
+      };
+
+      const response = await fetch('/api/notifications/novedad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          ...payload,
+          type: "new_novedad",
+          recipients: selectedRecipients
+        })
+      });
+      
+      if (response.ok) {
+        showToast(`Notificación enviada con éxito a ${selectedRecipients.length} destinatario(s)`, "success");
+        setIsRecipientModalOpen(false);
+      } else {
+        const data = await response.json().catch(() => ({}));
+        showToast(`Error: ${data.error || 'No se pudo enviar'}`, "error");
+      }
+    } catch (e: any) {
+      showToast(`Error de conexión: ${e.message}`, "error");
+    } finally {
+      setIsSendingNotification(false);
+    }
+  };
+
+  const handleSendDayNews = () => {
+    if (events.length === 0) {
+      showToast("No hay novedades para enviar en este día", "warning");
+      return;
+    }
+
+    const dateStr = (() => {
+        const [y, m, d] = displayDate.split('-').map(Number);
+        return new Date(y, m - 1, d).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+    })();
+
+    const title = `NOVEDADES: ${dateStr}`;
+    let description = `<p>Resumen de novedades para el día ${dateStr}:</p><ul>`;
+    
+    events.forEach(event => {
+        description += `<li><strong>${event.title}</strong>: ${event.description || 'Sin descripción'}</li>`;
+    });
+    
+    description += `</ul><p>Consulta el panel completo en la aplicación.</p>`;
+
+    handleOpenRecipientModal({ title, description });
+  };
 
   const handleFormat = (command: string, value: string | null = null) => {
     document.execCommand(command, false, value);
@@ -425,40 +515,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   </svg>
                 </button>
                 <button
-                  onClick={async () => {
-                    const confirmed = await confirm("¿Quieres enviar una notificación de prueba?");
-                    if (!confirmed) return;
-                    try {
-                      const response = await fetch('/api/notifications/novedad', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title: "TEST", description: "Prueba de notificación", type: "new_novedad" })
-                      });
-                      
-                      const contentType = response.headers.get("content-type");
-                      if (contentType && contentType.includes("application/json")) {
-                        const data = await response.json();
-                        if (response.ok) {
-                          showToast("Notificación de prueba enviada con éxito", "success");
-                        } else {
-                          showToast(`Error del servidor: ${data.error || 'Fallo desconocido'}`, "error");
-                        }
-                      } else {
-                        const text = await response.text();
-                        if (response.ok) {
-                          showToast("Notificación enviada (respuesta no JSON)", "success");
-                        } else {
-                          showToast(`Error ${response.status}: ${text.substring(0, 50)}...`, "error");
-                        }
-                      }
-                    } catch (e: any) {
-                      showToast(`Error de conexión: ${e.message}`, "error");
-                    }
-                  }}
+                  onClick={handleOpenRecipientModal}
                   className="no-print bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-600 transition-colors"
-                  title="Probar Notificación"
+                  title="Enviar Notificación"
                 >
-                  Probar Notificación
+                  Enviar Notificación
                 </button>
                 <button onClick={handleOpenAddModal} className="no-print bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                     Añadir Novedad
@@ -570,12 +631,26 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
         {/* News for selected/hovered day (Hidden in print) */}
         <div className="no-print w-full flex flex-col space-y-4">
-            <h3 className="text-xl font-bold flex items-center gap-2">
-                Novedades para el {(() => {
-                    const [y, m, day] = displayDate.split('-').map(Number);
-                    return new Date(y, m - 1, day).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-                })()}
-            </h3>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-xl font-bold flex items-center gap-2">
+                    Novedades para el {(() => {
+                        const [y, m, day] = displayDate.split('-').map(Number);
+                        return new Date(y, m - 1, day).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+                    })()}
+                </h3>
+                {userRole === 'editor' && events.length > 0 && (
+                    <button 
+                        onClick={handleSendDayNews}
+                        className="flex items-center justify-center gap-2 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-amber-200 transition-colors border border-amber-200"
+                        title="Enviar estas novedades por correo"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Enviar novedades de este día
+                    </button>
+                )}
+            </div>
         {dbError && (
             <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
                 <p className="font-bold text-red-700 dark:text-red-200">Error de Conexión</p>
@@ -715,6 +790,83 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     </button>
                 </div>
             </form>
+          </div>
+        </Modal>
+
+        {/* Recipient Selection Modal */}
+        <Modal 
+          isOpen={isRecipientModalOpen} 
+          onClose={() => setIsRecipientModalOpen(false)} 
+          title="Seleccionar Destinatarios"
+          maxWidth="max-w-xl"
+        >
+          <div className="p-4 space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Selecciona los correos electrónicos que deben recibir esta notificación general.
+            </p>
+            
+            <div className="flex gap-2 mb-4">
+              <button 
+                onClick={() => setSelectedRecipients(availableRecipients)}
+                className="text-xs font-bold text-blue-600 hover:underline"
+              >
+                Seleccionar Todos
+              </button>
+              <span className="text-gray-300">|</span>
+              <button 
+                onClick={() => setSelectedRecipients([])}
+                className="text-xs font-bold text-red-600 hover:underline"
+              >
+                Desmarcar Todos
+              </button>
+            </div>
+
+            <div className="max-h-[300px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
+              {availableRecipients.length === 0 ? (
+                <div className="p-4 text-center text-gray-500">No hay destinatarios configurados.</div>
+              ) : (
+                availableRecipients.map(email => (
+                  <label 
+                    key={email} 
+                    className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                  >
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                      checked={selectedRecipients.includes(email)}
+                      onChange={() => handleToggleRecipient(email)}
+                    />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{email}</span>
+                  </label>
+                ))
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+              <button 
+                onClick={() => setIsRecipientModalOpen(false)}
+                className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSendTargetedNotification}
+                disabled={isSendingNotification || selectedRecipients.length === 0}
+                className={`flex-1 py-2 px-4 bg-amber-500 text-white rounded-lg text-sm font-bold shadow-md hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2 ${isSendingNotification ? 'opacity-70 cursor-not-allowed' : ''}`}
+              >
+                {isSendingNotification ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviando...
+                  </>
+                ) : (
+                  `Enviar a ${selectedRecipients.length} personas`
+                )}
+              </button>
+            </div>
           </div>
         </Modal>
        
