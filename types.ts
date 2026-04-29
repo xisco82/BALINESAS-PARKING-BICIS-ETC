@@ -21,6 +21,7 @@ export interface NewsEvent {
   time?: string;
   title: string;
   description: string;
+  url?: string;
   guestName?: string;
   roomNumber?: string;
   email?: string;

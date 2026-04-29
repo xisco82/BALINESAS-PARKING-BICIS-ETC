@@ -48,6 +48,21 @@ const HIGHLIGHT_COLORS = [
   { name: 'Rojo Claro', value: '#f8d7da' },
 ];
 
+const autoLink = (html: string) => {
+  if (!html) return '';
+  // Basic auto-linking regex: matches http://, https://, or www.
+  // This one is simple and avoids complex lookbehinds for better compatibility, 
+  // although it might occasionally match a URL already inside a tag if not careful.
+  const urlRegex = /((https?:\/\/|www\.)[^\s<]+[^<.,:;"')\s])/g;
+  
+  return html.replace(urlRegex, (match) => {
+    // If the match is already inside an anchor tag (e.g., as part of href or text), 
+    // we should ideally skip it. A simple check for surrounding tags:
+    const fullUrl = match.startsWith('www.') ? `http://${match}` : match;
+    return `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" style="color: #2563eb; text-decoration: underline; font-weight: mb-1; font-weight: bold;">${match}</a>`;
+  });
+};
+
 const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
   const { showToast, confirm } = useToast();
   const [isLoading, setIsLoading] = useState(true);
@@ -89,6 +104,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     setFormData({
         title: '',
         description: '',
+        url: '',
         startDate: dateStr,
         endDate: dateStr,
     });
@@ -141,6 +157,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const initialFormState = useMemo(() => ({
     title: '',
     description: '',
+    url: '',
     startDate: selectedDate,
     endDate: selectedDate,
   }), [selectedDate]);
@@ -215,6 +232,21 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       }));
       updateCombinedEvents();
     });
+
+    // Pre-fetch recipients for smoother modal opening
+    const fetchRecipients = async () => {
+      try {
+        const response = await fetch('/api/recipients');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableRecipients(data);
+          setSelectedRecipients([]); // Start empty by default
+        }
+      } catch (e) {
+        console.error("Failed to pre-fetch recipients", e);
+      }
+    };
+    fetchRecipients();
 
     return () => {
       unsubscribeNews();
@@ -307,6 +339,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     setFormData({
         title: event.title,
         description: event.description,
+        url: event.url || '',
         startDate: formatForInput(event.startDate),
         endDate: formatForInput(event.endDate),
     });
@@ -319,7 +352,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   };
 
   const handleSaveEvent = async () => {
-      const { title, description, startDate, endDate } = formData;
+      const { title, description, url, startDate, endDate } = formData;
       if (!title || !description || !startDate || !endDate) {
         showToast("Por favor, complete todos los campos.", "error");
         return;
@@ -399,20 +432,26 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   const goToNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   
   const handleOpenRecipientModal = async (payload?: {title: string, description: string}) => {
-    try {
-      const response = await fetch('/api/recipients');
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableRecipients(data);
-        setSelectedRecipients(data); // Pre-select all by default
-        setNotificationPayload(payload || null);
-        setIsRecipientModalOpen(true);
-      } else {
+    // If we don't have recipients yet (rare), fetch them
+    if (availableRecipients.length === 0) {
+      try {
+        const response = await fetch('/api/recipients');
+        if (response.ok) {
+          const data = await response.json();
+          setAvailableRecipients(data);
+          setSelectedRecipients(data);
+        }
+      } catch (e) {
         showToast("Error al obtener la lista de contactos", "error");
+        return;
       }
-    } catch (e) {
-      showToast("Error al conectar con el servidor para obtener correos", "error");
+    } else {
+      // Keep recipients unselected by default as requested
+      setSelectedRecipients([]);
     }
+    
+    setNotificationPayload(payload || null);
+    setIsRecipientModalOpen(true);
   };
 
   const handleToggleRecipient = (email: string) => {
@@ -473,7 +512,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     let description = `<p>Resumen de novedades para el día ${dateStr}:</p><ul>`;
     
     events.forEach(event => {
-        description += `<li><strong>${event.title}</strong>: ${event.description || 'Sin descripción'}</li>`;
+        description += `<li><strong>${event.title}</strong>: ${autoLink(event.description) || 'Sin descripción'}`;
+        if (event.url) {
+            description += ` <a href="${event.url}">[Ver Enlace]</a>`;
+        }
+        description += `</li>`;
     });
     
     description += `</ul><p>Consulta el panel completo en la aplicación.</p>`;
@@ -515,7 +558,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   </svg>
                 </button>
                 <button
-                  onClick={handleOpenRecipientModal}
+                  onClick={() => handleOpenRecipientModal()}
                   className="no-print bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-600 transition-colors"
                   title="Enviar Notificación"
                 >
@@ -622,7 +665,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                     {event.startDate !== event.endDate ? ` - ${new Date(event.endDate + 'T00:00:00Z').toLocaleDateString('es-ES')}` : ''}
                                 </span>
                             </div>
-                            <div className="text-xs text-gray-800 leading-tight" dangerouslySetInnerHTML={{ __html: event.description }} />
+                            <div className="text-xs text-gray-800 leading-tight" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
                         </div>
                     ))
                 )}
@@ -679,7 +722,36 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                         className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'} ${userRole === 'editor' && event.type !== 'event' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
                     >
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
-                        <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: event.description }} />
+                        <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
+                        
+                        {event.url && (
+                          <div className="mt-3 no-print">
+                            <a 
+                              href={event.url} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-100 transition-colors border border-blue-200"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              {event.url.includes('drive.google.com') ? 'Ver Documento' : 'Abrir Enlace'}
+                            </a>
+                            
+                            {/* Optional: Embed preview for Google Drive links if they end in /preview */}
+                            {event.url.includes('drive.google.com') && event.url.includes('/preview') && (
+                              <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-video">
+                                <iframe 
+                                  src={event.url} 
+                                  className="w-full h-full" 
+                                  allow="autoplay"
+                                  title="Vista previa del documento"
+                                ></iframe>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         {userRole === 'editor' && event.type !== 'event' && (
                           <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
                               <button onClick={(e) => { e.stopPropagation(); handleOpenEditModal(event); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
@@ -700,7 +772,22 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             <h3 className="text-xl font-bold text-center">{editingEvent ? "Editar Novedad" : "Escribir Novedad"}</h3>
             <form onSubmit={handleFormSubmit}>
                 <div className="space-y-6">
-                    <input type="text" placeholder="Título..." value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="paper-input" required />
+                    <div className="space-y-2">
+                        <label className="block text-sm font-bold text-amber-900">Título de la novedad</label>
+                        <input type="text" placeholder="Título..." value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="paper-input" required />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="block text-sm font-bold text-amber-900">Enlace (Opcional - Google Drive, etc.)</label>
+                        <input 
+                            type="url" 
+                            placeholder="https://drive.google.com/..." 
+                            value={formData.url} 
+                            onChange={(e) => setFormData({ ...formData, url: e.target.value })} 
+                            className="paper-input" 
+                        />
+                        <p className="text-[10px] text-amber-700/60 italic">Si es un enlace de Google Drive, asegúrate de que termine en /preview para que se vea la vista previa.</p>
+                    </div>
                     
                     <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -797,75 +884,95 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         <Modal 
           isOpen={isRecipientModalOpen} 
           onClose={() => setIsRecipientModalOpen(false)} 
-          title="Seleccionar Destinatarios"
-          maxWidth="max-w-xl"
+          title="Preparar Envío de Notificación"
+          maxWidth="max-w-3xl"
         >
-          <div className="p-4 space-y-4">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Selecciona los correos electrónicos que deben recibir esta notificación general.
-            </p>
-            
-            <div className="flex gap-2 mb-4">
-              <button 
-                onClick={() => setSelectedRecipients(availableRecipients)}
-                className="text-xs font-bold text-blue-600 hover:underline"
-              >
-                Seleccionar Todos
-              </button>
-              <span className="text-gray-300">|</span>
-              <button 
-                onClick={() => setSelectedRecipients([])}
-                className="text-xs font-bold text-red-600 hover:underline"
-              >
-                Desmarcar Todos
-              </button>
+          <div className="p-0 flex flex-col md:flex-row h-[70vh] md:h-auto overflow-hidden">
+            {/* Left side: Preview */}
+            <div className="flex-1 p-6 bg-amber-50/50 dark:bg-amber-900/10 border-b md:border-b-0 md:border-r border-amber-100 dark:border-amber-900/30 overflow-y-auto">
+              <h4 className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-4">Vista Previa</h4>
+              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-amber-200/50 dark:border-amber-900/20">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  {notificationPayload?.title || "AVISO GENERAL"}
+                </h2>
+                <div 
+                  className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed prose dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ 
+                    __html: autoLink(notificationPayload?.description) || "Notificación enviada manualmente desde el panel de novedades." 
+                  }}
+                />
+                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-400 font-mono italic">
+                  Este mensaje se enviará a los destinatarios seleccionados.
+                </div>
+              </div>
             </div>
 
-            <div className="max-h-[300px] overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-lg divide-y divide-gray-100 dark:divide-gray-700">
-              {availableRecipients.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">No hay destinatarios configurados.</div>
-              ) : (
-                availableRecipients.map(email => (
+            {/* Right side: Recipients */}
+            <div className="w-full md:w-[320px] p-6 flex flex-col bg-white dark:bg-gray-800">
+              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Destinatarios</h4>
+              
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-xs text-gray-500">{selectedRecipients.length} seleccionados</span>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setSelectedRecipients(availableRecipients)}
+                    className="text-[10px] font-bold text-blue-600 hover:bg-blue-50 px-2 py-0.5 rounded"
+                  >
+                    Todos
+                  </button>
+                  <button 
+                    onClick={() => setSelectedRecipients([])}
+                    className="text-[10px] font-bold text-red-600 hover:bg-red-50 px-2 py-0.5 rounded"
+                  >
+                    Ninguno
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-1 mb-6 max-h-[300px]">
+                {availableRecipients.map(email => (
                   <label 
                     key={email} 
-                    className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${selectedRecipients.includes(email) ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
                   >
                     <input 
                       type="checkbox" 
-                      className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
                       checked={selectedRecipients.includes(email)}
                       onChange={() => handleToggleRecipient(email)}
                     />
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{email}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{email}</span>
                   </label>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
 
-            <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
-              <button 
-                onClick={() => setIsRecipientModalOpen(false)}
-                className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={handleSendTargetedNotification}
-                disabled={isSendingNotification || selectedRecipients.length === 0}
-                className={`flex-1 py-2 px-4 bg-amber-500 text-white rounded-lg text-sm font-bold shadow-md hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2 ${isSendingNotification ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {isSendingNotification ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Enviando...
-                  </>
-                ) : (
-                  `Enviar a ${selectedRecipients.length} personas`
-                )}
-              </button>
+              <div className="space-y-3">
+                <button 
+                  onClick={handleSendTargetedNotification}
+                  disabled={isSendingNotification || selectedRecipients.length === 0}
+                  className={`w-full py-3 bg-amber-500 text-white rounded-xl text-sm font-bold shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all active:scale-95 flex items-center justify-center gap-2 ${isSendingNotification ? 'opacity-70' : ''}`}
+                >
+                  {isSendingNotification ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Enviando...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                      Confirmar Envío
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={() => setIsRecipientModalOpen(false)}
+                  className="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           </div>
         </Modal>

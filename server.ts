@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import cron from "node-cron";
 import nodemailer from "nodemailer";
 import admin from "firebase-admin";
+import { getFirestore } from "firebase-admin/firestore";
 import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,9 +21,13 @@ function getDb() {
       if (admin.apps.length === 0) {
         admin.initializeApp({
           projectId: firebaseConfig.projectId,
+          credential: admin.credential.applicationDefault(),
         });
       }
-      db = admin.firestore();
+      // Use the database ID from config if available, default to '(default)'
+      const dbId = firebaseConfig.firestoreDatabaseId || "(default)";
+      db = getFirestore(dbId);
+      console.log(`[Firebase] Initialized Admin SDK with Project: ${firebaseConfig.projectId}, DB: ${dbId}`);
       return db;
     }
   } catch (err) {
@@ -58,7 +63,8 @@ async function fetchEmailRecipients(): Promise<string[]> {
     "pisosgranfiesta@hmhotels.com",
     "subdirgranfiesta@hmhotels.com",
     "bargranfiesta@hmhotels.com",
-    "ssttgranfiesta@hmhotels.com"
+    "ssttgranfiesta@hmhotels.com",
+    "dirgranfiesta@hmhotels.com"
   ];
 
   try {
@@ -66,7 +72,11 @@ async function fetchEmailRecipients(): Promise<string[]> {
     if (!firestore) return defaultRecipients;
 
     const snapshot = await firestore.collection("email_recipients").get();
-    if (snapshot.empty) return defaultRecipients;
+    
+    if (snapshot.empty) {
+      console.log("[Notification] No recipients found in DB collection 'email_recipients', using defaults.");
+      return defaultRecipients;
+    }
 
     const dbEmails = snapshot.docs
       .map(doc => doc.data().email)
@@ -76,9 +86,17 @@ async function fetchEmailRecipients(): Promise<string[]> {
 
     // Combine default and DB emails, removing duplicates
     const combined = Array.from(new Set([...defaultRecipients, ...dbEmails]));
+    console.log(`[Notification] Successfully fetched ${dbEmails.length} recipients from DB. Total unique: ${combined.length}`);
     return combined;
-  } catch (err) {
-    console.error("[Notification] Error fetching recipients from DB:", err);
+  } catch (err: any) {
+    // If it's a permission error, we log it clearly and move on with defaults
+    if (err.message && err.message.includes("PERMISSION_DENIED")) {
+      console.warn("[Notification] Firestore Permission Denied for Recipients. This usually means the server identity lacks permissions. Falling back to hardcoded defaults.");
+    } else if (err.code === 7 || err.code === 'permission-denied') {
+      console.warn("[Notification] Firestore Permission Denied (code 7). Falling back to hardcoded defaults.");
+    } else {
+      console.error("[Notification] Error fetching recipients from DB:", err.message || err);
+    }
     return defaultRecipients;
   }
 }
@@ -225,7 +243,8 @@ async function sendNotificationEmail(events: any[]) {
     "rec1granfiesta@hmhotels.com",
     "cocinagranfiesta@hmhotels.com",
     "pisosgranfiesta@hmhotels.com",
-    "subdirgranfiesta@hmhotels.com"
+    "subdirgranfiesta@hmhotels.com",
+    "dirgranfiesta@hmhotels.com"
   ];
   
   // SMTP Configuration from environment variables
