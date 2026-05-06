@@ -62,6 +62,16 @@ export interface ExtraOrder {
   endDate: string;
 }
 
+export interface ExtraFBEntry {
+  id: string;
+  date: string;
+  department: string;
+  numberOfPeople: number;
+  mealType: 'desayuno' | 'cena';
+  createdAt: string;
+  createdBy: string;
+}
+
 export interface RestaurantBooking {
   id: string;
   guestName: string;

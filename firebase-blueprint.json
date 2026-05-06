@@ -140,6 +140,20 @@
         "eventDate": { "type": "string", "format": "date", "description": "Optional date of the event for sorting purposes." }
       },
       "required": ["month", "pdfUrl", "fileName", "uploadedAt"]
+    },
+    "ExtraFBEntry": {
+      "title": "Extra F&B Entry",
+      "description": "An entry for breakfasts or dinners not in the PMS.",
+      "type": "object",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "department": { "type": "string", "enum": ["DIRECCIÓN/SUBDIRECCIÓN", "GUIAS O HUERZELER", "GRUPOS QUE NO APARECEN EN TIMÓN", "COMPENSACIONES DE H A HD", "COMPENSACIONES DE HD A HMP", "INTERCAMBIOS CENAS HM HOTELS"] },
+        "numberOfPeople": { "type": "integer" },
+        "mealType": { "type": "string", "enum": ["desayuno", "cena"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["date", "department", "numberOfPeople", "mealType", "createdAt", "createdBy"]
     }
   },
   "firestore": {
@@ -194,6 +208,10 @@
     "event_pdfs": {
       "schema": "EventPdf",
       "description": "Collection of PDF documents for events by month."
+    },
+    "extra_fb_entries": {
+      "schema": "ExtraFBEntry",
+      "description": "Collection of non-PMS breakfast and dinner counts."
     }
   }
 }

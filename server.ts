@@ -79,7 +79,7 @@ async function fetchEmailRecipients(): Promise<string[]> {
     }
 
     const dbEmails = snapshot.docs
-      .map(doc => doc.data().email)
+      .map(doc => doc.data().email?.toString().trim().toLowerCase())
       .filter(email => typeof email === 'string' && email.includes('@'));
     
     if (dbEmails.length === 0) return defaultRecipients;
@@ -103,7 +103,7 @@ async function fetchEmailRecipients(): Promise<string[]> {
 
 async function notifyAppsScript(type: string, data: any): Promise<{ success: boolean; error?: string }> {
   const envUrl = process.env.APPSCRIPT_URL;
-  const defaultUrl = "https://script.google.com/macros/s/AKfycbyeRNxuBtgSU3ia4XgFbG6pyIayR8cD7nw58CJMJ_ShQ1utcElfTACn7o_8zTRYAP7u/exec";
+  const defaultUrl = "https://script.google.com/macros/s/AKfycbzcqyO3SWf8F5ghsZ21Msk0LEVIOi5r9gzsS5qzMusHFQhSbYUs4ZGrH64SQ1paBtMv/exec";
   const appScriptUrl = (envUrl || defaultUrl).trim();
   
   // Use passed recipients if available, otherwise fetch all
@@ -244,6 +244,8 @@ async function sendNotificationEmail(events: any[]) {
     "cocinagranfiesta@hmhotels.com",
     "pisosgranfiesta@hmhotels.com",
     "subdirgranfiesta@hmhotels.com",
+    "bargranfiesta@hmhotels.com",
+    "ssttgranfiesta@hmhotels.com",
     "dirgranfiesta@hmhotels.com"
   ];
   

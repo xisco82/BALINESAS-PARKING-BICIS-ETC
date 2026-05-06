@@ -460,6 +460,34 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     );
   };
 
+  const handleOpenExternalMailClient = () => {
+    if (selectedRecipients.length === 0) {
+      showToast("Selecciona al menos un destinatario", "warning");
+      return;
+    }
+
+    const payload = notificationPayload || { 
+      title: "AVISO GENERAL", 
+      description: "Notificación enviada manualmente desde el panel de novedades."
+    };
+
+    // Strip HTML for mailto body
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = payload.description;
+    const plainTextDescription = tempDiv.textContent || tempDiv.innerText || "";
+    
+    // Construct mailto URL
+    const recipients = selectedRecipients.join(',');
+    const subject = encodeURIComponent(payload.title);
+    const body = encodeURIComponent(plainTextDescription + "\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/");
+    
+    const mailtoUrl = `mailto:${recipients}?subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+    
+    setIsRecipientModalOpen(false);
+    showToast("Abriendo cliente de correo...", "success");
+  };
+
   const handleSendTargetedNotification = async () => {
     if (selectedRecipients.length === 0) {
       showToast("Selecciona al menos un destinatario", "warning");
@@ -556,13 +584,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
-                </button>
-                <button
-                  onClick={() => handleOpenRecipientModal()}
-                  className="no-print bg-amber-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-amber-600 transition-colors"
-                  title="Enviar Notificación"
-                >
-                  Enviar Notificación
                 </button>
                 <button onClick={handleOpenAddModal} className="no-print bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
                     Añadir Novedad
@@ -962,10 +983,22 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
-                      Confirmar Envío
+                      Envío Automático (Apps Script)
                     </>
                   )}
                 </button>
+
+                <button 
+                  onClick={handleOpenExternalMailClient}
+                  disabled={selectedRecipients.length === 0}
+                  className="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Abrir en Outlook / Gmail
+                </button>
+
                 <button 
                   onClick={() => setIsRecipientModalOpen(false)}
                   className="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"

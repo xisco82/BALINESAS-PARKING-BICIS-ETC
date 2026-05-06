@@ -14,6 +14,7 @@ import {
   getNewsEvents,
   getEventPdfs
 } from '../services/firebaseService';
+import ExtraFBSection from '../components/ExtraFBSection';
 
 type UserRole = 'editor' | 'balinese_editor';
 
@@ -326,11 +327,18 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         <div>
             {!hideHeader && (
                 <Header title={title}>
-                  {userRole === 'editor' && (
-                    <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-                        Añadir {title}
-                    </button>
-                  )}
+                  <div className="flex flex-col items-end gap-2">
+                    {tableName === 'restaurant_bookings' && (
+                      <div className="bg-amber-50 dark:bg-amber-900/40 border border-amber-200 dark:border-amber-800 px-2 py-1 rounded text-[10px] font-bold text-amber-800 dark:text-amber-100 max-w-[200px] text-right leading-tight shadow-sm no-print">
+                        TICAR CTA. CASA: SOLO PROPIEDAD O AUTORIZADOS POR DIRECCIÓN
+                      </div>
+                    )}
+                    {userRole === 'editor' && (
+                      <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                          Añadir {title}
+                      </button>
+                    )}
+                  </div>
                 </Header>
             )}
 
@@ -563,6 +571,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                     </div>
                 )}
             </div>
+            
+            {tableName === 'restaurant_bookings' && (
+                <div className="p-4 pt-0 no-print">
+                    <ExtraFBSection userRole={userRole} />
+                </div>
+            )}
             
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? `Editar ${title}` : `Añadir Nuevo ${title}`}>
                 <form onSubmit={handleAddBooking}>

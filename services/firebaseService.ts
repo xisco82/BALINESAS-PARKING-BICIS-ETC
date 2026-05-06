@@ -23,7 +23,8 @@ import {
   RestaurantBooking, 
   DayPassBooking, 
   AccessibilityBooking, 
-  SaunaBooking 
+  SaunaBooking,
+  ExtraFBEntry
 } from '../types';
 
 export enum OperationType {
@@ -427,6 +428,53 @@ export const getEventPdfs = (callback: (pdfs: any[]) => void) => {
     }));
     callback(pdfs);
   }, (err) => handleFirestoreError(err, OperationType.GET, path));
+};
+
+// --- Extra F&B Entries ---
+export const getExtraFBEntries = (month: string, callback: (entries: ExtraFBEntry[]) => void) => {
+  const path = 'extra_fb_entries';
+  const [year, monthNum] = month.split('-');
+  const startDate = `${year}-${monthNum}-01`;
+  const lastDay = new Date(parseInt(year), parseInt(monthNum), 0).getDate();
+  const endDate = `${year}-${monthNum}-${lastDay.toString().padStart(2, '0')}`;
+
+  const q = query(
+    collection(db, path),
+    where('date', '>=', startDate),
+    where('date', '<=', endDate),
+    orderBy('date', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const entries = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as ExtraFBEntry[];
+    callback(entries);
+  }, (err) => handleFirestoreError(err, OperationType.GET, path));
+};
+
+export const addExtraFBEntry = async (entry: Omit<ExtraFBEntry, 'id' | 'createdAt' | 'createdBy'>) => {
+  const path = 'extra_fb_entries';
+  try {
+    await addDoc(collection(db, path), {
+      ...entry,
+      createdAt: new Date().toISOString(),
+      createdBy: auth.currentUser?.email || 'unknown'
+    });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, path);
+  }
+};
+
+export const deleteExtraFBEntry = async (id: string) => {
+  const path = `extra_fb_entries/${id}`;
+  try {
+    const docRef = doc(db, 'extra_fb_entries', id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, path);
+  }
 };
 
 // --- End of Service Functions ---

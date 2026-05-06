@@ -134,6 +134,22 @@ service cloud.firestore {
              (!('eventDate' in data) || data.eventDate == null || isValidDate(data.eventDate));
     }
 
+    function isValidExtraFBEntry(data) {
+      return hasRequiredFields(['date', 'department', 'numberOfPeople', 'mealType', 'createdAt', 'createdBy']) &&
+             hasOnlyAllowedFields(['date', 'department', 'numberOfPeople', 'mealType', 'createdAt', 'createdBy']) &&
+             isValidDate(data.date) &&
+             (data.department == 'DIRECCIÓN/SUBDIRECCIÓN' || 
+              data.department == 'GUIAS O HUERZELER' || 
+              data.department == 'GRUPOS QUE NO APARECEN EN TIMÓN' || 
+              data.department == 'COMPENSACIONES DE H A HD' || 
+              data.department == 'COMPENSACIONES DE HD A HMP' || 
+              data.department == 'INTERCAMBIOS CENAS HM HOTELS') &&
+             data.numberOfPeople is int &&
+             (data.mealType == 'desayuno' || data.mealType == 'cena') &&
+             isValidDateTime(data.createdAt) &&
+             data.createdBy is string;
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
@@ -227,6 +243,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidEmailRecipient(request.resource.data);
       allow update: if isAuthenticated() && isValidEmailRecipient(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /extra_fb_entries/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidExtraFBEntry(request.resource.data);
+      allow update: if isAuthenticated() && isValidExtraFBEntry(request.resource.data);
       allow delete: if isAuthenticated();
     }
 
