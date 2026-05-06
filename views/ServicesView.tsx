@@ -38,8 +38,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [showFullYear, setShowFullYear] = useState(false);
-    const [mealFilter, setMealFilter] = useState<'todos' | 'desayuno' | 'cena'>('todos');
-    const [checkedInFilter, setCheckedInFilter] = useState<'pending' | 'all'>('pending');
+    const [mealFilter, setMealFilter] = useState<'todos' | 'desayuno' | 'almuerzo' | 'cena'>('todos');
+    const [checkedInFilter, setCheckedInFilter] = useState<'pending' | 'all'>('all');
     const [newBooking, setNewBooking] = useState({ 
         guestName: '', 
         roomNumber: '', 
@@ -47,7 +47,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
         guestsCount: 1,
-        mealType: 'cena' as 'desayuno' | 'cena' | 'MP'
+        mealType: 'cena' as 'desayuno' | 'almuerzo' | 'cena' | 'MP'
     });
 
     useEffect(() => {
@@ -166,7 +166,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
     const handleToggleCheckIn = async (booking: RestaurantBooking) => {
         if (!booking.id) return;
         try {
-            await toggleServiceBookingCheckIn(tableName, booking.id, !!booking.checkedIn);
+            // A booking is considered "checkedIn" for today if it matches the selected date
+            const isCurrentlyCheckedIn = booking.checkedIn && booking.checkedInDate === selectedDate;
+            await toggleServiceBookingCheckIn(tableName, booking.id, isCurrentlyCheckedIn, selectedDate);
         } catch (error) {
             console.error("Error toggling check-in:", error);
         }
@@ -315,7 +317,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
         // Filter by check-in status
         if (checkedInFilter === 'pending') {
-            return !b.checkedIn;
+            // Item is pending if it's not checked in OR if it was checked in on a different date
+            return !b.checkedIn || b.checkedInDate !== selectedDate;
         }
         
         return true;
@@ -398,13 +401,19 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         </button>
                                         <button 
                                             onClick={() => setMealFilter('desayuno')}
-                                            className={`px-4 py-2 text-sm font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                            className={`px-3 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                                         >
                                             Desayuno
                                         </button>
                                         <button 
+                                            onClick={() => setMealFilter('almuerzo')}
+                                            className={`px-3 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'almuerzo' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                        >
+                                            Almuerzo
+                                        </button>
+                                        <button 
                                             onClick={() => setMealFilter('cena')}
-                                            className={`px-4 py-2 text-sm font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'cena' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                            className={`px-3 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'cena' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                                         >
                                             Cena
                                         </button>
@@ -449,21 +458,29 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             <span className="text-4xl font-black text-blue-900 dark:text-blue-100">{totalGuests}</span>
                         </div>
                         {mealFilter === 'todos' && (
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                                    <span className="text-yellow-800 dark:text-yellow-300 text-xs uppercase font-bold tracking-wider mb-2">
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                    <span className="text-yellow-800 dark:text-yellow-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                         {checkedInFilter === 'all' ? 'Total Desayuno (+MP)' : 'Pendientes Desayuno (+MP)'}
                                     </span>
-                                    <span className="text-6xl font-black text-yellow-900 dark:text-yellow-100">
-                                        {bookings.filter(b => (b.mealType === 'desayuno' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : !b.checkedIn)).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                    <span className="text-3xl font-black text-yellow-900 dark:text-yellow-100">
+                                        {bookings.filter(b => (b.mealType === 'desayuno' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                     </span>
                                 </div>
-                                <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/30 p-2.5 rounded-lg flex flex-col items-center justify-center text-center">
-                                    <span className="text-indigo-800 dark:text-indigo-300 text-xs uppercase font-bold tracking-wider mb-2">
+                                <div className="bg-orange-50/80 dark:bg-orange-900/20 border border-orange-200/50 dark:border-orange-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                    <span className="text-orange-800 dark:text-orange-300 text-[8px] uppercase font-bold tracking-wider mb-1">
+                                        {checkedInFilter === 'all' ? 'Total Almuerzo (+MP)' : 'Pendientes Almuerzo (+MP)'}
+                                    </span>
+                                    <span className="text-3xl font-black text-orange-900 dark:text-orange-100">
+                                        {bookings.filter(b => (b.mealType === 'almuerzo' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                    </span>
+                                </div>
+                                <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                    <span className="text-indigo-800 dark:text-indigo-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                         {checkedInFilter === 'all' ? 'Total Cena (+MP)' : 'Pendientes Cena (+MP)'}
                                     </span>
-                                    <span className="text-6xl font-black text-indigo-900 dark:text-indigo-100">
-                                        {bookings.filter(b => (b.mealType === 'cena' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : !b.checkedIn)).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
+                                    <span className="text-3xl font-black text-indigo-900 dark:text-indigo-100">
+                                        {bookings.filter(b => (b.mealType === 'cena' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                     </span>
                                 </div>
                             </div>
@@ -516,12 +533,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         <button 
                                             onClick={() => handleToggleCheckIn(booking)}
                                             className={`px-3 py-1 rounded-md text-xs font-bold font-mono shadow-sm transition-all transform active:scale-95 ${
-                                                booking.checkedIn 
+                                                (booking.checkedIn && booking.checkedInDate === selectedDate)
                                                 ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
                                                 : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                                             }`}
                                         >
-                                            {booking.checkedIn ? '✓ ENTRADO' : 'MARCAR ENTRADA'}
+                                            {(booking.checkedIn && booking.checkedInDate === selectedDate) ? '✓ ENTRADO' : 'MARCAR ENTRADA'}
                                         </button>
                                     )}
 
@@ -606,6 +623,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="desayuno">Desayuno</option>
+                                        <option value="almuerzo">Almuerzo</option>
                                         <option value="cena">Cena</option>
                                         <option value="MP">Media Pensión (MP)</option>
                                     </select>

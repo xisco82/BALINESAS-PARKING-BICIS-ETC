@@ -67,7 +67,7 @@ export interface ExtraFBEntry {
   date: string;
   department: string;
   numberOfPeople: number;
-  mealType: 'desayuno' | 'cena';
+  mealType: 'desayuno' | 'almuerzo' | 'cena';
   createdAt: string;
   createdBy: string;
 }
@@ -81,8 +81,9 @@ export interface RestaurantBooking {
   description: string;
   origin?: 'news' | 'service' | 'pdf';
   guestsCount?: number;
-  mealType?: 'desayuno' | 'cena' | 'MP';
+  mealType?: 'desayuno' | 'almuerzo' | 'cena' | 'MP';
   checkedIn?: boolean;
+  checkedInDate?: string;
 }
 
 export interface DayPassBooking {

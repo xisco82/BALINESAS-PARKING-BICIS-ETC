@@ -304,10 +304,14 @@ export const updateServiceBooking = async (tableName: string, id: string, bookin
   }
 };
 
-export const toggleServiceBookingCheckIn = async (tableName: string, id: string, currentStatus: boolean) => {
+export const toggleServiceBookingCheckIn = async (tableName: string, id: string, currentStatus: boolean, checkInDate: string) => {
   const path = `${tableName}/${id}`;
   try {
-    await updateDoc(doc(db, tableName, id), { checkedIn: !currentStatus });
+    const isCheckingIn = !currentStatus;
+    await updateDoc(doc(db, tableName, id), { 
+      checkedIn: isCheckingIn,
+      checkedInDate: isCheckingIn ? checkInDate : null
+    });
   } catch (err) {
     handleFirestoreError(err, OperationType.UPDATE, path);
   }

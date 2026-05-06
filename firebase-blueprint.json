@@ -62,8 +62,9 @@
         "endDate": { "type": "string", "format": "date" },
         "description": { "type": "string" },
         "guestsCount": { "type": "integer" },
-        "mealType": { "type": "string", "enum": ["desayuno", "cena", "MP"] },
-        "checkedIn": { "type": "boolean" }
+        "mealType": { "type": "string", "enum": ["desayuno", "almuerzo", "cena", "MP"] },
+        "checkedIn": { "type": "boolean" },
+        "checkedInDate": { "type": "string", "format": "date" }
       },
       "required": ["guestName", "roomNumber", "startDate", "endDate", "description"]
     },
@@ -149,7 +150,7 @@
         "date": { "type": "string", "format": "date" },
         "department": { "type": "string", "enum": ["DIRECCIÓN/SUBDIRECCIÓN", "GUIAS O HUERZELER", "GRUPOS QUE NO APARECEN EN TIMÓN", "COMPENSACIONES DE H A HD", "COMPENSACIONES DE HD A HMP", "INTERCAMBIOS CENAS HM HOTELS"] },
         "numberOfPeople": { "type": "integer" },
-        "mealType": { "type": "string", "enum": ["desayuno", "cena"] },
+        "mealType": { "type": "string", "enum": ["desayuno", "almuerzo", "cena"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "createdBy": { "type": "string" }
       },

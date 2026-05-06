@@ -77,14 +77,15 @@ service cloud.firestore {
 
     function isValidServiceBooking(data) {
       return hasRequiredFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description']) &&
-             hasOnlyAllowedFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description', 'guestsCount', 'mealType', 'checkedIn']) &&
+             hasOnlyAllowedFields(['guestName', 'roomNumber', 'startDate', 'endDate', 'description', 'guestsCount', 'mealType', 'checkedIn', 'checkedInDate']) &&
              data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
              data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
              isValidDate(data.startDate) && isValidDate(data.endDate) &&
              data.description is string && data.description.size() < 500 &&
              (!('guestsCount' in data) || data.guestsCount is int) &&
              (!('checkedIn' in data) || data.checkedIn is bool) &&
-             (!('mealType' in data) || (data.mealType is string && (data.mealType == 'desayuno' || data.mealType == 'cena' || data.mealType == 'MP')));
+             (!('checkedInDate' in data) || isValidDate(data.checkedInDate)) &&
+             (!('mealType' in data) || (data.mealType is string && (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena' || data.mealType == 'MP')));
     }
 
     function isValidDayPassBooking(data) {
@@ -145,7 +146,7 @@ service cloud.firestore {
               data.department == 'COMPENSACIONES DE HD A HMP' || 
               data.department == 'INTERCAMBIOS CENAS HM HOTELS') &&
              data.numberOfPeople is int &&
-             (data.mealType == 'desayuno' || data.mealType == 'cena') &&
+             (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena') &&
              isValidDateTime(data.createdAt) &&
              data.createdBy is string;
     }
@@ -199,7 +200,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidServiceBooking(request.resource.data);
       allow update: if isAuthenticated() && (
         isValidServiceBooking(request.resource.data) || 
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedIn']))
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['checkedIn', 'checkedInDate']))
       );
       allow delete: if isAuthenticated();
     }

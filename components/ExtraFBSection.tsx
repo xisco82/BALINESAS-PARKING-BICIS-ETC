@@ -29,7 +29,7 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
     date: new Date().toISOString().split('T')[0],
     department: DEPARTMENTS[0],
     numberOfPeople: 1,
-    mealType: 'cena' as 'desayuno' | 'cena'
+    mealType: 'cena' as 'desayuno' | 'almuerzo' | 'cena'
   });
 
   useEffect(() => {
@@ -73,9 +73,9 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
 
   const totals = filteredEntries.reduce((acc, curr) => ({
     ...acc,
-    [curr.mealType]: acc[curr.mealType] + curr.numberOfPeople,
+    [curr.mealType]: (acc[curr.mealType] || 0) + curr.numberOfPeople,
     total: acc.total + curr.numberOfPeople
-  }), { desayuno: 0, cena: 0, total: 0 });
+  }), { desayuno: 0, almuerzo: 0, cena: 0, total: 0 });
 
   return (
     <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg mt-8 border border-gray-200 dark:border-gray-700">
@@ -119,10 +119,11 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
           <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Servicio</label>
           <select 
             value={newEntry.mealType}
-            onChange={e => setNewEntry({...newEntry, mealType: e.target.value as 'desayuno' | 'cena'})}
+            onChange={e => setNewEntry({...newEntry, mealType: e.target.value as any})}
             className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
           >
             <option value="desayuno">Desayuno</option>
+            <option value="almuerzo">Almuerzo</option>
             <option value="cena">Cena</option>
           </select>
         </div>
@@ -137,7 +138,7 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
       </form>
 
       {/* Monthly Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-100 dark:border-gray-800 shadow-sm">
           <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Mes de Consulta</label>
           <input 
@@ -147,10 +148,14 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
             className="w-full p-2 text-sm rounded border dark:bg-gray-800"
           />
         </div>
-        <div className="grid grid-cols-3 gap-2 md:col-span-3">
+        <div className="grid grid-cols-4 gap-2 md:col-span-4">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-100 dark:border-yellow-900/40 text-center">
             <span className="block text-[10px] font-bold text-yellow-700 dark:text-yellow-400 uppercase">Desayunos</span>
             <span className="text-2xl font-black text-yellow-900 dark:text-yellow-100">{totals.desayuno}</span>
+          </div>
+          <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-100 dark:border-orange-900/40 text-center">
+            <span className="block text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase">Almuerzos</span>
+            <span className="text-2xl font-black text-orange-900 dark:text-orange-100">{totals.almuerzo}</span>
           </div>
           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40 text-center">
             <span className="block text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase">Cenas</span>
@@ -182,6 +187,7 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
           >
             <option value="todos">Todos los servicios</option>
             <option value="desayuno">Sólo Desayuno</option>
+            <option value="almuerzo">Sólo Almuerzo</option>
             <option value="cena">Sólo Cena</option>
           </select>
         </div>
@@ -209,7 +215,11 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
                     <td className="p-2 font-bold text-xs">{entry.department}</td>
                     <td className="p-2"><span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded font-black">{entry.numberOfPeople}</span></td>
                     <td className="p-2">
-                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${entry.mealType === 'desayuno' ? 'bg-yellow-100 text-yellow-800' : 'bg-indigo-100 text-indigo-800'}`}>
+                      <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                        entry.mealType === 'desayuno' ? 'bg-yellow-100 text-yellow-800' : 
+                        entry.mealType === 'almuerzo' ? 'bg-orange-100 text-orange-800' :
+                        'bg-indigo-100 text-indigo-800'
+                      }`}>
                         {entry.mealType}
                       </span>
                     </td>
