@@ -103,8 +103,18 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
     }, [isAuthReady]);
 
     const sortedBookings = useMemo(() => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       // Sorts bookings by arrival date ascending, then by room number.
-      return [...bookings].sort((a, b) => {
+      // Also filters out bookings whose departure date has passed.
+      return bookings
+        .filter(b => {
+          const departure = new Date(b.departureDate);
+          departure.setHours(0, 0, 0, 0);
+          return departure >= today;
+        })
+        .sort((a, b) => {
           const dateA = new Date(a.arrivalDate);
           const dateB = new Date(b.arrivalDate);
           const dateComparison = dateA.getTime() - dateB.getTime();
@@ -113,7 +123,7 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
               return dateComparison;
           }
           return a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true });
-      });
+        });
     }, [bookings]);
 
 
