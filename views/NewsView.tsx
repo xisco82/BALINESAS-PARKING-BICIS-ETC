@@ -742,8 +742,30 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                         onContextMenu={(e) => handleContextMenu(e, event)}
                         className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'} ${userRole === 'editor' && event.type !== 'event' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
                     >
-                        <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-16">{event.title}</h4>
+                        <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-24">{event.title}</h4>
                         <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
+                        
+                        {/* Action buttons for individual news */}
+                        <div className="absolute top-2 right-12 flex items-center space-x-1 no-print">
+                           {userRole === 'editor' && (
+                             <button 
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 const dateStr = new Date(event.startDate + 'T00:00:00Z').toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+                                 handleOpenRecipientModal({
+                                   title: `AVISO: ${event.title}`,
+                                   description: `<p>Novedad publicada para el ${dateStr}:</p><p><strong>${event.title}</strong></p><div>${event.description}</div>`
+                                 });
+                               }}
+                               className="p-1.5 bg-amber-50 text-amber-600 rounded-md hover:bg-amber-100 transition-colors border border-amber-200 shadow-sm"
+                               title="Enviar esta novedad"
+                             >
+                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                               </svg>
+                             </button>
+                           )}
+                        </div>
                         
                         {event.url && (
                           <div className="mt-3 no-print">
