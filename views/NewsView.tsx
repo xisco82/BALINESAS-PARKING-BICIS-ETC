@@ -352,8 +352,16 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
   };
 
   const handleSaveEvent = async () => {
-      const { title, description, url, startDate, endDate } = formData;
-      if (!title || !description || !startDate || !endDate) {
+      // Sync description from editor Ref one last time to ensure we have the latest content for mobile browsers
+      let finalDescription = formData.description;
+      if (editorRef.current) {
+          finalDescription = editorRef.current.innerHTML;
+      }
+      
+      const { title, url, startDate, endDate } = formData;
+      const description = finalDescription;
+
+      if (!title || !description || description === '<br>' || description === '<div><br></div>' || !startDate || !endDate) {
         showToast("Por favor, complete todos los campos.", "error");
         return;
       }
@@ -817,7 +825,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <label className="block text-sm font-bold text-amber-900">Título de la novedad</label>
-                        <input type="text" placeholder="Título..." value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="paper-input" required />
+                        <input type="text" placeholder="Título..." value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="paper-input" />
                     </div>
 
                     <div className="space-y-2">
@@ -840,7 +848,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                 value={formData.startDate} 
                                 onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                                 className="paper-input"
-                                required
                             />
                         </div>
                         <div>
@@ -851,7 +858,6 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                 min={formData.startDate}
                                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                                 className="paper-input"
-                                required
                             />
                         </div>
                     </div>
@@ -911,13 +917,15 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                       onKeyUp={updateToolbarState}
                       contentEditable="true"
                       className="paper-textarea"
-                      style={{ minHeight: '15rem', maxHeight: '50vh', overflowY: 'auto' }}
+                      style={{ minHeight: '10rem', maxHeight: '40vh', overflowY: 'auto' }}
                       aria-label="Contenido de la novedad"
                     ></div>
 
-                    <button type="submit" className="w-full paper-button">
-                        {editingEvent ? 'Guardar Cambios' : 'Guardar Novedad'}
-                    </button>
+                    <div className="pb-8">
+                      <button type="submit" className="w-full paper-button">
+                          {editingEvent ? 'Guardar Cambios' : 'Guardar Novedad'}
+                      </button>
+                    </div>
                 </div>
             </form>
           </div>
