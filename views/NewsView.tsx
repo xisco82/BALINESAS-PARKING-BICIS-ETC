@@ -485,7 +485,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     const plainTextDescription = tempDiv.textContent || tempDiv.innerText || "";
     
     // Construct mailto URL
-    const recipients = selectedRecipients.join(',');
+    const recipients = selectedRecipients.join(';');
     const subject = encodeURIComponent(payload.title);
     const body = encodeURIComponent(plainTextDescription + "\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/");
     
