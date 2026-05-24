@@ -223,7 +223,11 @@ export const blockBike = async (bikeId: number, reason: string) => {
   const docId = `${bikeId}`;
   const path = `blocked_bikes/${docId}`;
   try {
-    await setDoc(doc(db, 'blocked_bikes', docId), { bikeId, reason });
+    await setDoc(doc(db, 'blocked_bikes', docId), { 
+      bikeId, 
+      reason, 
+      createdAt: new Date().toISOString() 
+    });
   } catch (err) {
     handleFirestoreError(err, OperationType.WRITE, path);
   }

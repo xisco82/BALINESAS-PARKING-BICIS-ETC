@@ -47,6 +47,7 @@ export interface BikeBooking {
 export interface BlockedBike {
   bikeId: number;
   reason: string;
+  createdAt?: string;
 }
 
 export interface BalineseBedBooking {

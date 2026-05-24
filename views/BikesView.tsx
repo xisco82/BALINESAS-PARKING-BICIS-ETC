@@ -87,6 +87,11 @@ const Bike: React.FC<{
                     <p className="text-xs italic mt-1 break-all px-1 line-clamp-2 max-w-[150px]">
                         "{blockedInfo.reason}"
                     </p>
+                    {blockedInfo.createdAt && (
+                        <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 mt-1">
+                            Bloqueada desde: <span className="font-semibold text-red-700 dark:text-red-400 font-mono">{formatReservationTime(blockedInfo.createdAt)}</span>
+                        </p>
+                    )}
                     {userRole === 'editor' && (
                         <button 
                             onClick={() => onUnblock(bikeId)} 
@@ -109,7 +114,7 @@ const Bike: React.FC<{
                         {userRole === 'editor' && (
                             <>
                                 <button onClick={() => onCancel(bikeId)} className="bg-red-500 text-white px-2.5 py-1 text-xs font-semibold rounded-md hover:bg-red-600 transition">Cancelar</button>
-                                <button onClick={() => onBlock(bikeId)} className="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 text-xs font-semibold rounded-md transition">Bloquear</button>
+                                <button onClick={() => onBlock(bikeId)} className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 border border-amber-600/20 hover:border-amber-600/40 bg-amber-600/5 hover:bg-amber-600/10 py-0.5 text-[10px] font-medium rounded transition">Bloquear</button>
                             </>
                         )}
                     </div>
@@ -121,7 +126,7 @@ const Bike: React.FC<{
                         {userRole === 'editor' && (
                             <>
                                 <button onClick={() => onBook(bikeId)} className="bg-green-600 text-white px-2.5 py-1 text-xs font-semibold rounded-md hover:bg-green-700 transition">Reservar</button>
-                                <button onClick={() => onBlock(bikeId)} className="bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 text-xs font-semibold rounded-md transition">Bloquear</button>
+                                <button onClick={() => onBlock(bikeId)} className="text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 border border-amber-600/20 hover:border-amber-600/40 bg-amber-600/5 hover:bg-amber-600/10 py-0.5 text-[10px] font-medium rounded transition">Bloquear</button>
                             </>
                         )}
                     </div>

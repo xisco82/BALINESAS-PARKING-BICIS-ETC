@@ -126,7 +126,8 @@
       "type": "object",
       "properties": {
         "bikeId": { "type": "integer" },
-        "reason": { "type": "string" }
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["bikeId", "reason"]
     },

@@ -121,9 +121,10 @@ service cloud.firestore {
 
     function isValidBlockedBike(data) {
       return hasRequiredFields(['bikeId', 'reason']) &&
-             hasOnlyAllowedFields(['bikeId', 'reason']) &&
+             hasOnlyAllowedFields(['bikeId', 'reason', 'createdAt']) &&
              data.bikeId is int &&
-             data.reason is string && data.reason.size() < 500;
+             data.reason is string && data.reason.size() < 500 &&
+             (!('createdAt' in data) || data.createdAt is string);
     }
 
     function isValidEmailRecipient(data) {
