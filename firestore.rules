@@ -57,11 +57,12 @@ service cloud.firestore {
 
     function isValidBikeBooking(data) {
       return hasRequiredFields(['bikeId', 'date', 'guestName', 'roomNumber']) &&
-             hasOnlyAllowedFields(['bikeId', 'date', 'guestName', 'roomNumber']) &&
+             hasOnlyAllowedFields(['bikeId', 'date', 'guestName', 'roomNumber', 'createdAt']) &&
              data.bikeId is int &&
              isValidDate(data.date) &&
              data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
-             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20;
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
+             (!('createdAt' in data) || data.createdAt is string);
     }
 
     function isValidBalineseBooking(data) {
@@ -116,6 +117,13 @@ service cloud.firestore {
              data.timeSlot is string &&
              data.guestName is string && data.guestName.size() > 0 && data.guestName.size() < 100 &&
              data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20;
+    }
+
+    function isValidBlockedBike(data) {
+      return hasRequiredFields(['bikeId', 'reason']) &&
+             hasOnlyAllowedFields(['bikeId', 'reason']) &&
+             data.bikeId is int &&
+             data.reason is string && data.reason.size() < 500;
     }
 
     function isValidEmailRecipient(data) {
@@ -186,6 +194,13 @@ service cloud.firestore {
     match /bike_availability/{id} {
       allow read: if isAuthenticated();
       allow write: if isAuthenticated();
+    }
+
+    match /blocked_bikes/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidBlockedBike(request.resource.data);
+      allow update: if isAuthenticated() && isValidBlockedBike(request.resource.data);
+      allow delete: if isAuthenticated();
     }
 
     match /balinese_bookings/{id} {

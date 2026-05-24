@@ -19,6 +19,7 @@ import {
   NewsEvent, 
   ParkingBooking, 
   BikeBooking, 
+  BlockedBike,
   BalineseBedBooking, 
   RestaurantBooking, 
   DayPassBooking, 
@@ -205,6 +206,36 @@ export const updateBikeAvailability = async (bikeId: number, date: string, isAva
     }
   } catch (err) {
     handleFirestoreError(err, isAvailable ? OperationType.WRITE : OperationType.DELETE, path);
+  }
+};
+
+// --- Blocked Bikes ---
+export const getBlockedBikes = (callback: (blocked: BlockedBike[]) => void) => {
+  const path = 'blocked_bikes';
+  const q = collection(db, path);
+  return onSnapshot(q, (snapshot) => {
+    const blocked = snapshot.docs.map(doc => doc.data() as BlockedBike);
+    callback(blocked);
+  }, (err) => handleFirestoreError(err, OperationType.GET, path));
+};
+
+export const blockBike = async (bikeId: number, reason: string) => {
+  const docId = `${bikeId}`;
+  const path = `blocked_bikes/${docId}`;
+  try {
+    await setDoc(doc(db, 'blocked_bikes', docId), { bikeId, reason });
+  } catch (err) {
+    handleFirestoreError(err, OperationType.WRITE, path);
+  }
+};
+
+export const unblockBike = async (bikeId: number) => {
+  const docId = `${bikeId}`;
+  const path = `blocked_bikes/${docId}`;
+  try {
+    await deleteDoc(doc(db, 'blocked_bikes', docId));
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, path);
   }
 };
 

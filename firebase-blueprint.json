@@ -33,7 +33,8 @@
         "bikeId": { "type": "integer" },
         "date": { "type": "string", "format": "date" },
         "guestName": { "type": "string" },
-        "roomNumber": { "type": "string" }
+        "roomNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["bikeId", "date", "guestName", "roomNumber"]
     },
@@ -119,6 +120,16 @@
       },
       "required": ["bikeId", "date"]
     },
+    "BlockedBike": {
+      "title": "Blocked Bike",
+      "description": "Information about a blocked bike (e.g. stolen, broken).",
+      "type": "object",
+      "properties": {
+        "bikeId": { "type": "integer" },
+        "reason": { "type": "string" }
+      },
+      "required": ["bikeId", "reason"]
+    },
     "EmailRecipient": {
       "title": "Email Recipient",
       "description": "A department and its corresponding email address.",
@@ -173,6 +184,10 @@
     "bike_availability": {
       "schema": "BikeAvailability",
       "description": "Collection of bike availability status."
+    },
+    "blocked_bikes": {
+      "schema": "BlockedBike",
+      "description": "Collection of blocked bikes."
     },
     "balinese_bookings": {
       "schema": "BalineseBooking",

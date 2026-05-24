@@ -41,6 +41,12 @@ export interface BikeBooking {
   guestName: string;
   roomNumber: string;
   date: string; // YYYY-MM-DD
+  createdAt?: string;
+}
+
+export interface BlockedBike {
+  bikeId: number;
+  reason: string;
 }
 
 export interface BalineseBedBooking {
