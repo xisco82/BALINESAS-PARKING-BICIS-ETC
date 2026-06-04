@@ -146,18 +146,20 @@ service cloud.firestore {
 
     function isValidExtraFBEntry(data) {
       return hasRequiredFields(['date', 'department', 'numberOfPeople', 'mealType', 'createdAt', 'createdBy']) &&
-             hasOnlyAllowedFields(['date', 'department', 'numberOfPeople', 'mealType', 'createdAt', 'createdBy']) &&
+             hasOnlyAllowedFields(['date', 'department', 'numberOfPeople', 'mealType', 'createdAt', 'createdBy', 'notes']) &&
              isValidDate(data.date) &&
              (data.department == 'DIRECCIÓN/SUBDIRECCIÓN' || 
               data.department == 'GUIAS O HUERZELER' || 
               data.department == 'GRUPOS QUE NO APARECEN EN TIMÓN' || 
               data.department == 'COMPENSACIONES DE H A HD' || 
               data.department == 'COMPENSACIONES DE HD A HMP' || 
-              data.department == 'INTERCAMBIOS CENAS HM HOTELS') &&
+              data.department == 'INTERCAMBIOS CENAS HM HOTELS' ||
+              data.department == 'PROPIEDAD') &&
              data.numberOfPeople is int &&
              (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena') &&
              isValidDateTime(data.createdAt) &&
-             data.createdBy is string;
+             data.createdBy is string &&
+             (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));
     }
 
     // ===============================================================

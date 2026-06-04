@@ -10,7 +10,8 @@ const DEPARTMENTS = [
   "GRUPOS QUE NO APARECEN EN TIMÓN",
   "COMPENSACIONES DE H A HD",
   "COMPENSACIONES DE HD A HMP",
-  "INTERCAMBIOS CENAS HM HOTELS"
+  "INTERCAMBIOS CENAS HM HOTELS",
+  "PROPIEDAD"
 ];
 
 interface ExtraFBSectionProps {
@@ -29,7 +30,8 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
     date: new Date().toISOString().split('T')[0],
     department: DEPARTMENTS[0],
     numberOfPeople: 1,
-    mealType: 'cena' as 'desayuno' | 'almuerzo' | 'cena'
+    mealType: 'cena' as 'desayuno' | 'almuerzo' | 'cena',
+    notes: ''
   });
 
   useEffect(() => {
@@ -46,8 +48,8 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
     try {
       await addExtraFBEntry(newEntry);
       showToast("Entrada guardada correctamente", "success");
-      // Reset people count but keep date/dept/meal for quick consecutive entries
-      setNewEntry(prev => ({ ...prev, numberOfPeople: 1 }));
+      // Reset people count and notes, but keep date/dept/meal for quick consecutive entries
+      setNewEntry(prev => ({ ...prev, numberOfPeople: 1, notes: '' }));
     } catch (error: any) {
       showToast("Error al guardar: " + error.message, "error");
     }
@@ -85,55 +87,70 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
       </h3>
 
       {/* Form Section */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-6 bg-amber-50/50 dark:bg-amber-900/10 p-4 rounded-lg border border-amber-100 dark:border-amber-900/30">
-        <div className="md:col-span-1">
-          <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Fecha</label>
-          <input 
-            type="date" 
-            value={newEntry.date}
-            onChange={e => setNewEntry({...newEntry, date: e.target.value})}
-            className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
-          />
+      <form onSubmit={handleSubmit} className="mb-6 bg-amber-50/50 dark:bg-amber-900/10 p-4 rounded-lg border border-amber-100 dark:border-amber-900/30 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Fecha</label>
+            <input 
+              type="date" 
+              value={newEntry.date}
+              onChange={e => setNewEntry({...newEntry, date: e.target.value})}
+              className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Concepto / Dept.</label>
+            <select 
+              value={newEntry.department}
+              onChange={e => setNewEntry({...newEntry, department: e.target.value})}
+              className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
+            >
+              {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Personas</label>
+            <input 
+              type="number" 
+              min="1"
+              value={newEntry.numberOfPeople}
+              onChange={e => setNewEntry({...newEntry, numberOfPeople: parseInt(e.target.value) || 1})}
+              className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Servicio</label>
+            <select 
+              value={newEntry.mealType}
+              onChange={e => setNewEntry({...newEntry, mealType: e.target.value as any})}
+              className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
+            >
+              <option value="desayuno">Desayuno</option>
+              <option value="almuerzo">Almuerzo</option>
+              <option value="cena">Cena</option>
+            </select>
+          </div>
         </div>
-        <div className="md:col-span-1">
-          <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Concepto / Dept.</label>
-          <select 
-            value={newEntry.department}
-            onChange={e => setNewEntry({...newEntry, department: e.target.value})}
-            className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
-          >
-            {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-        </div>
-        <div className="md:col-span-1">
-          <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Personas</label>
-          <input 
-            type="number" 
-            min="1"
-            value={newEntry.numberOfPeople}
-            onChange={e => setNewEntry({...newEntry, numberOfPeople: parseInt(e.target.value) || 1})}
-            className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
-          />
-        </div>
-        <div className="md:col-span-1">
-          <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Servicio</label>
-          <select 
-            value={newEntry.mealType}
-            onChange={e => setNewEntry({...newEntry, mealType: e.target.value as any})}
-            className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
-          >
-            <option value="desayuno">Desayuno</option>
-            <option value="almuerzo">Almuerzo</option>
-            <option value="cena">Cena</option>
-          </select>
-        </div>
-        <div className="md:col-span-1 flex items-end">
-          <button 
-            type="submit"
-            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded shadow transition-all active:scale-95"
-          >
-            AÑADIR
-          </button>
+        
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end pt-1">
+          <div className="md:col-span-4">
+            <label className="block text-[10px] font-bold uppercase text-amber-800 dark:text-amber-300 mb-1">Observaciones (Opcional)</label>
+            <input 
+              type="text"
+              placeholder="Observaciones..."
+              value={newEntry.notes}
+              onChange={e => setNewEntry({...newEntry, notes: e.target.value})}
+              className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+            />
+          </div>
+          <div className="md:col-span-1">
+            <button 
+              type="submit"
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 rounded shadow transition-all active:scale-95"
+            >
+              AÑADIR
+            </button>
+          </div>
         </div>
       </form>
 
@@ -212,7 +229,14 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
                 filteredEntries.map(entry => (
                   <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                     <td className="p-2 font-mono text-[11px]">{new Date(entry.date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</td>
-                    <td className="p-2 font-bold text-xs">{entry.department}</td>
+                    <td className="p-2 font-bold text-xs">
+                      <div>{entry.department}</div>
+                      {entry.notes && (
+                        <div className="text-[10px] text-gray-500 dark:text-gray-400 font-normal italic mt-0.5 max-w-xs break-words">
+                          {entry.notes}
+                        </div>
+                      )}
+                    </td>
                     <td className="p-2"><span className="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded font-black">{entry.numberOfPeople}</span></td>
                     <td className="p-2">
                       <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${

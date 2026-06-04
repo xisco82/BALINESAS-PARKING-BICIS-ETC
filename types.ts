@@ -77,6 +77,7 @@ export interface ExtraFBEntry {
   mealType: 'desayuno' | 'almuerzo' | 'cena';
   createdAt: string;
   createdBy: string;
+  notes?: string;
 }
 
 export interface RestaurantBooking {
