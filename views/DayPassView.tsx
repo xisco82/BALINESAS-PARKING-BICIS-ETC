@@ -345,8 +345,8 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                                             <p className="text-sm text-black/60 dark:text-gray-400 truncate flex-shrink font-semibold" title={booking.serviceType}>{booking.serviceType.replace(/^\d+\.\s/, '')}</p>
                                                         </div>
                                                         {booking.notes && (
-                                                            <p className="text-xs text-amber-900 dark:text-amber-200 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md mt-1.5 max-w-xl break-words italic font-medium font-sans">
-                                                                <span className="not-italic font-extrabold text-[10px] text-amber-700 dark:text-amber-300 mr-1 uppercase font-mono">Obs:</span>
+                                                            <p className="text-xs text-black bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-md mt-1.5 max-w-xl break-words italic font-bold font-sans shadow-sm">
+                                                                <span className="not-italic font-black text-[10px] text-black mr-1 uppercase font-mono">Obs:</span>
                                                                 {booking.notes}
                                                             </p>
                                                         )}
