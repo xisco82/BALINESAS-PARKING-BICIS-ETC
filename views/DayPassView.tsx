@@ -25,6 +25,7 @@ const DAY_PASS_OPTIONS = [
   { id: '6. Day Pass con Cama Balinesa + Almuerzo', name: 'Day Pass con Cama Balinesa + Almuerzo' },
   { id: '4. Day Pass con Cena Buffet', name: 'Day Pass con Cena Buffet' },
   { id: '5. Day Pass de Tarde con Cena Buffet & Cocktail', name: 'Day Pass de Tarde con Cena Buffet & Cocktail' },
+  { id: '7. Day Pass', name: 'Day Pass' },
 ];
 
 const initialFormState = {
@@ -333,14 +334,22 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
 
                                             return (
                                                 <div key={booking.id} className={`flex justify-between items-center ${cardClasses} backdrop-blur-sm px-4 py-3 rounded-lg shadow-md`}>
-                                                    <div className="min-w-0 flex items-baseline space-x-3">
-                                                        <p className="font-bold text-gray-900 dark:text-gray-100 truncate flex items-center" title={booking.clientName}>
-                                                            {booking.clientName}
-                                                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200">
-                                                                {booking.numberOfPeople || 1} {booking.numberOfPeople > 1 ? 'pax' : 'pax'}
-                                                            </span>
-                                                        </p>
-                                                        <p className="text-sm text-black dark:text-gray-400 truncate flex-shrink" title={booking.serviceType}>{booking.serviceType.replace(/^\d+\.\s/, '')}</p>
+                                                    <div className="min-w-0 flex-1 flex flex-col">
+                                                        <div className="flex flex-col md:flex-row md:items-baseline gap-x-3 gap-y-1">
+                                                            <p className="font-bold text-gray-900 dark:text-gray-100 truncate flex items-center" title={booking.clientName}>
+                                                                {booking.clientName}
+                                                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200">
+                                                                    {booking.numberOfPeople || 1} {booking.numberOfPeople > 1 ? 'pax' : 'pax'}
+                                                                </span>
+                                                            </p>
+                                                            <p className="text-sm text-black/60 dark:text-gray-400 truncate flex-shrink font-semibold" title={booking.serviceType}>{booking.serviceType.replace(/^\d+\.\s/, '')}</p>
+                                                        </div>
+                                                        {booking.notes && (
+                                                            <p className="text-xs text-amber-900 dark:text-amber-200 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md mt-1.5 max-w-xl break-words italic font-medium font-sans">
+                                                                <span className="not-italic font-extrabold text-[10px] text-amber-700 dark:text-amber-300 mr-1 uppercase font-mono">Obs:</span>
+                                                                {booking.notes}
+                                                            </p>
+                                                        )}
                                                     </div>
 
                                                     <div className="ml-4 flex-shrink-0 flex items-center space-x-3">
