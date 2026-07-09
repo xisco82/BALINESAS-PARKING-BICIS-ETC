@@ -10,6 +10,7 @@ import DisabilityView from './views/DisabilityView';
 import BikesView from './views/BikesView';
 import SaunaView from './views/SaunaView';
 import DayPassView from './views/DayPassView';
+import IncidenciasClientesView from './views/IncidenciasClientesView';
 import { initClient } from './services/googleSheetsService';
 import { auth } from './services/firebase';
 import firebaseConfig from './firebase-applet-config.json';
@@ -28,6 +29,7 @@ import {
     SaunaIcon,
     DayPassIcon,
     SkyDinnerIcon,
+    IncidentIcon,
 } from './components/icons/NavIcons';
 
 
@@ -171,6 +173,7 @@ const App: React.FC = () => {
     { view: View.DayPass, label: 'Day Pass', icon: <DayPassIcon /> },
     { view: View.SkyDinner, label: 'Cena Sky', icon: <SkyDinnerIcon /> },
     { view: View.Disability, label: 'Minusvalías', icon: <DisabilityIcon /> },
+    { view: View.ClientIncidents, label: 'Incidencias Clientes', icon: <IncidentIcon /> },
   ];
 
   const visibleNavItems = allNavItems;
@@ -210,6 +213,8 @@ const App: React.FC = () => {
         return <DayPassView {...commonProps} />;
       case View.Disability:
         return <DisabilityView {...commonProps} />;
+      case View.ClientIncidents:
+        return <IncidenciasClientesView {...commonProps} />;
       default:
         return <NewsView 
                   isSignedIn={isSignedIn} 

@@ -10,6 +10,7 @@ export enum View {
   Disability,
   Sauna,
   SkyDinner,
+  ClientIncidents,
 }
 
 export type UserRole = 'editor' | 'balinese_editor';
@@ -119,4 +120,17 @@ export interface SaunaBooking {
   timeSlot: string; // HH:MM
   guestName: string;
   roomNumber: string;
+}
+
+export interface ClientIncident {
+  id: string;
+  clientName: string;
+  roomNumber: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  notes: string;
+  resolved: boolean;
+  status?: 'pendiente' | 'proceso' | 'resuelta';
+  createdAt: string; // ISO String
+  createdBy: string;
 }

@@ -25,7 +25,8 @@ import {
   DayPassBooking, 
   AccessibilityBooking, 
   SaunaBooking,
-  ExtraFBEntry
+  ExtraFBEntry,
+  ClientIncident
 } from '../types';
 
 export enum OperationType {
@@ -510,6 +511,53 @@ export const deleteExtraFBEntry = async (id: string) => {
   const path = `extra_fb_entries/${id}`;
   try {
     const docRef = doc(db, 'extra_fb_entries', id);
+    await deleteDoc(docRef);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.DELETE, path);
+  }
+};
+
+// --- Client Incidents ---
+export const getClientIncidents = (callback: (incidents: ClientIncident[]) => void) => {
+  const path = 'client_incidents';
+  const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+  return onSnapshot(q, (snapshot) => {
+    const incidents = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    })) as ClientIncident[];
+    callback(incidents);
+  }, (err) => handleFirestoreError(err, OperationType.GET, path));
+};
+
+export const addClientIncident = async (incident: Omit<ClientIncident, 'id' | 'createdAt' | 'createdBy'>) => {
+  const path = 'client_incidents';
+  try {
+    const docRef = await addDoc(collection(db, path), {
+      ...incident,
+      createdAt: new Date().toISOString(),
+      createdBy: auth.currentUser?.email || 'unknown'
+    });
+    return docRef.id;
+  } catch (err) {
+    handleFirestoreError(err, OperationType.CREATE, path);
+  }
+};
+
+export const updateClientIncident = async (id: string, updates: Partial<Omit<ClientIncident, 'id' | 'createdAt' | 'createdBy'>>) => {
+  const path = `client_incidents/${id}`;
+  try {
+    const docRef = doc(db, 'client_incidents', id);
+    await updateDoc(docRef, updates);
+  } catch (err) {
+    handleFirestoreError(err, OperationType.UPDATE, path);
+  }
+};
+
+export const deleteClientIncident = async (id: string) => {
+  const path = `client_incidents/${id}`;
+  try {
+    const docRef = doc(db, 'client_incidents', id);
     await deleteDoc(docRef);
   } catch (err) {
     handleFirestoreError(err, OperationType.DELETE, path);

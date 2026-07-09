@@ -162,6 +162,19 @@ service cloud.firestore {
              (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));
     }
 
+    function isValidClientIncident(data) {
+      return hasRequiredFields(['clientName', 'roomNumber', 'startDate', 'endDate', 'notes', 'resolved']) &&
+             hasOnlyAllowedFields(['clientName', 'roomNumber', 'startDate', 'endDate', 'notes', 'resolved', 'createdAt', 'createdBy', 'status']) &&
+             data.clientName is string && data.clientName.size() > 0 && data.clientName.size() < 200 &&
+             data.roomNumber is string && data.roomNumber.size() > 0 && data.roomNumber.size() < 20 &&
+             isValidDate(data.startDate) && isValidDate(data.endDate) &&
+             data.notes is string && data.notes.size() < 2000 &&
+             data.resolved is bool &&
+             (!('status' in data) || (data.status is string && (data.status == 'pendiente' || data.status == 'proceso' || data.status == 'resuelta'))) &&
+             (!('createdAt' in data) || isValidDateTime(data.createdAt)) &&
+             (!('createdBy' in data) || data.createdBy is string);
+    }
+
     // ===============================================================
     // Collection Rules
     // ===============================================================
@@ -269,6 +282,13 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidExtraFBEntry(request.resource.data);
       allow update: if isAuthenticated() && isValidExtraFBEntry(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /client_incidents/{id} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidClientIncident(request.resource.data);
+      allow update: if isAuthenticated() && isValidClientIncident(request.resource.data);
       allow delete: if isAuthenticated();
     }
 

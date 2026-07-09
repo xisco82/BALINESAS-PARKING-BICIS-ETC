@@ -168,6 +168,23 @@
         "notes": { "type": "string" }
       },
       "required": ["date", "department", "numberOfPeople", "mealType", "createdAt", "createdBy"]
+    },
+    "ClientIncident": {
+      "title": "Client Incident",
+      "description": "An incident or issue logged for a hotel guest.",
+      "type": "object",
+      "properties": {
+        "clientName": { "type": "string" },
+        "roomNumber": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "notes": { "type": "string" },
+        "resolved": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["pendiente", "proceso", "resuelta"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "createdBy": { "type": "string" }
+      },
+      "required": ["clientName", "roomNumber", "startDate", "endDate", "notes", "resolved"]
     }
   },
   "firestore": {
@@ -230,6 +247,10 @@
     "extra_fb_entries": {
       "schema": "ExtraFBEntry",
       "description": "Collection of non-PMS breakfast and dinner counts."
+    },
+    "client_incidents": {
+      "schema": "ClientIncident",
+      "description": "Collection of client incidents or issues."
     }
   }
 }
