@@ -30,7 +30,7 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
     date: new Date().toISOString().split('T')[0],
     department: DEPARTMENTS[0],
     numberOfPeople: 1,
-    mealType: 'cena' as 'desayuno' | 'almuerzo' | 'cena',
+    mealType: 'cena' as 'desayuno' | 'solo_bebidas' | 'cena' | 'almuerzo',
     notes: ''
   });
 
@@ -69,15 +69,19 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
 
   const filteredEntries = entries.filter(e => {
     const matchesDept = filterDept === 'todos' || e.department === filterDept;
-    const matchesMeal = filterMeal === 'todos' || e.mealType === filterMeal;
+    const matchesMeal = filterMeal === 'todos' || 
+      (filterMeal === 'solo_bebidas' ? (e.mealType === 'solo_bebidas' || e.mealType === 'almuerzo') : e.mealType === filterMeal);
     return matchesDept && matchesMeal;
   });
 
-  const totals = filteredEntries.reduce((acc, curr) => ({
-    ...acc,
-    [curr.mealType]: (acc[curr.mealType] || 0) + curr.numberOfPeople,
-    total: acc.total + curr.numberOfPeople
-  }), { desayuno: 0, almuerzo: 0, cena: 0, total: 0 });
+  const totals = filteredEntries.reduce((acc, curr) => {
+    const key = (curr.mealType === 'solo_bebidas' || curr.mealType === 'almuerzo') ? 'solo_bebidas' : curr.mealType;
+    return {
+      ...acc,
+      [key]: (acc[key] || 0) + curr.numberOfPeople,
+      total: acc.total + curr.numberOfPeople
+    };
+  }, { desayuno: 0, solo_bebidas: 0, cena: 0, total: 0 } as Record<string, number>);
 
   return (
     <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl shadow-lg mt-8 border border-gray-200 dark:border-gray-700">
@@ -126,7 +130,7 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
               className="w-full p-2 text-sm rounded bg-white dark:bg-gray-700 border border-amber-200 dark:border-amber-800"
             >
               <option value="desayuno">Desayuno</option>
-              <option value="almuerzo">Almuerzo</option>
+              <option value="solo_bebidas">Solo Bebidas</option>
               <option value="cena">Cena</option>
             </select>
           </div>
@@ -168,19 +172,19 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
         <div className="grid grid-cols-4 gap-2 md:col-span-4">
           <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-100 dark:border-yellow-900/40 text-center">
             <span className="block text-[10px] font-bold text-yellow-700 dark:text-yellow-400 uppercase">Desayunos</span>
-            <span className="text-2xl font-black text-yellow-900 dark:text-yellow-100">{totals.desayuno}</span>
+            <span className="text-2xl font-black text-yellow-900 dark:text-yellow-100">{totals.desayuno || 0}</span>
           </div>
-          <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg border border-orange-100 dark:border-orange-900/40 text-center">
-            <span className="block text-[10px] font-bold text-orange-700 dark:text-orange-400 uppercase">Almuerzos</span>
-            <span className="text-2xl font-black text-orange-900 dark:text-orange-100">{totals.almuerzo}</span>
+          <div className="bg-cyan-50 dark:bg-cyan-900/20 p-3 rounded-lg border border-cyan-100 dark:border-cyan-900/40 text-center">
+            <span className="block text-[10px] font-bold text-cyan-700 dark:text-cyan-400 uppercase">Solo Bebidas</span>
+            <span className="text-2xl font-black text-cyan-900 dark:text-cyan-100">{totals.solo_bebidas || 0}</span>
           </div>
           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg border border-indigo-100 dark:border-indigo-900/40 text-center">
             <span className="block text-[10px] font-bold text-indigo-700 dark:text-indigo-400 uppercase">Cenas</span>
-            <span className="text-2xl font-black text-indigo-900 dark:text-indigo-100">{totals.cena}</span>
+            <span className="text-2xl font-black text-indigo-900 dark:text-indigo-100">{totals.cena || 0}</span>
           </div>
           <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-100 dark:border-green-900/40 text-center">
             <span className="block text-[10px] font-bold text-green-700 dark:text-green-400 uppercase">Total Mensual</span>
-            <span className="text-2xl font-black text-green-900 dark:text-green-100">{totals.total}</span>
+            <span className="text-2xl font-black text-green-900 dark:text-green-100">{totals.total || 0}</span>
           </div>
         </div>
       </div>
@@ -204,7 +208,7 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
           >
             <option value="todos">Todos los servicios</option>
             <option value="desayuno">Sólo Desayuno</option>
-            <option value="almuerzo">Sólo Almuerzo</option>
+            <option value="solo_bebidas">Sólo Bebidas</option>
             <option value="cena">Sólo Cena</option>
           </select>
         </div>
@@ -241,10 +245,10 @@ const ExtraFBSection: React.FC<ExtraFBSectionProps> = ({ userRole }) => {
                     <td className="p-2">
                       <span className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
                         entry.mealType === 'desayuno' ? 'bg-yellow-100 text-yellow-800' : 
-                        entry.mealType === 'almuerzo' ? 'bg-orange-100 text-orange-800' :
+                        (entry.mealType === 'solo_bebidas' || entry.mealType === 'almuerzo') ? 'bg-cyan-100 text-cyan-800' :
                         'bg-indigo-100 text-indigo-800'
                       }`}>
-                        {entry.mealType}
+                        {(entry.mealType === 'solo_bebidas' || entry.mealType === 'almuerzo') ? 'solo bebidas' : entry.mealType}
                       </span>
                     </td>
                     <td className="p-2 text-right">

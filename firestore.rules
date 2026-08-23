@@ -86,7 +86,7 @@ service cloud.firestore {
              (!('guestsCount' in data) || data.guestsCount is int) &&
              (!('checkedIn' in data) || data.checkedIn is bool) &&
              (!('checkedInDate' in data) || isValidDate(data.checkedInDate)) &&
-             (!('mealType' in data) || (data.mealType is string && (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena' || data.mealType == 'MP')));
+             (!('mealType' in data) || (data.mealType is string && (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena' || data.mealType == 'MP' || data.mealType == 'desayuno_cena' || data.mealType == 'desayuno_cena_compensacion' || data.mealType == 'solo_bebidas' || data.mealType == 'desayuno_compensacion' || data.mealType == 'cena_compensacion')));
     }
 
     function isValidDayPassBooking(data) {
@@ -156,7 +156,7 @@ service cloud.firestore {
               data.department == 'INTERCAMBIOS CENAS HM HOTELS' ||
               data.department == 'PROPIEDAD') &&
              data.numberOfPeople is int &&
-             (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena') &&
+             (data.mealType == 'desayuno' || data.mealType == 'almuerzo' || data.mealType == 'cena' || data.mealType == 'solo_bebidas') &&
              isValidDateTime(data.createdAt) &&
              data.createdBy is string &&
              (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000));

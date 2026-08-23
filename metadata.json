@@ -1,6 +1,7 @@
 {
   "name": "BALINESAS, PARKING ETC.",
-  "description": "An application for managing reservations and operations at a hotel reception desk. Features include Balinese bed reservations, bike rentals, parking management, extra order logging, and accessibility tracking.",
+  "description": "An application for managing reservations and operations at a hotel reception desk. Features include Balinese bed reservations, bike rentals, parking management, extra order logging, restaurant service tracking with monthly analytics, and accessibility tracking.",
   "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"],
   "prompt": ""
 }

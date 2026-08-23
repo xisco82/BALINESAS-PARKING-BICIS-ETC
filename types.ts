@@ -75,7 +75,7 @@ export interface ExtraFBEntry {
   date: string;
   department: string;
   numberOfPeople: number;
-  mealType: 'desayuno' | 'almuerzo' | 'cena';
+  mealType: 'desayuno' | 'almuerzo' | 'cena' | 'solo_bebidas';
   createdAt: string;
   createdBy: string;
   notes?: string;
@@ -90,7 +90,7 @@ export interface RestaurantBooking {
   description: string;
   origin?: 'news' | 'service' | 'pdf';
   guestsCount?: number;
-  mealType?: 'desayuno' | 'almuerzo' | 'cena' | 'MP';
+  mealType?: 'desayuno' | 'almuerzo' | 'cena' | 'MP' | 'desayuno_cena' | 'desayuno_cena_compensacion' | 'solo_bebidas' | 'desayuno_compensacion' | 'cena_compensacion';
   checkedIn?: boolean;
   checkedInDate?: string;
 }
