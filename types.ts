@@ -27,7 +27,9 @@ export interface NewsEvent {
   roomNumber?: string;
   email?: string;
   phone?: string;
-  type?: 'news' | 'event';
+  type?: 'news' | 'event' | 'document';
+  pdfId?: string;   // Linked monthly summary document
+  pdfName?: string;
 }
 
 export interface ParkingBooking {
@@ -93,6 +95,8 @@ export interface RestaurantBooking {
   mealType?: 'desayuno' | 'almuerzo' | 'cena' | 'MP' | 'desayuno_cena' | 'desayuno_cena_compensacion' | 'solo_bebidas' | 'desayuno_compensacion' | 'cena_compensacion';
   checkedIn?: boolean;
   checkedInDate?: string;
+  pdfId?: string;   // Linked monthly summary document (events only)
+  pdfName?: string;
 }
 
 export interface DayPassBooking {

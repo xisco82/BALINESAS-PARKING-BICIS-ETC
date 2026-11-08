@@ -5,7 +5,9 @@ import { db } from '../services/firebase';
 import { useToast } from '../components/Toast';
 import ServicesView from './ServicesView';
 import DocumentEditorModal from '../components/DocumentEditorModal';
-import { UserRole } from '../types';
+import { UserRole, RestaurantBooking, NewsEvent } from '../types';
+import { getAllServiceBookings, getNewsEvents } from '../services/firebaseService';
+import { mergeEventSources } from '../services/eventSync';
 
 interface EventsViewProps {
   dbError: string | null;
@@ -29,6 +31,23 @@ const MONTHS = [
   'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre'
 ];
 
+const ALL_MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+/** Month tab that a date (YYYY-MM-DD) belongs to, if it is one of the season tabs. */
+const monthFromDate = (date?: string | null): string | null => {
+  if (!date) return null;
+  const name = ALL_MONTHS[Number(date.split('-')[1]) - 1];
+  return name && MONTHS.includes(name) ? name : null;
+};
+
+const formatShortDate = (date: string) => {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+};
+
 const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
   const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('summary');
   const [pdfs, setPdfs] = useState<EventPdf[]>([]);
@@ -37,7 +56,26 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
   const [activeMonth, setActiveMonth] = useState<string>(MONTHS[0]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingDoc, setEditingDoc] = useState<EventPdf | null>(null);
+  const [draftDoc, setDraftDoc] = useState<{ fileName: string; eventDate: string } | null>(null);
+  const [annualEvents, setAnnualEvents] = useState<RestaurantBooking[]>([]);
+  const [newsEvents, setNewsEvents] = useState<NewsEvent[]>([]);
   const { showToast } = useToast();
+
+  // Annual events and novedades, to show in each month which events still have no summary document.
+  useEffect(() => {
+    if (!isDbInitialized || !isAuthReady) return;
+    const unsubscribeEvents = getAllServiceBookings('events_bookings', setAnnualEvents);
+    const unsubscribeNews = getNewsEvents(setNewsEvents);
+    return () => {
+      unsubscribeEvents();
+      unsubscribeNews();
+    };
+  }, [isDbInitialized, isAuthReady]);
+
+  const openDocumentById = (pdfId: string) => {
+    const pdf = pdfs.find(p => p.id === pdfId);
+    if (pdf) setSelectedDoc(pdf);
+  };
 
   useEffect(() => {
     if (!isDbInitialized || !isAuthReady) return;
@@ -90,8 +128,10 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
 
   const handleSaveDocument = async (docData: { fileName: string; eventDate: string; content: string }) => {
     const isEditing = Boolean(editingDoc?.id);
+    // Keep the document in the tab of its event date so every view agrees.
+    const targetMonth = monthFromDate(docData.eventDate) || activeMonth;
     const payload = {
-      month: activeMonth,
+      month: targetMonth,
       fileName: docData.fileName.trim(),
       content: docData.content,
       pdfUrl: editingDoc?.pdfUrl || 'document',
@@ -127,7 +167,12 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             body: JSON.stringify(payload)
           });
         }
-        showToast('Documento guardado correctamente', 'success');
+        showToast(
+          targetMonth !== activeMonth
+            ? `Documento guardado en ${targetMonth} (mes de la fecha del evento)`
+            : 'Documento guardado correctamente',
+          'success'
+        );
 
         // Send notification via server to Apps Script
         try {
@@ -136,8 +181,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               title: docData.fileName.trim(),
-              description: `Nuevo documento añadido para ${activeMonth}: ${docData.fileName.trim()}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
-              month: activeMonth,
+              description: `Nuevo documento añadido para ${targetMonth}: ${docData.fileName.trim()}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
+              month: targetMonth,
               eventDate: docData.eventDate || null,
               type: 'event_pdf'
             })
@@ -148,6 +193,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       }
 
       setEditingDoc(null);
+      setDraftDoc(null);
       setIsEditorOpen(false);
     } catch (error) {
       console.error("Error saving document:", error);
@@ -174,6 +220,12 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       return a.eventDate.localeCompare(b.eventDate);
     });
   const hasPdfs = activeMonthPdfs.length > 0;
+
+  // Annual events / novedades of this month that are not linked to any summary document yet.
+  const activeMonthNumber = String(ALL_MONTHS.indexOf(activeMonth) + 1).padStart(2, '0');
+  const activeMonthPrefix = `${new Date().getFullYear()}-${activeMonthNumber}`;
+  const eventsWithoutDoc = mergeEventSources(annualEvents, newsEvents, pdfs)
+    .filter(e => e.source === 'service' && !e.pdfId && e.startDate.startsWith(activeMonthPrefix));
 
   return (
     <div className="flex flex-col h-full">
@@ -337,6 +389,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               tableName="events_bookings"
               onRetryAuth={onRetryAuth}
               hideHeader={true}
+              onOpenDocument={openDocumentById}
             />
           </div>
         ) : (
@@ -370,6 +423,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     <button 
                       onClick={() => {
                         setEditingDoc(null);
+                        setDraftDoc(null);
                         setIsEditorOpen(true);
                       }}
                       className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2 shadow-sm"
@@ -444,6 +498,39 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     </div>
                   )}
                 </div>
+
+                {eventsWithoutDoc.length > 0 && (
+                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-3">
+                      Eventos anuales de {activeMonth} sin documento
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {eventsWithoutDoc.map(ev => (
+                        <div key={ev.id} className="flex items-center justify-between gap-3 bg-purple-50/80 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg px-3 py-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300 bg-white/70 dark:bg-gray-800/70 px-1.5 py-0.5 rounded shrink-0">
+                              {formatShortDate(ev.startDate)}
+                              {ev.endDate !== ev.startDate && ` - ${formatShortDate(ev.endDate)}`}
+                            </span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{ev.title}</span>
+                          </div>
+                          {userRole === 'editor' && (
+                            <button
+                              onClick={() => {
+                                setEditingDoc(null);
+                                setDraftDoc({ fileName: ev.title, eventDate: ev.startDate });
+                                setIsEditorOpen(true);
+                              }}
+                              className="text-xs font-semibold text-blue-700 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 shrink-0"
+                            >
+                              Crear documento
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>
@@ -593,9 +680,10 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         onClose={() => {
           setIsEditorOpen(false);
           setEditingDoc(null);
+          setDraftDoc(null);
         }}
         onSave={handleSaveDocument}
-        initialData={editingDoc}
+        initialData={editingDoc || draftDoc}
         monthName={activeMonth}
       />
     </div>
