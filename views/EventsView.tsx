@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
-import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc, deleteField } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useToast } from '../components/Toast';
 import ServicesView from './ServicesView';
+import DocumentEditorModal from '../components/DocumentEditorModal';
 import { UserRole } from '../types';
-import RichTextEditor, { DOC_STYLES, sanitizeHtml, isHtmlEmpty, htmlByteSize } from '../components/RichTextEditor';
-
-const MAX_CONTENT_BYTES = 900_000; // Firestore admite como máximo 1 MB por documento
 
 interface EventsViewProps {
   dbError: string | null;
@@ -17,14 +15,14 @@ interface EventsViewProps {
   onRetryAuth: () => void;
 }
 
-interface EventPdf {
+export interface EventPdf {
   id: string;
   month: string;
-  pdfUrl?: string;   // Documentos antiguos (enlace de Google Drive)
-  content?: string;  // Documentos nuevos (texto con formato, HTML)
+  pdfUrl?: string;
   fileName: string;
   uploadedAt: string;
   eventDate?: string; // YYYY-MM-DD
+  content?: string;   // Rich text HTML document written directly in the app
 }
 
 const MONTHS = [
@@ -34,16 +32,11 @@ const MONTHS = [
 const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, onRetryAuth }) => {
   const [activeTab, setActiveTab] = useState<'pdfs' | 'summary'>('summary');
   const [pdfs, setPdfs] = useState<EventPdf[]>([]);
-  const [selectedPdf, setSelectedPdf] = useState<EventPdf | null>(null);
+  const [selectedDoc, setSelectedDoc] = useState<EventPdf | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMonth, setActiveMonth] = useState<string>(MONTHS[0]);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingPdf, setEditingPdf] = useState<EventPdf | null>(null);
-  const [editorHtml, setEditorHtml] = useState('');
-  const [editorKey, setEditorKey] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [driveName, setDriveName] = useState('');
-  const [eventDate, setEventDate] = useState('');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<EventPdf | null>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -64,65 +57,77 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
     return () => unsubscribe();
   }, [isDbInitialized, isAuthReady]);
 
+  // Escape key handler for the full-screen viewer
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedDoc) {
+        setSelectedDoc(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDoc]);
+
   const handleDeletePdf = async (pdf: EventPdf) => {
     if (!window.confirm(`¿Estás seguro de que quieres eliminar el documento "${pdf.fileName}"?`)) return;
 
     try {
-      await deleteDoc(doc(db, 'event_pdfs', pdf.id));
+      try {
+        await deleteDoc(doc(db, 'event_pdfs', pdf.id));
+      } catch (clientErr) {
+        console.warn("Client delete failed, attempting backend delete proxy:", clientErr);
+        await fetch(`/api/event-documents/${pdf.id}`, { method: 'DELETE' });
+      }
       showToast('Documento eliminado correctamente', 'success');
+      if (selectedDoc?.id === pdf.id) {
+        setSelectedDoc(null);
+      }
     } catch (error) {
       console.error("Error deleting PDF:", error);
       showToast('Error al eliminar el documento', 'error');
     }
   };
 
-  // Cerrar el visor con la tecla Escape
-  useEffect(() => {
-    if (!selectedPdf) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setSelectedPdf(null); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [selectedPdf]);
+  const handleSaveDocument = async (docData: { fileName: string; eventDate: string; content: string }) => {
+    const isEditing = Boolean(editingDoc?.id);
+    const payload = {
+      month: activeMonth,
+      fileName: docData.fileName.trim(),
+      content: docData.content,
+      pdfUrl: editingDoc?.pdfUrl || 'document',
+      eventDate: docData.eventDate || null,
+      uploadedAt: editingDoc?.uploadedAt || new Date().toISOString()
+    };
 
-  const isLegacyDrive = !!editingPdf?.pdfUrl && !editingPdf?.content;
-  const contentIsEmpty = isHtmlEmpty(editorHtml);
-  const canSave = !!driveName.trim() && (!contentIsEmpty || isLegacyDrive) && !isSaving;
-
-  const handleSaveDocument = async () => {
-    if (!canSave) return;
-
-    const cleanContent = contentIsEmpty ? '' : sanitizeHtml(editorHtml);
-    if (htmlByteSize(cleanContent) > MAX_CONTENT_BYTES) {
-      showToast('El documento es demasiado grande. Reduce el número o tamaño de las imágenes.', 'error');
-      return;
-    }
-
-    setIsSaving(true);
     try {
-      if (editingPdf) {
-        const updates: Record<string, unknown> = {
-          month: activeMonth,
-          fileName: driveName.trim(),
-          eventDate: eventDate || null
-        };
-        if (cleanContent) {
-          updates.content = cleanContent;
-          // Si era un enlace de Drive antiguo, se sustituye por el texto
-          if (editingPdf.pdfUrl) updates.pdfUrl = deleteField();
+      if (isEditing && editingDoc) {
+        try {
+          await updateDoc(doc(db, 'event_pdfs', editingDoc.id), payload);
+        } catch (clientErr) {
+          console.warn("Client updateDoc failed, attempting backend proxy:", clientErr);
+          await fetch('/api/event-documents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: editingDoc.id, ...payload })
+          });
         }
-        await updateDoc(doc(db, 'event_pdfs', editingPdf.id), updates);
         showToast('Documento actualizado correctamente', 'success');
-        setIsAddModalOpen(false);
+        // Update local viewer state if this doc is currently open
+        if (selectedDoc?.id === editingDoc.id) {
+          setSelectedDoc({ ...editingDoc, ...payload });
+        }
       } else {
-        await addDoc(collection(db, 'event_pdfs'), {
-          month: activeMonth,
-          content: cleanContent,
-          fileName: driveName.trim(),
-          uploadedAt: new Date().toISOString(),
-          eventDate: eventDate || null
-        });
-        showToast('Documento añadido correctamente', 'success');
-        setIsAddModalOpen(false);
+        try {
+          await addDoc(collection(db, 'event_pdfs'), payload);
+        } catch (clientErr) {
+          console.warn("Client addDoc failed, attempting backend proxy:", clientErr);
+          await fetch('/api/event-documents', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+        showToast('Documento guardado correctamente', 'success');
 
         // Send notification via server to Apps Script
         try {
@@ -130,11 +135,10 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              title: driveName.trim(),
-              description: `Nuevo documento añadido para ${activeMonth}: ${driveName.trim()}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
+              title: docData.fileName.trim(),
+              description: `Nuevo documento añadido para ${activeMonth}: ${docData.fileName.trim()}\n\nREVISA LOS CAMBIOS EN ESTE ENLACE: https://balinesas-parking-bicis-etc.vercel.app/`,
               month: activeMonth,
-              pdfUrl: null,
-              eventDate: eventDate || null,
+              eventDate: docData.eventDate || null,
               type: 'event_pdf'
             })
           });
@@ -142,57 +146,23 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           console.error("Notification fetch failed:", e);
         }
       }
-      setEditingPdf(null);
-      setEditorHtml('');
-      setDriveName('');
-      setEventDate('');
+
+      setEditingDoc(null);
+      setIsEditorOpen(false);
     } catch (error) {
       console.error("Error saving document:", error);
       showToast('Error al guardar el documento', 'error');
-    } finally {
-      setIsSaving(false);
+      throw error;
     }
-  };
-
-  const handleOpenAdd = () => {
-    setEditingPdf(null);
-    setDriveName('');
-    setEventDate('');
-    setEditorHtml('');
-    setEditorKey(k => k + 1);
-    setIsAddModalOpen(true);
-  };
-
-  const handlePrint = (item: EventPdf) => {
-    const win = window.open('', '_blank');
-    if (!win) {
-      showToast('Permite las ventanas emergentes para imprimir', 'error');
-      return;
-    }
-    const safeTitle = item.fileName.replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string));
-    win.document.write(`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${safeTitle}</title>
-      <style>${DOC_STYLES} body{margin:0;padding:32px;background:#fff;} @page{margin:16mm;}</style></head>
-      <body><div class="doc-content">${sanitizeHtml(item.content || '')}</div></body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(() => win.print(), 400);
   };
 
   const handleEditPdf = (pdf: EventPdf) => {
-    setEditingPdf(pdf);
-    setDriveName(pdf.fileName);
-    setEditorHtml(pdf.content || '');
-    setEditorKey(k => k + 1);
-    setEventDate(pdf.eventDate || '');
-    setIsAddModalOpen(true);
+    setEditingDoc(pdf);
+    setIsEditorOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsAddModalOpen(false);
-    setEditingPdf(null);
-    setEditorHtml('');
-    setDriveName('');
-    setEventDate('');
+  const handlePrint = () => {
+    window.print();
   };
 
   const activeMonthPdfs = pdfs
@@ -209,18 +179,133 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
     <div className="flex flex-col h-full">
       <Header title="Eventos" />
 
+      {/* Embedded print styles for crisp, paper-sized output */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #printable-doc-sheet, #printable-doc-sheet * {
+            visibility: visible !important;
+          }
+          #printable-doc-sheet {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 12mm 16mm !important;
+            box-shadow: none !important;
+            border: none !important;
+            background: white !important;
+            color: #111827 !important;
+          }
+          #printable-doc-sheet table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: avoid;
+          }
+          #printable-doc-sheet th, #printable-doc-sheet td {
+            border: 1px solid #9ca3af !important;
+            padding: 8px 12px !important;
+          }
+          #printable-doc-sheet img {
+            max-width: 100% !important;
+            page-break-inside: avoid;
+          }
+        }
+        
+        /* Document body styling */
+        .document-render-sheet h1 {
+          font-size: 1.85rem;
+          font-weight: 800;
+          color: #111827;
+          margin-top: 1.25rem;
+          margin-bottom: 0.5rem;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 0.25rem;
+        }
+        .document-render-sheet h2 {
+          font-size: 1.45rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-top: 1rem;
+          margin-bottom: 0.4rem;
+        }
+        .document-render-sheet h3 {
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: #374151;
+          margin-top: 0.85rem;
+          margin-bottom: 0.35rem;
+        }
+        .document-render-sheet p {
+          margin-bottom: 0.75rem;
+          line-height: 1.65;
+          color: #1f2937;
+        }
+        .document-render-sheet ul {
+          list-style-type: disc;
+          padding-left: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .document-render-sheet ol {
+          list-style-type: decimal;
+          padding-left: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .document-render-sheet li {
+          margin-bottom: 0.25rem;
+        }
+        .document-render-sheet table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1rem 0;
+          border: 1px solid #d1d5db;
+        }
+        .document-render-sheet th {
+          border: 1px solid #d1d5db;
+          padding: 8px 12px;
+          background-color: #f3f4f6;
+          font-weight: 700;
+          text-align: left;
+        }
+        .document-render-sheet td {
+          border: 1px solid #d1d5db;
+          padding: 8px 12px;
+          vertical-align: top;
+        }
+        .document-render-sheet hr {
+          border: 0;
+          border-top: 1px solid #d1d5db;
+          margin: 1.5rem 0;
+        }
+        .document-render-sheet img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 1rem auto;
+          display: block;
+        }
+        .document-render-sheet a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+      `}</style>
+
       <div className="p-4 max-w-5xl mx-auto w-full flex-grow flex flex-col">
         {dbError && (
-            <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
-                <p className="font-bold">Error de Conexión</p>
-                <p className="whitespace-pre-line">{dbError}</p>
-                <button 
-                    onClick={onRetryAuth} 
-                    className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
-                >
-                    Reintentar Conexión
-                </button>
-            </div>
+          <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+            <p className="font-bold">Error de Conexión</p>
+            <p className="whitespace-pre-line">{dbError}</p>
+            <button 
+              onClick={onRetryAuth} 
+              className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+            >
+              Reintentar Conexión
+            </button>
+          </div>
         )}
 
         <div className="flex space-x-4 mb-6 justify-center">
@@ -253,6 +338,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
           </div>
         ) : (
           <>
+            {/* MONTH SELECTOR BAR */}
             <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
               <div className="flex space-x-2 min-w-max">
                 {MONTHS.map(month => (
@@ -279,8 +365,11 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Documentos de {activeMonth}</h2>
                   {userRole === 'editor' && (
                     <button 
-                      onClick={handleOpenAdd}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
+                      onClick={() => {
+                        setEditingDoc(null);
+                        setIsEditorOpen(true);
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2 shadow-sm"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -297,24 +386,16 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {activeMonthPdfs.map(pdf => {
-                        const isFolder = !pdf.content && !!pdf.pdfUrl?.includes('embeddedfolderview');
-                        return (
+                      {activeMonthPdfs.map(pdf => (
                         <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl group border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
                           <button 
-                            onClick={() => setSelectedPdf(pdf)}
+                            onClick={() => setSelectedDoc(pdf)}
                             className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow text-left"
                           >
-                            <div className={`${isFolder ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'} p-2 rounded-lg shrink-0`}>
-                              {isFolder ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                                  <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                                </svg>
-                              )}
+                            <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg shrink-0">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                              </svg>
                             </div>
                             <div className="flex flex-col overflow-hidden">
                               <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
@@ -356,7 +437,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                             </div>
                           )}
                         </div>
-                      )})}
+                      ))}
                     </div>
                   )}
                 </div>
@@ -366,64 +447,78 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         )}
       </div>
 
-      {selectedPdf && (
+      {/* FULLSCREEN DARK VIEWER (HOJA BLANCA CENTRADA TIPO PDF) */}
+      {selectedDoc && (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-md">
-          {/* Header for the Viewer */}
-          <div className="flex items-center justify-between p-4 bg-gray-900 text-white shadow-lg">
+          {/* Header of Viewer */}
+          <div className="flex items-center justify-between p-4 bg-gray-900 text-white shadow-lg border-b border-gray-800 shrink-0">
             <div className="flex flex-col overflow-hidden mr-4">
-              <h3 className="font-bold truncate text-sm md:text-base">{selectedPdf.fileName}</h3>
-              <p className="text-[10px] md:text-xs text-gray-400">
-                Vista previa del documento
-                {selectedPdf.eventDate && ` · ${new Date(selectedPdf.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}`}
-              </p>
+              <h3 className="font-bold truncate text-sm md:text-base text-white">{selectedDoc.fileName}</h3>
+              <div className="flex items-center gap-2 text-[10px] md:text-xs text-gray-400">
+                {selectedDoc.eventDate && (
+                  <span className="text-blue-400 font-semibold">
+                    {new Date(selectedDoc.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </span>
+                )}
+                <span>•</span>
+                <span>Mes: {selectedDoc.month}</span>
+                <span>•</span>
+                <span>Subido: {new Date(selectedDoc.uploadedAt).toLocaleDateString('es-ES')}</span>
+              </div>
             </div>
+
             <div className="flex items-center space-x-2 shrink-0">
-              {selectedPdf.content ? (
-                <>
-                  {userRole === 'editor' && (
-                    <button
-                      onClick={() => { const d = selectedPdf; setSelectedPdf(null); handleEditPdf(d); }}
-                      className="p-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center space-x-2 text-xs md:text-sm font-semibold"
-                      title="Editar documento"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                      </svg>
-                      <span className="hidden sm:inline">Editar</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handlePrint(selectedPdf)}
-                    className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 text-xs md:text-sm font-semibold"
-                    title="Imprimir o guardar como PDF"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zm0 8H7v4h6v-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="hidden sm:inline">Imprimir / PDF</span>
-                    <span className="sm:hidden">PDF</span>
-                  </button>
-                </>
-              ) : (
+              {/* Botón Imprimir / PDF */}
+              <button
+                onClick={handlePrint}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-1.5 text-xs md:text-sm font-semibold shadow-sm"
+                title="Imprimir o Guardar como PDF"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Imprimir / PDF</span>
+              </button>
+
+              {/* Botón Editar (si eres editor) */}
+              {userRole === 'editor' && (
+                <button
+                  onClick={() => {
+                    const docToEdit = selectedDoc;
+                    setSelectedDoc(null);
+                    handleEditPdf(docToEdit);
+                  }}
+                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center space-x-1.5 text-xs md:text-sm font-semibold shadow-sm"
+                  title="Editar documento"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                  <span>Editar</span>
+                </button>
+              )}
+
+              {/* Legacy fallback: open Drive link if present */}
+              {selectedDoc.pdfUrl && selectedDoc.pdfUrl !== 'document' && (
                 <a 
-                  href={(selectedPdf.pdfUrl || '').replace('/preview', '/view')} 
+                  href={selectedDoc.pdfUrl.replace('/preview', '/view')} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-2 text-xs md:text-sm font-semibold"
-                  title="Abrir en pestaña nueva para zoom completo"
+                  className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg transition-colors flex items-center space-x-1 text-xs"
+                  title="Abrir en pestaña nueva"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
                     <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
                   </svg>
-                  <span className="hidden sm:inline">Abrir en pestaña nueva</span>
-                  <span className="sm:hidden">Abrir</span>
                 </a>
               )}
+
+              {/* Botón Cerrar (X) */}
               <button
-                onClick={() => setSelectedPdf(null)}
-                className="p-2 bg-gray-700 hover:bg-red-600 text-white rounded-lg transition-colors"
-                title="Cerrar"
+                onClick={() => setSelectedDoc(null)}
+                className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors"
+                title="Cerrar (Escape)"
               >
                 <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -432,99 +527,68 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             </div>
           </div>
 
-          {/* Content Area */}
-          {selectedPdf.content ? (
-            <div className="flex-grow w-full overflow-y-auto bg-gray-600/40 p-3 sm:p-8">
-              <style>{DOC_STYLES}</style>
+          {/* Centered Document Sheet (Hoja blanca como si fuera un PDF) */}
+          <div className="flex-grow overflow-y-auto p-4 md:p-8 flex justify-center bg-black/75">
+            {selectedDoc.content ? (
               <div
-                className="doc-content bg-white mx-auto max-w-[850px] min-h-full shadow-2xl rounded-sm p-5 sm:p-12"
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedPdf.content) }}
-              />
-            </div>
-          ) : (
-            <div className="flex-grow w-full relative overflow-hidden bg-white">
-              <iframe
-                src={(selectedPdf.pdfUrl || '').includes('drive.google.com') ? selectedPdf.pdfUrl : `${selectedPdf.pdfUrl}#view=FitH`}
-                className={`w-full h-full border-0 bg-white ${
-                  (selectedPdf.pdfUrl || '').includes('drive.google.com') && !(selectedPdf.pdfUrl || '').includes('embeddedfolderview')
-                    ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' 
-                    : ''
-                }`}
-                title={selectedPdf.fileName}
-                allow="autoplay"
-              />
-              
-              {/* Mobile Zoom Hint */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[10px] px-3 py-1 rounded-full pointer-events-none sm:hidden">
-                Usa el botón superior para zoom completo
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 sm:p-4 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-5xl h-[95vh] flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center px-5 py-4 border-b border-gray-200 dark:border-gray-700 shrink-0">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {editingPdf ? 'Editar Documento' : `Añadir Documento a ${activeMonth}`}
-              </h3>
-              <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-
-            <div className="flex-grow flex flex-col min-h-0 p-4 sm:p-5 gap-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
-                <div className="sm:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre del documento</label>
-                  <input
-                    type="text"
-                    value={driveName}
-                    onChange={(e) => setDriveName(e.target.value)}
-                    placeholder="Ej: 24/04 Sala de conferencias"
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
+                id="printable-doc-sheet"
+                className="document-render-sheet bg-white text-gray-900 shadow-2xl rounded-sm max-w-4xl w-full my-4 p-8 md:p-16 min-h-[842px] font-sans leading-relaxed text-base"
+              >
+                {/* Header inside sheet */}
+                <div className="border-b border-gray-300 pb-4 mb-6">
+                  <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
+                    {selectedDoc.fileName}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                    {selectedDoc.eventDate && (
+                      <span className="font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
+                        Fecha del evento: {new Date(selectedDoc.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+                      </span>
+                    )}
+                    <span>Mes: <strong>{selectedDoc.month}</strong></span>
+                    <span>Subido: {new Date(selectedDoc.uploadedAt).toLocaleDateString('es-ES')}</span>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha del evento (opcional)</label>
-                  <input
-                    type="date"
-                    value={eventDate}
-                    onChange={(e) => setEventDate(e.target.value)}
-                    className="w-full p-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  />
-                </div>
+
+                {/* HTML Document Body */}
+                <div
+                  dangerouslySetInnerHTML={{ __html: selectedDoc.content }}
+                />
               </div>
-
-              {isLegacyDrive && (
-                <div className="shrink-0 text-xs sm:text-sm bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-2">
-                  Este documento es un enlace de Google Drive antiguo. Si escribes contenido abajo, se sustituirá por el texto. Si lo dejas vacío, solo se guardarán el nombre y la fecha.
-                </div>
-              )}
-
-              <RichTextEditor key={editorKey} initialHtml={editorHtml} onChange={setEditorHtml} />
-
-              <div className="flex justify-end space-x-3 shrink-0">
-                <button
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveDocument}
-                  disabled={!canSave}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSaving ? 'Guardando...' : editingPdf ? 'Guardar Cambios' : 'Añadir Documento'}
-                </button>
+            ) : selectedDoc.pdfUrl ? (
+              /* Legacy Fallback for existing PDF or Drive embeds */
+              <div className="w-full h-full relative overflow-hidden bg-white max-w-5xl rounded-lg shadow-xl">
+                <iframe
+                  src={selectedDoc.pdfUrl.includes('drive.google.com') ? selectedDoc.pdfUrl : `${selectedDoc.pdfUrl}#view=FitH`}
+                  className={`w-full h-full border-0 bg-white ${
+                    selectedDoc.pdfUrl.includes('drive.google.com') && !selectedDoc.pdfUrl.includes('embeddedfolderview')
+                      ? 'absolute top-[-56px] left-0 h-[calc(100%+56px)]' 
+                      : ''
+                  }`}
+                  title={selectedDoc.fileName}
+                  allow="autoplay"
+                />
               </div>
-            </div>
+            ) : (
+              <div className="bg-white text-gray-700 p-8 rounded-lg max-w-md my-auto text-center">
+                <p>El documento está vacío.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
+
+      {/* RICH DOCUMENT EDITOR MODAL */}
+      <DocumentEditorModal
+        isOpen={isEditorOpen}
+        onClose={() => {
+          setIsEditorOpen(false);
+          setEditingDoc(null);
+        }}
+        onSave={handleSaveDocument}
+        initialData={editingDoc}
+        monthName={activeMonth}
+      />
     </div>
   );
 };

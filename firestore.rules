@@ -135,12 +135,13 @@ service cloud.firestore {
     }
 
     function isValidEventPdf(data) {
-      return hasRequiredFields(['month', 'pdfUrl', 'fileName', 'uploadedAt']) &&
-             hasOnlyAllowedFields(['month', 'pdfUrl', 'fileName', 'uploadedAt', 'eventDate']) &&
-             data.month is string && data.month.size() > 0 && data.month.size() < 20 &&
-             data.pdfUrl is string && data.pdfUrl.size() > 0 && data.pdfUrl.size() < 1000 &&
-             data.fileName is string && data.fileName.size() > 0 && data.fileName.size() < 200 &&
+      return hasRequiredFields(['month', 'fileName', 'uploadedAt']) &&
+             hasOnlyAllowedFields(['month', 'fileName', 'uploadedAt', 'eventDate', 'content', 'pdfUrl']) &&
+             data.month is string && data.month.size() > 0 && data.month.size() < 50 &&
+             data.fileName is string && data.fileName.size() > 0 && data.fileName.size() < 300 &&
              data.uploadedAt is string &&
+             (!('pdfUrl' in data) || data.pdfUrl == null || (data.pdfUrl is string && data.pdfUrl.size() < 2000)) &&
+             (!('content' in data) || data.content == null || (data.content is string && data.content.size() < 900000)) &&
              (!('eventDate' in data) || data.eventDate == null || isValidDate(data.eventDate));
     }
 

@@ -345,6 +345,37 @@ app.post("/api/notifications/novedad", async (req, res) => {
   }
 });
 
+app.post("/api/event-documents", async (req, res) => {
+  try {
+    const firestore = getDb();
+    if (!firestore) return res.status(500).json({ error: "Database not initialized" });
+    const { id, ...data } = req.body;
+    if (id) {
+      await firestore.collection("event_pdfs").doc(id).set(data, { merge: true });
+      res.json({ id, success: true });
+    } else {
+      const docRef = await firestore.collection("event_pdfs").add(data);
+      res.json({ id: docRef.id, success: true });
+    }
+  } catch (err: any) {
+    console.error("[API] Error saving event document:", err);
+    res.status(500).json({ error: err.message || "Failed to save event document" });
+  }
+});
+
+app.delete("/api/event-documents/:id", async (req, res) => {
+  try {
+    const firestore = getDb();
+    if (!firestore) return res.status(500).json({ error: "Database not initialized" });
+    await firestore.collection("event_pdfs").doc(req.params.id).delete();
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("[API] Error deleting event document:", err);
+    res.status(500).json({ error: err.message || "Failed to delete event document" });
+  }
+});
+
+
 async function startServer() {
   console.log("[Server] Starting server...");
   

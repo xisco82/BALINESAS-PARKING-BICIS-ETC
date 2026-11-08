@@ -143,16 +143,17 @@
     },
     "EventPdf": {
       "title": "Event Document",
-      "description": "A Google Drive link to a document or folder for a specific month in the Events tab.",
+      "description": "An event document written in the app or linked for a specific month in the Events tab.",
       "type": "object",
       "properties": {
         "month": { "type": "string" },
-        "pdfUrl": { "type": "string" },
         "fileName": { "type": "string" },
+        "content": { "type": "string", "description": "HTML rich text content of the document." },
+        "pdfUrl": { "type": "string", "description": "Optional legacy URL." },
         "uploadedAt": { "type": "string", "format": "date-time" },
         "eventDate": { "type": "string", "format": "date", "description": "Optional date of the event for sorting purposes." }
       },
-      "required": ["month", "pdfUrl", "fileName", "uploadedAt"]
+      "required": ["month", "fileName", "uploadedAt"]
     },
     "ExtraFBEntry": {
       "title": "Extra F&B Entry",
