@@ -708,9 +708,91 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
         </span>
       </div>
 
-      {/* EDITOR CANVAS (A4-LIKE WHITE SHEET) */}
+      {/* WYSIWYG STYLING FOR EDITOR CANVAS */}
+      <style>{`
+        .document-editor-sheet h1 {
+          font-size: 2rem;
+          font-weight: 800;
+          color: #111827;
+          margin-top: 1.25rem;
+          margin-bottom: 0.5rem;
+          border-bottom: 1px solid #e5e7eb;
+          padding-bottom: 0.25rem;
+        }
+        .document-editor-sheet h2 {
+          font-size: 1.55rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-top: 1rem;
+          margin-bottom: 0.4rem;
+        }
+        .document-editor-sheet h3 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #374151;
+          margin-top: 0.85rem;
+          margin-bottom: 0.35rem;
+        }
+        .document-editor-sheet p {
+          margin-bottom: 0.75rem;
+          line-height: 1.65;
+          color: #1f2937;
+        }
+        .document-editor-sheet ul {
+          list-style-type: disc;
+          padding-left: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .document-editor-sheet ol {
+          list-style-type: decimal;
+          padding-left: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .document-editor-sheet li {
+          margin-bottom: 0.25rem;
+        }
+        .document-editor-sheet table {
+          width: 100%;
+          max-width: 100%;
+          table-layout: fixed;
+          border-collapse: collapse;
+          margin: 1rem 0;
+          border: 1px solid #d1d5db;
+          word-break: break-word;
+        }
+        .document-editor-sheet th {
+          border: 1px solid #d1d5db;
+          padding: 8px 12px;
+          background-color: #f3f4f6;
+          font-weight: 700;
+          text-align: left;
+        }
+        .document-editor-sheet td {
+          border: 1px solid #d1d5db;
+          padding: 8px 12px;
+          vertical-align: top;
+        }
+        .document-editor-sheet hr {
+          border: 0;
+          border-top: 1px solid #d1d5db;
+          margin: 1.5rem 0;
+        }
+        .document-editor-sheet img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 6px;
+          margin: 1rem auto;
+          display: block;
+        }
+        .document-editor-sheet a {
+          color: #2563eb;
+          text-decoration: underline;
+        }
+      `}</style>
+
+      {/* EDITOR CANVAS (HOJA DIN A4 CENTRADA Y COMPLETAMENTE VISIBLE) */}
       <div
-        className="flex-grow overflow-y-auto bg-gray-200/90 dark:bg-gray-950 p-4 md:p-8 flex justify-center cursor-text"
+        className="flex-grow overflow-y-auto overflow-x-auto bg-gray-200/90 dark:bg-gray-950 p-3 sm:p-6 pb-28 flex justify-center cursor-text"
         onClick={(e) => {
           if (e.target === e.currentTarget && editorRef.current) {
             editorRef.current.focus();
@@ -721,9 +803,10 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
           ref={editorRef}
           contentEditable
           onPaste={handlePaste}
-          className="w-full max-w-4xl min-h-[850px] bg-white text-gray-900 shadow-2xl rounded-sm border border-gray-300/80 p-8 md:p-16 focus:outline-none focus:ring-2 focus:ring-blue-400/50 leading-relaxed text-base font-sans"
+          className="document-editor-sheet w-full max-w-[794px] min-h-[1123px] bg-white text-gray-900 shadow-2xl rounded-sm border border-gray-300 p-8 sm:p-14 pb-28 focus:outline-none focus:ring-2 focus:ring-blue-400/50 leading-relaxed text-base font-sans mx-auto box-border"
           style={{
             wordBreak: 'break-word',
+            overflowWrap: 'break-word',
           }}
           data-placeholder="Escribe aquí el contenido del documento. Puedes añadir títulos, listas, tablas de horarios o montajes, imágenes pegadas con Ctrl+V..."
         />

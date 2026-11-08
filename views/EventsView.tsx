@@ -260,9 +260,12 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         }
         .document-render-sheet table {
           width: 100%;
+          max-width: 100%;
+          table-layout: fixed;
           border-collapse: collapse;
           margin: 1rem 0;
           border: 1px solid #d1d5db;
+          word-break: break-word;
         }
         .document-render-sheet th {
           border: 1px solid #d1d5db;
@@ -527,12 +530,16 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             </div>
           </div>
 
-          {/* Centered Document Sheet (Hoja blanca como si fuera un PDF) */}
-          <div className="flex-grow overflow-y-auto p-4 md:p-8 flex justify-center bg-black/75">
+          {/* Centered Document Sheet (Hoja DIN A4 como si fuera un PDF) */}
+          <div className="flex-grow overflow-y-auto overflow-x-auto p-3 sm:p-6 pb-28 flex justify-center bg-black/85">
             {selectedDoc.content ? (
               <div
                 id="printable-doc-sheet"
-                className="document-render-sheet bg-white text-gray-900 shadow-2xl rounded-sm max-w-4xl w-full my-4 p-8 md:p-16 min-h-[842px] font-sans leading-relaxed text-base"
+                className="document-render-sheet bg-white text-gray-900 shadow-2xl rounded-sm w-full max-w-[794px] min-h-[1123px] my-4 p-8 sm:p-14 pb-28 font-sans leading-relaxed text-base box-border mx-auto"
+                style={{
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                }}
               >
                 {/* Header inside sheet */}
                 <div className="border-b border-gray-300 pb-4 mb-6">
@@ -546,18 +553,20 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                       </span>
                     )}
                     <span>Mes: <strong>{selectedDoc.month}</strong></span>
+                    <span>•</span>
                     <span>Subido: {new Date(selectedDoc.uploadedAt).toLocaleDateString('es-ES')}</span>
                   </div>
                 </div>
 
                 {/* HTML Document Body */}
                 <div
+                  className="document-content-area"
                   dangerouslySetInnerHTML={{ __html: selectedDoc.content }}
                 />
               </div>
             ) : selectedDoc.pdfUrl ? (
               /* Legacy Fallback for existing PDF or Drive embeds */
-              <div className="w-full h-full relative overflow-hidden bg-white max-w-5xl rounded-lg shadow-xl">
+              <div className="w-full h-[85vh] relative overflow-hidden bg-white max-w-[794px] rounded-lg shadow-xl my-4 mx-auto">
                 <iframe
                   src={selectedDoc.pdfUrl.includes('drive.google.com') ? selectedDoc.pdfUrl : `${selectedDoc.pdfUrl}#view=FitH`}
                   className={`w-full h-full border-0 bg-white ${
