@@ -9,8 +9,10 @@ import {
   deleteNewsEvent, 
   updateNewsEvent,
   deleteServiceBooking,
-  getAllServiceBookings
+  getAllServiceBookings,
+  getEventPdfs
 } from '../services/firebaseService';
+import { mergeEventSources } from '../services/eventSync';
 
 type UserRole = 'editor' | 'balinese_editor';
 
@@ -119,13 +121,14 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
         return;
     }
     setSelectedDate(dateStr);
-    if (event.type !== 'event') {
+    if (event.type === 'news') {
         handleOpenEditModal(event);
     }
   };
 
   const handleContextMenu = (e: React.MouseEvent, event: NewsEvent) => {
-    if (userRole !== 'editor') return;
+    // Summary documents are managed from the "Eventos" tab.
+    if (userRole !== 'editor' || event.type === 'document') return;
     e.preventDefault();
     e.stopPropagation();
     setContextMenu({
@@ -208,28 +211,39 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     setIsLoading(true);
     
     let newsEvents: NewsEvent[] = [];
-    let serviceEvents: NewsEvent[] = [];
+    let serviceEvents: any[] = [];
+    let pdfDocs: any[] = [];
 
+    // Same merge used by "Eventos Anuales": annual events, summary documents and
+    // novedades are combined so the same event never appears twice on a date.
     const updateCombinedEvents = () => {
-      const allEvents = [...newsEvents, ...serviceEvents];
+      const allEvents: NewsEvent[] = mergeEventSources(serviceEvents, newsEvents, pdfDocs).map(e => ({
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        url: e.url,
+        pdfId: e.pdfId,
+        pdfName: e.pdfName,
+        type: e.source === 'service' ? 'event' as const : e.source === 'pdf' ? 'document' as const : 'news' as const,
+      }));
       setMonthlyEvents(allEvents);
       setIsLoading(false);
     };
 
     const unsubscribeNews = getNewsEvents((allEvents) => {
-      newsEvents = allEvents.map(e => ({ ...e, type: 'news' as const }));
+      newsEvents = allEvents;
       updateCombinedEvents();
     });
 
     const unsubscribeServices = getAllServiceBookings('events_bookings', (bookings) => {
-      serviceEvents = bookings.map(b => ({
-        id: b.id,
-        title: b.guestName,
-        description: b.description,
-        startDate: b.startDate,
-        endDate: b.endDate,
-        type: 'event' as const
-      }));
+      serviceEvents = bookings;
+      updateCombinedEvents();
+    });
+
+    const unsubscribePdfs = getEventPdfs((pdfs) => {
+      pdfDocs = pdfs;
       updateCombinedEvents();
     });
 
@@ -251,6 +265,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
     return () => {
       unsubscribeNews();
       unsubscribeServices();
+      unsubscribePdfs();
     };
   }, [isAuthReady]);
 
@@ -652,8 +667,8 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                         key={event.id} 
                                         onClick={(e) => handleEventClick(e, event, formatDateToYYYYMMDD(d.date))}
                                         onContextMenu={(e) => handleContextMenu(e, event)}
-                                        className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm transition-transform hover:scale-[1.02] ${event.type === 'event' ? 'bg-purple-400' : 'bg-red-400 hover:bg-red-300'}`}
-                                        title={event.type !== 'event' && userRole === 'editor' ? 'Clic para editar, clic derecho para eliminar' : ''}
+                                        className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm transition-transform hover:scale-[1.02] ${event.type === 'event' ? 'bg-purple-400' : event.type === 'document' ? 'bg-blue-300' : 'bg-red-400 hover:bg-red-300'}`}
+                                        title={event.type === 'news' && userRole === 'editor' ? 'Clic para editar, clic derecho para eliminar' : ''}
                                     >
                                         {event.title}
                                     </div>
@@ -743,15 +758,20 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     <div 
                         key={event.id} 
                         onClick={() => {
-                            if (userRole === 'editor' && event.type !== 'event') {
+                            if (userRole === 'editor' && event.type === 'news') {
                                 handleOpenEditModal(event);
                             }
                         }}
                         onContextMenu={(e) => handleContextMenu(e, event)}
-                        className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : 'border-red-500'} ${userRole === 'editor' && event.type !== 'event' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
+                        className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : event.type === 'document' ? 'border-blue-500' : 'border-red-500'} ${userRole === 'editor' && event.type === 'news' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
                     >
                         <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-24">{event.title}</h4>
                         <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
+                        {event.pdfName && (
+                          <p className="mt-2 text-xs font-semibold text-blue-700">
+                            📄 Documento en Eventos → Resumen de eventos mensuales: {event.pdfName}
+                          </p>
+                        )}
                         
                         {/* Action buttons for individual news */}
                         <div className="absolute top-2 right-12 flex items-center space-x-1 no-print">
@@ -803,7 +823,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                           </div>
                         )}
 
-                        {userRole === 'editor' && event.type !== 'event' && (
+                        {userRole === 'editor' && event.type === 'news' && (
                           <div className="absolute top-2 right-2 flex items-center space-x-1 no-print">
                               <button onClick={(e) => { e.stopPropagation(); handleOpenEditModal(event); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
                               <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event); }} className="p-1"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
@@ -1050,7 +1070,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
           <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 mb-1">
             Opciones
           </div>
-          {contextMenu.event.type !== 'event' && (
+          {contextMenu.event.type === 'news' && (
             <button 
               onClick={() => {
                 handleOpenEditModal(contextMenu.event);

@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { RestaurantBooking } from '../types';
+import { RestaurantBooking, NewsEvent } from '../types';
+import { mergeEventSources } from '../services/eventSync';
 import Header from '../components/Header';
 import Modal from '../components/Modal';
 import { useToast } from '../components/Toast';
@@ -27,9 +28,11 @@ interface ServicesViewProps {
   tableName: string;
   onRetryAuth: () => void;
   hideHeader?: boolean;
+  /** Opens a monthly summary document (used by "Eventos Anuales"). */
+  onOpenDocument?: (pdfId: string) => void;
 }
 
-const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName, onRetryAuth, hideHeader }) => {
+const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, isAuthReady, userRole, title, tableName, onRetryAuth, hideHeader, onOpenDocument }) => {
     const { showToast, confirm } = useToast();
     const [bookings, setBookings] = useState<RestaurantBooking[]>([]);
     const [allRestaurantBookings, setAllRestaurantBookings] = useState<RestaurantBooking[]>([]);
@@ -78,23 +81,27 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         setIsLoading(true);
 
         let serviceBookings: RestaurantBooking[] = [];
-        let newsBookings: RestaurantBooking[] = [];
-        let pdfBookings: RestaurantBooking[] = [];
+        let rawNews: NewsEvent[] = [];
+        let rawPdfs: any[] = [];
 
         const updateCombinedBookings = () => {
-            let allBookings = [...serviceBookings, ...newsBookings, ...pdfBookings];
+            let allBookings = [...serviceBookings];
             
             if (tableName === 'events_bookings') {
-                const uniqueBookings = new Map<string, RestaurantBooking>();
-                const priority = { 'service': 3, 'news': 2, 'pdf': 1 };
-                const sortedByPriority = [...allBookings].sort((a, b) => priority[a.origin] - priority[b.origin]);
-                
-                sortedByPriority.forEach(b => {
-                    const key = `${b.guestName.toLowerCase().trim()}_${b.startDate}`;
-                    uniqueBookings.set(key, b);
-                });
-                
-                allBookings = Array.from(uniqueBookings.values());
+                // Same merge used by "Novedades" so both tabs never repeat a date.
+                allBookings = mergeEventSources(serviceBookings, rawNews, rawPdfs)
+                    .filter(e => e.startDate.startsWith(selectedYear.toString()) || e.endDate.startsWith(selectedYear.toString()))
+                    .map(e => ({
+                        id: e.id,
+                        guestName: e.title,
+                        roomNumber: '',
+                        description: e.description,
+                        startDate: e.startDate,
+                        endDate: e.endDate,
+                        origin: e.source,
+                        pdfId: e.pdfId,
+                        pdfName: e.pdfName,
+                    }));
                 
                 if (!showFullYear) {
                     const today = new Date();
@@ -162,32 +169,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
         let unsubscribePdfs: () => void = () => {};
         if (tableName === 'events_bookings') {
             unsubscribeNews = getNewsEvents((allEvents) => {
-                newsBookings = allEvents
-                    .filter(e => e.startDate.startsWith(selectedYear.toString()) || e.endDate.startsWith(selectedYear.toString()))
-                    .map(e => ({
-                        id: e.id,
-                        guestName: e.title,
-                        roomNumber: '',
-                        description: e.description,
-                        startDate: e.startDate,
-                        endDate: e.endDate,
-                        origin: 'news' as const
-                    }));
+                rawNews = allEvents;
                 updateCombinedBookings();
             });
 
             unsubscribePdfs = getEventPdfs((allPdfs) => {
-                pdfBookings = allPdfs
-                    .filter(p => p.eventDate && p.eventDate.startsWith(selectedYear.toString()))
-                    .map(p => ({
-                        id: p.id,
-                        guestName: p.fileName,
-                        roomNumber: '',
-                        description: `Documento PDF disponible: ${p.fileName}`,
-                        startDate: p.eventDate,
-                        endDate: p.eventDate,
-                        origin: 'pdf' as const
-                    }));
+                rawPdfs = allPdfs;
                 updateCombinedBookings();
             });
         }
@@ -1099,6 +1086,17 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                             <p className="text-black text-base my-1 line-clamp-1 group-hover:line-clamp-none">{booking.description}</p>
                                         )}
                                     </div>
+                                    {tableName === 'events_bookings' && booking.pdfId && (
+                                        <button
+                                            onClick={() => onOpenDocument?.(booking.pdfId!)}
+                                            disabled={!onOpenDocument}
+                                            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-md hover:bg-blue-100 transition-colors disabled:cursor-default"
+                                            title="Abrir documento del resumen mensual"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clipRule="evenodd" /></svg>
+                                            <span>Documento: {booking.pdfName}</span>
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                             </div>
