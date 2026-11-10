@@ -38,6 +38,17 @@ service cloud.firestore {
     // Domain Validators
     // ===============================================================
 
+    // Figures of the day read from the PMS screenshot in the Portal del Recepcionista
+    function isValidHotelDay(id, data) {
+      return hasRequiredFields(['date', 'prevision']) &&
+             hasOnlyAllowedFields(['date', 'entradas', 'entradasPax', 'alojadas', 'alojadasPax', 'salidas', 'salidasPax',
+               'checkinPendiente', 'inHouse', 'inHousePax', 'checkoutPendiente', 'disponibles', 'cerradas', 'vacias',
+               'ocupacion', 'libres', 'pax', 'prevision', 'updatedAt']) &&
+             isValidDate(id) && data.date == id &&
+             data.prevision is list && data.prevision.size() <= 60 &&
+             (!('updatedAt' in data) || data.updatedAt is string);
+    }
+
     function isValidNewsEvent(data) {
       return hasRequiredFields(['title', 'description', 'startDate', 'endDate']) &&
              hasOnlyAllowedFields(['title', 'description', 'startDate', 'endDate']) &&
@@ -290,6 +301,12 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidClientIncident(request.resource.data);
       allow update: if isAuthenticated() && isValidClientIncident(request.resource.data);
+      allow delete: if isAuthenticated();
+    }
+
+    match /hotel_hoy/{date} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isValidHotelDay(date, request.resource.data);
       allow delete: if isAuthenticated();
     }
 
