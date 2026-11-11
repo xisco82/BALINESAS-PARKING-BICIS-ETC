@@ -600,7 +600,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
               <>
                 <button
                   onClick={() => window.print()}
-                  className="no-print bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="no-print bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 p-2 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                   title="Imprimir"
                   aria-label="Imprimir calendario del mes"
                 >
@@ -608,7 +608,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                   </svg>
                 </button>
-                <button onClick={handleOpenAddModal} className="no-print bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                <button onClick={handleOpenAddModal} className="no-print bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                     Añadir Novedad
                 </button>
               </>
@@ -617,26 +617,26 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       </Header>
       <div className="p-4 print:p-0 flex flex-col gap-6 print:gap-2">
         {/* Calendar */}
-        <div className="w-full p-4 bg-white/20 dark:bg-gray-800/20 backdrop-blur-md rounded-xl shadow-sm h-fit print:p-2 print:mt-0">
+        <div className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm h-fit print:p-2 print:mt-0">
             <div className="flex justify-between items-center mb-4 px-2 print:mb-2">
-                <button onClick={goToPreviousMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&lt;</button>
+                <button onClick={goToPreviousMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">&lt;</button>
                 <h2 className="text-2xl print:text-lg font-bold text-center">{getHeaderTitle()}</h2>
-                <button onClick={goToNextMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">&gt;</button>
+                <button onClick={goToNextMonth} className="no-print px-6 py-2 text-4xl font-bold rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">&gt;</button>
             </div>
-            <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm mb-2 print:mb-1 text-gray-600 dark:text-gray-300">
+            <div className="grid grid-cols-7 gap-1 text-center font-semibold text-sm mb-2 print:mb-1 text-slate-600 dark:text-slate-300">
                 {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map(d => <div key={d}>{d}</div>)}
             </div>
             <div className="grid grid-cols-7 gap-1 md:gap-2">
                 {calendarDays.map(d => {
-                    if (d.isEmpty) return <div key={d.key} className="h-24 rounded-lg"></div>;
+                    if (d.isEmpty) return <div key={d.key} className="h-24 rounded-xl"></div>;
                     
-                    let dayClasses = "h-24 print:h-16 rounded-lg cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 ";
+                    let dayClasses = "h-24 print:h-16 rounded-xl cursor-pointer flex flex-col items-start p-1.5 relative transition-colors duration-200 ";
                     if (d.isSelected) {
                         dayClasses += "bg-blue-200/70 dark:bg-blue-800/50 ring-2 ring-blue-500 ring-inset";
                     } else if (d.isToday) {
                         dayClasses += "bg-blue-100/60 dark:bg-blue-900/40";
                     } else {
-                        dayClasses += "bg-white/10 dark:bg-gray-800/10 hover:bg-gray-200/40 dark:hover:bg-gray-700/40";
+                        dayClasses += "bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800";
                     }
 
                     return (
@@ -648,11 +648,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             className={`${dayClasses} group relative`}
                         >
                             <div className="w-full flex justify-between items-start mb-0.5">
-                                <span className={`font-semibold text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-gray-800 dark:text-gray-100'}`}>{d.day}</span>
+                                <span className={`font-semibold text-sm ${d.isSelected ? 'text-blue-800 dark:text-white' : 'text-slate-800 dark:text-slate-100'}`}>{d.day}</span>
                                 {userRole === 'editor' && (
                                     <button 
                                         onClick={(e) => handleAddForDate(e, formatDateToYYYYMMDD(d.date))}
-                                        className="opacity-0 group-hover:opacity-100 bg-blue-500 text-white p-0.5 rounded-full hover:bg-blue-600 transition-opacity shadow-sm z-10"
+                                        className="opacity-0 group-hover:opacity-100 bg-amber-400 text-slate-950 p-0.5 rounded-full hover:bg-amber-300 transition-opacity shadow-sm z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                                         title="Añadir novedad para este día"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -667,22 +667,22 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                                         key={event.id} 
                                         onClick={(e) => handleEventClick(e, event, formatDateToYYYYMMDD(d.date))}
                                         onContextMenu={(e) => handleContextMenu(e, event)}
-                                        className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm transition-transform hover:scale-[1.02] ${event.type === 'event' ? 'bg-purple-400' : event.type === 'document' ? 'bg-blue-300' : 'bg-red-400 hover:bg-red-300'}`}
+                                        className={`text-xs text-black font-medium rounded px-1.5 py-0.5 truncate shadow-sm transition-transform hover:scale-[1.02] ${event.type === 'event' ? 'bg-purple-400' : event.type === 'document' ? 'bg-blue-300' : 'bg-rose-400 hover:bg-rose-300'}`}
                                         title={event.type === 'news' && userRole === 'editor' ? 'Clic para editar, clic derecho para eliminar' : ''}
                                     >
                                         {event.title}
                                     </div>
                                 ))}
                                 {d.events.length > 2 && (
-                                    <div className="text-[11px] text-gray-600 dark:text-gray-400 mt-1 pl-1">
+                                    <div className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 pl-1">
                                         + {d.events.length - 2} más...
                                     </div>
                                 )}
                             </div>
                             {userRole === 'editor' && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-gray-900 text-white text-xs rounded py-1 px-2 text-center z-50 shadow-lg pointer-events-none">
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block w-48 bg-slate-900 text-white text-xs rounded py-1 px-2 text-center z-50 shadow-lg pointer-events-none">
                                     Clic en el día para añadir novedad.<br/>Clic en la novedad para editarla.
-                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-slate-900"></div>
                                 </div>
                             )}
                         </div>
@@ -693,23 +693,23 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
         {/* Print only: All events of the month */}
         <div className="hidden print:block w-full mt-2">
-            <h3 className="text-xl font-bold mb-2 border-b-2 border-gray-800 pb-1 text-center">
+            <h3 className="text-xl font-bold mb-2 border-b-2 border-slate-800 pb-1 text-center">
                 Resumen de Novedades - {getHeaderTitle()}
             </h3>
             <div className="space-y-2">
                 {monthlyUniqueEvents.length === 0 ? (
-                    <p className="text-center italic text-gray-600">No hay novedades registradas para este mes.</p>
+                    <p className="text-center italic text-slate-600">No hay novedades registradas para este mes.</p>
                 ) : (
                     monthlyUniqueEvents.map(event => (
-                        <div key={event.id} className="break-inside-avoid border-b border-gray-100 pb-1">
+                        <div key={event.id} className="break-inside-avoid border-b border-slate-100 pb-1">
                             <div className="flex justify-between items-start mb-0.5">
-                                <h4 className="font-bold text-base text-gray-900">{event.title}</h4>
-                                <span className="text-xs font-medium text-gray-600">
+                                <h4 className="font-bold text-base text-slate-900">{event.title}</h4>
+                                <span className="text-xs font-medium text-slate-600">
                                     {new Date(event.startDate + 'T00:00:00Z').toLocaleDateString('es-ES')} 
                                     {event.startDate !== event.endDate ? ` - ${new Date(event.endDate + 'T00:00:00Z').toLocaleDateString('es-ES')}` : ''}
                                 </span>
                             </div>
-                            <div className="text-xs text-gray-800 leading-tight" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
+                            <div className="text-xs text-slate-800 leading-tight" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
                         </div>
                     ))
                 )}
@@ -728,7 +728,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 {userRole === 'editor' && events.length > 0 && (
                     <button 
                         onClick={handleSendDayNews}
-                        className="flex items-center justify-center gap-2 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-amber-200 transition-colors border border-amber-200"
+                        className="flex items-center justify-center gap-2 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-xl text-sm font-bold hover:bg-amber-200 transition-colors border border-amber-200"
                         title="Enviar estas novedades por correo"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -739,19 +739,19 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 )}
             </div>
         {dbError && (
-            <div className="bg-red-100/80 dark:bg-red-900/80 p-4 rounded-lg mb-4 border-l-4 border-red-500">
-                <p className="font-bold text-red-700 dark:text-red-200">Error de Conexión</p>
-                <p className="text-red-700 dark:text-red-200 whitespace-pre-line">{dbError}</p>
+            <div className="bg-rose-100/80 dark:bg-rose-900/80 p-4 rounded-xl mb-4 border-l-4 border-rose-500">
+                <p className="font-bold text-rose-700 dark:text-rose-200">Error de Conexión</p>
+                <p className="text-rose-700 dark:text-rose-200 whitespace-pre-line">{dbError}</p>
                 <button 
                     onClick={onRetryAuth} 
-                    className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                    className="mt-3 bg-rose-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-rose-700 transition-colors"
                 >
                     Reintentar Conexión
                 </button>
             </div>
         )}
         {isLoading ? (
-            <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
+            <div className="text-center py-10 text-slate-500 dark:text-slate-400">Cargando...</div>
         ) : !dbError && events.length > 0 ? (
             <div className="flex flex-col space-y-4">
                 {events.map(event => (
@@ -763,9 +763,9 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             }
                         }}
                         onContextMenu={(e) => handleContextMenu(e, event)}
-                        className={`w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : event.type === 'document' ? 'border-blue-500' : 'border-red-500'} ${userRole === 'editor' && event.type === 'news' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-gray-700/90' : ''}`}
+                        className={`w-full bg-white dark:bg-slate-900 backdrop-blur-sm p-4 rounded-xl shadow-md relative animate-fade-in border-l-4 ${event.type === 'event' ? 'border-purple-500' : event.type === 'document' ? 'border-blue-500' : 'border-rose-500'} ${userRole === 'editor' && event.type === 'news' ? 'cursor-pointer hover:bg-white/100 dark:hover:bg-slate-700/90' : ''}`}
                     >
-                        <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100 pr-24">{event.title}</h4>
+                        <h4 className="font-semibold text-lg text-slate-900 dark:text-slate-100 pr-24">{event.title}</h4>
                         <div className="text-sm text-black mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: autoLink(event.description) }} />
                         {event.pdfName && (
                           <p className="mt-2 text-xs font-semibold text-blue-700">
@@ -801,7 +801,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                               href={event.url} 
                               target="_blank" 
                               rel="noreferrer"
-                              className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-lg text-sm font-bold hover:bg-blue-100 transition-colors border border-blue-200"
+                              className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-2 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors border border-blue-200"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -811,7 +811,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                             
                             {/* Optional: Embed preview for Google Drive links if they end in /preview */}
                             {event.url.includes('drive.google.com') && event.url.includes('/preview') && (
-                              <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm aspect-video">
+                              <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 shadow-sm aspect-video">
                                 <iframe 
                                   src={event.url} 
                                   className="w-full h-full" 
@@ -833,7 +833,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 ))}
             </div>
         ) : (
-           !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg">No hay novedades registradas para esta fecha.</div>
+           !dbError && <div className="text-center py-10 text-slate-800 dark:text-slate-200 bg-slate-50/90 dark:bg-slate-900 backdrop-blur-sm rounded-xl">No hay novedades registradas para esta fecha.</div>
         )}
         </div>
       </div>
@@ -962,28 +962,28 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
             {/* Left side: Preview */}
             <div className="flex-1 p-6 bg-amber-50/50 dark:bg-amber-900/10 border-b md:border-b-0 md:border-r border-amber-100 dark:border-amber-900/30 overflow-y-auto">
               <h4 className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest mb-4">Vista Previa</h4>
-              <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-amber-200/50 dark:border-amber-900/20">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-amber-200/50 dark:border-amber-900/20">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                   {notificationPayload?.title || "AVISO GENERAL"}
                 </h2>
                 <div 
-                  className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed prose dark:prose-invert max-w-none"
+                  className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed prose dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ 
                     __html: autoLink(notificationPayload?.description) || "Notificación enviada manualmente desde el panel de novedades." 
                   }}
                 />
-                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-400 font-mono italic">
+                <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 font-mono italic">
                   Este mensaje se enviará a los destinatarios seleccionados.
                 </div>
               </div>
             </div>
 
             {/* Right side: Recipients */}
-            <div className="w-full md:w-[320px] p-6 flex flex-col bg-white dark:bg-gray-800">
-              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Destinatarios</h4>
+            <div className="w-full md:w-[320px] p-6 flex flex-col bg-white dark:bg-slate-800">
+              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Destinatarios</h4>
               
               <div className="flex justify-between items-center mb-4">
-                <span className="text-xs text-gray-500">{selectedRecipients.length} seleccionados</span>
+                <span className="text-xs text-slate-500">{selectedRecipients.length} seleccionados</span>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => setSelectedRecipients(availableRecipients)}
@@ -993,7 +993,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                   </button>
                   <button 
                     onClick={() => setSelectedRecipients([])}
-                    className="text-[10px] font-bold text-red-600 hover:bg-red-50 px-2 py-0.5 rounded"
+                    className="text-[10px] font-bold text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded"
                   >
                     Ninguno
                   </button>
@@ -1004,15 +1004,15 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 {availableRecipients.map(email => (
                   <label 
                     key={email} 
-                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${selectedRecipients.includes(email) ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}
+                    className={`flex items-center p-2 rounded-xl cursor-pointer transition-colors ${selectedRecipients.includes(email) ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-slate-50 dark:hover:bg-slate-700/50'}`}
                   >
                     <input 
                       type="checkbox" 
-                      className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 mr-3"
+                      className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-amber-200 dark:focus:ring-amber-500/30 mr-3"
                       checked={selectedRecipients.includes(email)}
                       onChange={() => handleToggleRecipient(email)}
                     />
-                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate">{email}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-200 truncate">{email}</span>
                   </label>
                 ))}
               </div>
@@ -1041,7 +1041,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 <button 
                   onClick={handleOpenExternalMailClient}
                   disabled={selectedRecipients.length === 0}
-                  className="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-amber-400 text-slate-950 rounded-xl text-sm font-bold shadow-lg shadow-amber-500/10 hover:bg-amber-300 transition-all active:scale-95 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -1051,7 +1051,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
 
                 <button 
                   onClick={() => setIsRecipientModalOpen(false)}
-                  className="w-full py-2 text-xs font-bold text-gray-400 hover:text-gray-600 transition-colors"
+                  className="w-full py-2 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -1063,11 +1063,11 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
       {/* Context Menu */}
       {contextMenu && (
         <div 
-          className="fixed z-[100] bg-white dark:bg-gray-800 shadow-xl rounded-lg border border-gray-200 dark:border-gray-700 py-1 min-w-[180px] animate-fade-in"
+          className="fixed z-[100] bg-white dark:bg-slate-800 shadow-xl rounded-xl border border-slate-200 dark:border-slate-700 py-1 min-w-[180px] animate-fade-in"
           style={{ top: contextMenu.y, left: contextMenu.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700 mb-1">
+          <div className="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700 mb-1">
             Opciones
           </div>
           {contextMenu.event.type === 'news' && (
@@ -1076,7 +1076,7 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
                 handleOpenEditModal(contextMenu.event);
                 closeContextMenu();
               }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
+              className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -1089,17 +1089,17 @@ const NewsView: React.FC<NewsViewProps> = ({ isSignedIn, gapiError, dbError, isD
               handleDeleteEvent(contextMenu.event);
               closeContextMenu();
             }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center transition-colors"
+            className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 flex items-center transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
             Eliminar {contextMenu.event.type === 'event' ? 'Evento' : 'Novedad'}
           </button>
-          <div className="border-t border-gray-100 dark:border-gray-700 mt-1">
+          <div className="border-t border-slate-100 dark:border-slate-700 mt-1">
             <button 
               onClick={closeContextMenu}
-              className="w-full text-left px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center transition-colors"
+              className="w-full text-left px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center transition-colors"
             >
               Cerrar
             </button>

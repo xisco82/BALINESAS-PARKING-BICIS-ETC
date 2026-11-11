@@ -99,22 +99,22 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200 dark:border-gray-800"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 dark:border-slate-800"
             >
               <div className="p-6">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Confirmar Acción</h3>
-                <p className="text-gray-600 dark:text-gray-400">{confirmDialog.message}</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Confirmar Acción</h3>
+                <p className="text-slate-600 dark:text-slate-400">{confirmDialog.message}</p>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-800/50 px-6 py-4 flex justify-end gap-3">
+              <div className="bg-slate-50 dark:bg-slate-900 px-6 py-4 flex justify-end gap-3">
                 <button
                   onClick={() => handleConfirmResponse(false)}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={() => handleConfirmResponse(true)}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-lg shadow-amber-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                 >
                   Confirmar
                 </button>

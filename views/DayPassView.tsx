@@ -203,7 +203,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
         <div>
             <Header title="Day Pass">
               {userRole === 'editor' && (
-                <button onClick={handleOpenAddModal} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                <button onClick={handleOpenAddModal} className="bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                     Añadir Day Pass
                 </button>
               )}
@@ -212,29 +212,29 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
             <div className="p-4 space-y-4">
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label htmlFor="daypass-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
+                        <label htmlFor="daypass-date-picker" className="block mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">Seleccionar Fecha:</label>
                         <input 
                             type="date"
                             id="daypass-date-picker"
                             value={selectedDate}
                             onChange={(e) => setSelectedDate(e.target.value)}
-                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                            className="bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 text-slate-900 dark:text-white text-sm rounded-xl focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:border-amber-500 block w-full p-2.5"
                         />
                     </div>
                     <div ref={filterRef}>
-                        <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Filtrar por Servicio:</label>
+                        <label className="block mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">Filtrar por Servicio:</label>
                         <div className="relative">
                             <button
                                 onClick={() => setIsFilterOpen(prev => !prev)}
-                                className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 text-left flex justify-between items-center"
+                                className="bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 text-slate-900 dark:text-white text-sm rounded-xl focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:border-amber-500 block w-full p-2.5 text-left flex justify-between items-center"
                             >
                                 <span>{selectedServices.length > 0 ? `${selectedServices.length} seleccionado(s)` : 'Todos los servicios'}</span>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                             </button>
                             {isFilterOpen && (
-                                <div className="absolute z-10 mt-1 w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-lg shadow-xl border border-gray-200/50 dark:border-gray-700/50 max-h-60 overflow-y-auto">
+                                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-900 backdrop-blur-md rounded-xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 max-h-60 overflow-y-auto">
                                     <div className="p-2">
-                                         <label className="flex items-center w-full px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                                         <label className="flex items-center w-full px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md cursor-pointer">
                                             <input
                                                 type="checkbox"
                                                 className="h-4 w-4 rounded"
@@ -243,9 +243,9 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                             />
                                             <span className="ml-2 font-semibold">{selectedServices.length === DAY_PASS_OPTIONS.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}</span>
                                         </label>
-                                        <hr className="my-1 border-gray-200 dark:border-gray-600"/>
+                                        <hr className="my-1 border-slate-200 dark:border-slate-600"/>
                                         {DAY_PASS_OPTIONS.map(opt => (
-                                            <label key={opt.id} className="flex items-center w-full px-2 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md cursor-pointer">
+                                            <label key={opt.id} className="flex items-center w-full px-2 py-2 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md cursor-pointer">
                                                 <input
                                                     type="checkbox"
                                                     className="h-4 w-4 rounded"
@@ -263,12 +263,12 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                 </div>
                 
                 {dbError && (
-                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                    <div className="bg-rose-100/80 dark:bg-rose-900/80 backdrop-blur-sm border-l-4 border-rose-500 text-rose-700 dark:text-rose-200 p-4 rounded-xl mb-4" role="alert">
                         <p className="font-bold">Error de Conexión</p>
                         <p className="whitespace-pre-line">{dbError}</p>
                         <button 
                             onClick={onRetryAuth} 
-                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                            className="mt-3 bg-rose-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-rose-700 transition-colors"
                         >
                             Reintentar Conexión
                         </button>
@@ -276,22 +276,22 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                 )}
                 
                 {!isLoading && !dbError && totalPeopleToday > 0 && (
-                    <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-md rounded-xl shadow-md p-4 animate-fade-in">
-                        <h3 className="font-bold text-lg mb-3 pb-2 border-b border-gray-300/50 dark:border-gray-600/50 text-gray-900 dark:text-gray-100">Resumen del Día</h3>
+                    <div className="bg-white dark:bg-slate-900 backdrop-blur-md rounded-xl shadow-md p-4 animate-fade-in">
+                        <h3 className="font-bold text-lg mb-3 pb-2 border-b border-slate-200 dark:border-slate-600/50 text-slate-900 dark:text-slate-100">Resumen del Día</h3>
                         <dl className="space-y-2 text-sm">
                             {dailySummary.map(({ serviceName, totalPax }) => (
                                 <div key={serviceName} className="flex justify-between items-center">
-                                    <dt className="text-gray-600 dark:text-gray-300">{serviceName}</dt>
-                                    <dd className={`font-semibold rounded-full px-3 py-1 text-xs ${totalPax > 0 ? 'text-gray-900 dark:text-white bg-gray-200/60 dark:bg-gray-700/60' : 'text-gray-400 dark:text-gray-500'}`}>
+                                    <dt className="text-slate-600 dark:text-slate-300">{serviceName}</dt>
+                                    <dd className={`font-semibold rounded-full px-3 py-1 text-xs ${totalPax > 0 ? 'text-slate-900 dark:text-white bg-slate-200/60 dark:bg-slate-700/60' : 'text-slate-400 dark:text-slate-500'}`}>
                                         {totalPax} {totalPax === 1 ? 'pax' : 'pax'}
                                     </dd>
                                 </div>
                             ))}
                         </dl>
-                        <hr className="my-3 border-gray-300/50 dark:border-gray-600/50" />
+                        <hr className="my-3 border-slate-200 dark:border-slate-600/50" />
                         <div className="flex justify-between items-center">
-                            <dt className="font-bold text-gray-700 dark:text-gray-200">Total del Día:</dt>
-                            <dd className="font-bold text-xl text-green-700 dark:text-green-300">
+                            <dt className="font-bold text-slate-700 dark:text-slate-200">Total del Día:</dt>
+                            <dd className="font-bold text-xl text-emerald-700 dark:text-emerald-300">
                                 {totalPeopleToday} Personas
                             </dd>
                         </div>
@@ -322,27 +322,27 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                             }
                             return (
                                 <div key={option.id} className="animate-fade-in">
-                                    <h4 className="font-bold text-lg mt-4 mb-2 pl-2 text-gray-800 dark:text-gray-100">{option.name}</h4>
+                                    <h4 className="font-bold text-lg mt-4 mb-2 pl-2 text-slate-800 dark:text-slate-100">{option.name}</h4>
                                     <div className="space-y-2">
                                         {bookingsForService.map(booking => {
-                                            let cardClasses = 'bg-white/30 dark:bg-gray-800/30'; // Default
+                                            let cardClasses = 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10'; // Default
                                             if (booking.createdFrom === 'direct') {
-                                                cardClasses = 'bg-red-600/50 dark:bg-red-800/40 border border-red-500/60 dark:border-red-600/60';
+                                                cardClasses = 'bg-rose-600/50 dark:bg-rose-800/40 border border-rose-500/60 dark:border-rose-600/60';
                                             } else if (booking.createdFrom === 'hoteltreats') {
                                                 cardClasses = 'bg-blue-300/40 dark:bg-blue-900/20 border border-blue-400/50 dark:border-blue-700/50';
                                             }
 
                                             return (
-                                                <div key={booking.id} className={`flex justify-between items-center ${cardClasses} backdrop-blur-sm px-4 py-3 rounded-lg shadow-md`}>
+                                                <div key={booking.id} className={`flex justify-between items-center ${cardClasses} backdrop-blur-sm px-4 py-3 rounded-xl shadow-md`}>
                                                     <div className="min-w-0 flex-1 flex flex-col">
                                                         <div className="flex flex-col md:flex-row md:items-baseline gap-x-3 gap-y-1">
-                                                            <p className="font-bold text-gray-900 dark:text-gray-100 truncate flex items-center" title={booking.clientName}>
+                                                            <p className="font-bold text-slate-900 dark:text-slate-100 truncate flex items-center" title={booking.clientName}>
                                                                 {booking.clientName}
-                                                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-200/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200">
+                                                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200/80 dark:bg-slate-700/80 text-slate-800 dark:text-slate-200">
                                                                     {booking.numberOfPeople || 1} {booking.numberOfPeople > 1 ? 'pax' : 'pax'}
                                                                 </span>
                                                             </p>
-                                                            <p className="text-sm text-black/60 dark:text-gray-400 truncate flex-shrink font-semibold" title={booking.serviceType}>{booking.serviceType.replace(/^\d+\.\s/, '')}</p>
+                                                            <p className="text-sm text-black/60 dark:text-slate-400 truncate flex-shrink font-semibold" title={booking.serviceType}>{booking.serviceType.replace(/^\d+\.\s/, '')}</p>
                                                         </div>
                                                         {booking.notes && (
                                                             <p className="text-xs text-black bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-md mt-1.5 max-w-xl break-words italic font-bold font-sans shadow-sm">
@@ -356,7 +356,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                                         {booking.createdFrom && (
                                                             <span className={`inline-block w-32 text-center px-2.5 py-1 rounded-full text-xs font-bold ${
                                                                 booking.createdFrom === 'direct' 
-                                                                    ? 'bg-red-200/80 text-red-800 dark:bg-red-900/60 dark:text-red-200' 
+                                                                    ? 'bg-rose-200/80 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200' 
                                                                     : 'bg-blue-200/80 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200'
                                                             }`}>
                                                                 {booking.createdFrom === 'direct' ? 'DIR DAY PASS' : 'DIR HOTELTREATS'}
@@ -365,7 +365,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                                         
                                                         {booking.notes && (
                                                             <div title={booking.notes}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 dark:text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-500 dark:text-slate-400" viewBox="0 0 20 20" fill="currentColor">
                                                                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2-2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                                                                 </svg>
                                                             </div>
@@ -375,7 +375,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                                             <>
                                                                 <button 
                                                                     onClick={() => handleOpenEditModal(booking)}
-                                                                    className="text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-300 p-2 rounded-full transition-colors"
+                                                                    className="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 p-2 rounded-full transition-colors"
                                                                     aria-label="Editar Day Pass"
                                                                 >
                                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -385,7 +385,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                                                 </button>
                                                                 <button 
                                                                     onClick={() => handleDeleteBooking(booking.id)} 
-                                                                    className="text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 p-2 rounded-full transition-colors"
+                                                                    className="text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-2 rounded-full transition-colors"
                                                                     aria-label="Eliminar Day Pass"
                                                                 >
                                                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -403,7 +403,7 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                             );
                         })
                     ) : (
-                        !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                        !dbError && <div className="text-center py-10 text-slate-800 dark:text-slate-200 bg-slate-50/30 dark:bg-slate-800/30 backdrop-blur-sm rounded-xl">
                             No hay ventas de Day Pass para esta fecha {selectedServices.length > 0 ? `con el filtro seleccionado` : ''}.
                         </div>
                     )}
@@ -413,24 +413,24 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? "Editar Day Pass" : "Añadir Day Pass"}>
                 <form onSubmit={handleSaveBooking}>
                     <div className="space-y-4">
-                        <input type="text" placeholder="Nombre del Cliente" value={formData.clientName} onChange={(e) => setFormData({ ...formData, clientName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <input type="text" placeholder="Nombre del Cliente" value={formData.clientName} onChange={(e) => setFormData({ ...formData, clientName: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                         
                         <div className="grid grid-cols-3 gap-4">
                             <div className="col-span-2">
-                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Tipo de Servicio</label>
-                                <select value={formData.serviceType} onChange={(e) => setFormData(prev => ({ ...prev, serviceType: e.target.value }))} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Tipo de Servicio</label>
+                                <select value={formData.serviceType} onChange={(e) => setFormData(prev => ({ ...prev, serviceType: e.target.value }))} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required>
                                     {DAY_PASS_OPTIONS.map(opt => <option key={opt.id} value={opt.id}>{opt.name}</option>)}
                                 </select>
                             </div>
                              <div>
-                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Nº Personas</label>
-                                <input type="number" min="1" value={formData.numberOfPeople} onChange={(e) => setFormData({ ...formData, numberOfPeople: parseInt(e.target.value) || 1 })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Nº Personas</label>
+                                <input type="number" min="1" value={formData.numberOfPeople} onChange={(e) => setFormData({ ...formData, numberOfPeople: parseInt(e.target.value) || 1 })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                             </div>
                         </div>
                         
                         <div>
-                            <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Origen de la reserva</label>
-                            <div className="mt-2 flex space-x-4 p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg">
+                            <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Origen de la reserva</label>
+                            <div className="mt-2 flex space-x-4 p-3 bg-white dark:bg-slate-800 rounded-xl">
                                 <label className="flex items-center">
                                     <input
                                         type="radio"
@@ -438,9 +438,9 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                         value="direct"
                                         checked={formData.createdFrom === 'direct'}
                                         onChange={(e) => setFormData({ ...formData, createdFrom: e.target.value })}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                        className="h-4 w-4 text-blue-600 focus:ring-amber-200 dark:focus:ring-amber-500/30 border-slate-300"
                                     />
-                                    <span className="ml-2 text-gray-700 dark:text-gray-200">DIR DAY PASS</span>
+                                    <span className="ml-2 text-slate-700 dark:text-slate-200">DIR DAY PASS</span>
                                 </label>
                                 <label className="flex items-center">
                                     <input
@@ -449,16 +449,16 @@ const DayPassView: React.FC<DayPassViewProps> = ({ dbError, isDbInitialized, isA
                                         value="hoteltreats"
                                         checked={formData.createdFrom === 'hoteltreats'}
                                         onChange={(e) => setFormData({ ...formData, createdFrom: e.target.value })}
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                        className="h-4 w-4 text-blue-600 focus:ring-amber-200 dark:focus:ring-amber-500/30 border-slate-300"
                                     />
-                                    <span className="ml-2 text-gray-700 dark:text-gray-200">DIR HOTELTREATS</span>
+                                    <span className="ml-2 text-slate-700 dark:text-slate-200">DIR HOTELTREATS</span>
                                 </label>
                             </div>
                         </div>
 
-                        <textarea placeholder="Notas (opcional)" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3}></textarea>
+                        <textarea placeholder="Notas (opcional)" value={formData.notes} onChange={(e) => setFormData({ ...formData, notes: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" rows={3}></textarea>
                         
-                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        <button type="submit" className="w-full bg-amber-400 text-slate-950 p-3 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                             {editingBooking ? 'Guardar Cambios' : 'Guardar Day Pass'}
                         </button>
                     </div>

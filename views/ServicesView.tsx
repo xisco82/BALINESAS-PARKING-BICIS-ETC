@@ -366,7 +366,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             default:
                 return {
                     label: mealType || 'Servicio',
-                    className: 'bg-gray-100 text-gray-800 border border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600'
+                    className: 'bg-slate-100 text-slate-800 border border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
                 };
         }
     };
@@ -700,7 +700,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                       </div>
                     )}
                     {userRole === 'editor' && (
-                      <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                      <button onClick={() => handleOpenModal()} className="bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                           Añadir {title}
                       </button>
                     )}
@@ -711,14 +711,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             <div className="p-4 space-y-4">
                 {/* View Switcher for Restaurant */}
                 {tableName === 'restaurant_bookings' && (
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-3 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm">
-                        <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700/60 p-1 rounded-lg">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white dark:bg-slate-900 backdrop-blur-sm p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm">
+                        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-700/60 p-1 rounded-xl">
                             <button
                                 onClick={() => setViewMode('daily')}
                                 className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
                                     viewMode === 'daily'
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20 shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                 }`}
                             >
                                 <span>📅 Vista Diaria</span>
@@ -727,8 +727,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 onClick={() => setViewMode('monthly')}
                                 className={`px-4 py-2 rounded-md text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
                                     viewMode === 'monthly'
-                                        ? 'bg-blue-600 text-white shadow-sm'
-                                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20 shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                 }`}
                             >
                                 <span>📊 Vista Mensual y Totales</span>
@@ -744,7 +744,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span>Ver estadísticas de {monthFormattedName} →</span>
                                 </button>
                             ) : (
-                                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                                     Total Personas calculadas por servicio activo
                                 </span>
                             )}
@@ -760,12 +760,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 {tableName === 'events_bookings' ? (
                                 <div className="flex flex-col sm:flex-row sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
                                     <div className="w-full sm:w-auto">
-                                        <label htmlFor="service-year-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Año:</label>
+                                        <label htmlFor="service-year-picker" className="block mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">Seleccionar Año:</label>
                                         <select 
                                             id="service-year-picker"
                                             value={selectedYear}
                                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                            className="bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 text-slate-900 dark:text-white text-sm rounded-xl focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:border-amber-500 block w-full p-2.5"
                                         >
                                             {[...Array(5)].map((_, i) => {
                                                 const year = new Date().getFullYear() - 2 + i;
@@ -776,10 +776,10 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <div className="w-full sm:w-auto">
                                         <button
                                             onClick={() => setShowFullYear(!showFullYear)}
-                                            className={`w-full sm:w-auto px-4 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-sm flex items-center justify-center space-x-2 ${
+                                            className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center justify-center space-x-2 ${
                                                 showFullYear 
-                                                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                                                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                                                    ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20' 
+                                                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
                                             }`}
                                         >
                                             <span>{showFullYear ? 'Ver solo próximos' : 'Ver año completo'}</span>
@@ -789,95 +789,95 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             ) : (
                                 <div className="flex flex-col sm:flex-row sm:items-end gap-3">
                                     <div className="w-full sm:w-auto">
-                                        <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white bg-gray-900/50 rounded-md p-1 w-fit">Seleccionar Fecha:</label>
+                                        <label htmlFor="service-date-picker" className="block mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">Seleccionar Fecha:</label>
                                         <input 
                                             type="date" 
                                             id="service-date-picker"
                                             value={selectedDate} 
                                             onChange={(e) => setSelectedDate(e.target.value)} 
-                                            className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-300/50 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                            className="bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 text-slate-900 dark:text-white text-sm rounded-xl focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:border-amber-500 block w-full p-2.5"
                                         />
                                     </div>
                                     
                                     {tableName === 'restaurant_bookings' && (
                                         <div className="flex flex-col xl:flex-row gap-3 items-start xl:items-center">
-                                            <div className="flex flex-wrap bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300/50 rounded-lg overflow-hidden shadow-sm">
+                                            <div className="flex flex-wrap bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                                                 <button 
                                                     onClick={() => setMealFilter('todos')}
-                                                    className={`px-3 py-2 text-xs font-semibold transition-all ${mealFilter === 'todos' ? 'bg-blue-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-3 py-2 text-xs font-semibold transition-all ${mealFilter === 'todos' ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20 shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Todos
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('total_desayunos')}
-                                                    className={`px-2.5 py-2 text-xs font-bold border-l border-gray-300/50 transition-all ${mealFilter === 'total_desayunos' ? 'bg-amber-500 text-white shadow-inner ring-1 ring-amber-300' : 'text-amber-800 dark:text-amber-300 bg-amber-50/50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40'}`}
+                                                    className={`px-2.5 py-2 text-xs font-bold border-l border-slate-200 transition-all ${mealFilter === 'total_desayunos' ? 'bg-amber-500 text-white shadow-inner ring-1 ring-amber-300' : 'text-amber-800 dark:text-amber-300 bg-amber-50/50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40'}`}
                                                 >
                                                     Total Desayunos
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('total_cenas')}
-                                                    className={`px-2.5 py-2 text-xs font-bold border-l border-gray-300/50 transition-all ${mealFilter === 'total_cenas' ? 'bg-indigo-700 text-white shadow-inner ring-1 ring-indigo-400' : 'text-indigo-800 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40'}`}
+                                                    className={`px-2.5 py-2 text-xs font-bold border-l border-slate-200 transition-all ${mealFilter === 'total_cenas' ? 'bg-indigo-700 text-white shadow-inner ring-1 ring-indigo-400' : 'text-indigo-800 dark:text-indigo-300 bg-indigo-50/50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40'}`}
                                                 >
                                                     Total Cenas
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('desayuno')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno' ? 'bg-yellow-500 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'desayuno' ? 'bg-yellow-500 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Desayuno
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('desayuno_compensacion')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno_compensacion' ? 'bg-amber-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'desayuno_compensacion' ? 'bg-amber-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Desayuno Comp.
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('desayuno_cena')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno_cena' ? 'bg-emerald-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'desayuno_cena' ? 'bg-emerald-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Desayuno + Cena
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('desayuno_cena_compensacion')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'desayuno_cena_compensacion' ? 'bg-teal-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'desayuno_cena_compensacion' ? 'bg-teal-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Des.+Cena Comp.
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('solo_bebidas')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'solo_bebidas' ? 'bg-cyan-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'solo_bebidas' ? 'bg-cyan-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Solo Bebidas
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('cena')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'cena' ? 'bg-indigo-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'cena' ? 'bg-indigo-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Cena
                                                 </button>
                                                 <button 
                                                     onClick={() => setMealFilter('cena_compensacion')}
-                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${mealFilter === 'cena_compensacion' ? 'bg-purple-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-2.5 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${mealFilter === 'cena_compensacion' ? 'bg-purple-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Cena Comp.
                                                 </button>
                                             </div>
-                                            <div className="flex bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-300/50 rounded-lg overflow-hidden h-[38px] shadow-sm">
+                                            <div className="flex bg-white dark:bg-slate-900 backdrop-blur-sm border border-slate-200 rounded-xl overflow-hidden h-[38px] shadow-sm">
                                                 <button 
                                                     onClick={() => setCheckedInFilter('pending')}
-                                                    className={`px-3 py-2 text-xs font-semibold transition-all ${checkedInFilter === 'pending' ? 'bg-emerald-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-3 py-2 text-xs font-semibold transition-all ${checkedInFilter === 'pending' ? 'bg-emerald-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Pendientes
                                                 </button>
                                                 <button 
                                                     onClick={() => setCheckedInFilter('all')}
-                                                    className={`px-3 py-2 text-xs font-semibold border-l border-gray-300/50 transition-all ${checkedInFilter === 'all' ? 'bg-indigo-600 text-white shadow-inner' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                                    className={`px-3 py-2 text-xs font-semibold border-l border-slate-200 transition-all ${checkedInFilter === 'all' ? 'bg-indigo-600 text-white shadow-inner' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                                                 >
                                                     Ver Todos
                                                 </button>
                                             </div>
-                                            <div className="hidden 2xl:flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                            <div className="hidden 2xl:flex items-center px-3 py-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl">
                                                 <span className="text-xs font-bold text-blue-800 dark:text-blue-300">
                                                     💡 Clica MARCAR ENTRADA cuando lleguen
                                                 </span>
@@ -888,7 +888,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             )}
                             </div>
                             {userRole === 'editor' && (
-                                <button onClick={() => handleOpenModal()} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md transform active:scale-95">
+                                <button onClick={() => handleOpenModal()} className="bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold hover:bg-amber-300 transition-colors shadow-md transform active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                                     Añadir {title}
                                 </button>
                             )}
@@ -897,7 +897,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                         {tableName === 'restaurant_bookings' && !isLoading && !dbError && (
                             <div className="space-y-2 mb-4">
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 rounded-lg flex justify-between items-center shadow-sm">
+                                    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-3 rounded-xl flex justify-between items-center shadow-sm">
                                         <div>
                                             <span className="text-blue-800 dark:text-blue-200 font-bold block text-sm">
                                                 {checkedInFilter === 'all' ? 'Total Personas:' : 'Pendientes:'}
@@ -909,7 +909,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         <span className="text-3xl sm:text-4xl font-black text-blue-900 dark:text-blue-100">{totalGuests}</span>
                                     </div>
 
-                                    <div className="bg-amber-50/90 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/60 p-3 rounded-lg flex justify-between items-center shadow-sm">
+                                    <div className="bg-amber-50/90 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800/60 p-3 rounded-xl flex justify-between items-center shadow-sm">
                                         <div>
                                             <span className="text-amber-900 dark:text-amber-200 font-bold block text-sm">
                                                 ☕ Total Desayunos:
@@ -923,7 +923,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         </span>
                                     </div>
 
-                                    <div className="bg-indigo-50/90 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800/60 p-3 rounded-lg flex justify-between items-center shadow-sm">
+                                    <div className="bg-indigo-50/90 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800/60 p-3 rounded-xl flex justify-between items-center shadow-sm">
                                         <div>
                                             <span className="text-indigo-900 dark:text-indigo-200 font-bold block text-sm">
                                                 🍲 Total Cenas:
@@ -939,7 +939,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 </div>
                                 {mealFilter === 'todos' && (
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2">
-                                        <div className="bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-yellow-50/80 dark:bg-yellow-900/20 border border-yellow-200/50 dark:border-yellow-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-yellow-800 dark:text-yellow-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'Desayuno' : 'Pend. Desayuno'}
                                             </span>
@@ -947,7 +947,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 {bookings.filter(b => b.mealType === 'desayuno' && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-amber-50/80 dark:bg-amber-900/20 border border-amber-200/50 dark:border-amber-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-amber-800 dark:text-amber-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'Desayuno Comp.' : 'Pend. Des. Comp.'}
                                             </span>
@@ -955,7 +955,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 {bookings.filter(b => b.mealType === 'desayuno_compensacion' && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-emerald-50/80 dark:bg-emerald-900/20 border border-emerald-200/50 dark:border-emerald-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-emerald-800 dark:text-emerald-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'Desayuno + Cena' : 'Pend. Des.+Cena'}
                                             </span>
@@ -963,7 +963,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 {bookings.filter(b => (b.mealType === 'desayuno_cena' || b.mealType === 'MP') && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="bg-teal-50/80 dark:bg-teal-900/20 border border-teal-200/50 dark:border-teal-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-teal-50/80 dark:bg-teal-900/20 border border-teal-200/50 dark:border-teal-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-teal-800 dark:text-teal-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'D+C Comp.' : 'Pend. D+C Comp.'}
                                             </span>
@@ -971,7 +971,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 {bookings.filter(b => b.mealType === 'desayuno_cena_compensacion' && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="bg-cyan-50/80 dark:bg-cyan-900/20 border border-cyan-200/50 dark:border-cyan-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-cyan-50/80 dark:bg-cyan-900/20 border border-cyan-200/50 dark:border-cyan-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-cyan-800 dark:text-cyan-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'Solo Bebidas' : 'Pend. Bebidas'}
                                             </span>
@@ -979,7 +979,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 {bookings.filter(b => (b.mealType === 'solo_bebidas' || b.mealType === 'almuerzo') && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-indigo-50/80 dark:bg-indigo-900/20 border border-indigo-200/50 dark:border-indigo-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-indigo-800 dark:text-indigo-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'Cena' : 'Pend. Cena'}
                                             </span>
@@ -987,7 +987,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 {bookings.filter(b => b.mealType === 'cena' && (checkedInFilter === 'all' ? true : (b.checkedInDate !== selectedDate))).reduce((sum, b) => sum + (b.guestsCount || 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="bg-purple-50/80 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-2 rounded-lg flex flex-col items-center justify-center text-center">
+                                        <div className="bg-purple-50/80 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 p-2 rounded-xl flex flex-col items-center justify-center text-center">
                                             <span className="text-purple-800 dark:text-purple-300 text-[8px] uppercase font-bold tracking-wider mb-1">
                                                 {checkedInFilter === 'all' ? 'Cena Comp.' : 'Pend. Cena Comp.'}
                                             </span>
@@ -1001,12 +1001,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                         )}
                         
                         {dbError && (
-                            <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                            <div className="bg-rose-100/80 dark:bg-rose-900/80 backdrop-blur-sm border-l-4 border-rose-500 text-rose-700 dark:text-rose-200 p-4 rounded-xl mb-4" role="alert">
                                 <p className="font-bold">Error de Conexión</p>
                                 <p className="whitespace-pre-line">{dbError}</p>
                                 <button 
                                     onClick={onRetryAuth} 
-                                    className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                                    className="mt-3 bg-rose-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-rose-700 transition-colors"
                                 >
                                     Reintentar Conexión
                                 </button>
@@ -1017,10 +1017,10 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                         ) : !dbError && filteredBookings.length > 0 ? (
                             <div className="flex flex-col space-y-4">
                             {filteredBookings.map(booking => (
-                                <div key={booking.id} className={`group cursor-pointer w-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-4 py-3 rounded-lg shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-red-500' : booking.origin === 'pdf' ? 'border-blue-500' : 'border-purple-500'}`}>
+                                <div key={booking.id} className={`group cursor-pointer w-full bg-white dark:bg-slate-900 backdrop-blur-sm px-4 py-3 rounded-xl shadow-md animate-fade-in border-l-4 transition-all duration-300 ${booking.origin === 'news' ? 'border-rose-500' : booking.origin === 'pdf' ? 'border-blue-500' : 'border-purple-500'}`}>
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex items-center gap-2">
-                                            <div className="text-black dark:text-gray-300 font-medium text-xs bg-gray-200/60 dark:bg-gray-700/60 px-2 py-1 rounded-md w-fit">
+                                            <div className="text-black dark:text-slate-300 font-medium text-xs bg-slate-200/60 dark:bg-slate-700/60 px-2 py-1 rounded-md w-fit">
                                                 <span>{formatDate(booking.startDate)}</span>
                                                 {booking.startDate !== booking.endDate && (
                                                 <>
@@ -1042,7 +1042,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                     className={`px-3 py-1 rounded-md text-xs font-bold font-mono shadow-sm transition-all transform active:scale-95 ${
                                                         (booking.checkedIn && booking.checkedInDate === selectedDate)
                                                         ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' 
-                                                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                                                     }`}
                                                 >
                                                     {(booking.checkedIn && booking.checkedInDate === selectedDate) ? '✓ ENTRADO' : 'MARCAR ENTRADA'}
@@ -1053,13 +1053,13 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 <div className="flex gap-2">
                                                     <button 
                                                         onClick={() => handleOpenModal(booking)} 
-                                                        className="bg-blue-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-blue-600 transition-colors"
+                                                        className="bg-amber-400 text-slate-950 px-2 py-0.5 text-xs rounded-md font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                                                     >
                                                         Editar
                                                     </button>
                                                     <button 
                                                         onClick={() => handleDeleteBooking(booking.id)} 
-                                                        className="bg-red-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
+                                                        className="bg-rose-500 text-white px-2 py-0.5 text-xs rounded-md font-semibold hover:bg-rose-600 transition-colors"
                                                         aria-label="Cancelar servicio"
                                                     >
                                                         Cancelar
@@ -1070,9 +1070,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     </div>
                                     
                                     <div className="flex justify-between items-center">
-                                        <h3 className="font-bold text-lg leading-tight text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
+                                        <h3 className="font-bold text-lg leading-tight text-slate-900 dark:text-slate-100">{booking.guestName}</h3>
                                         <div className="flex flex-col items-end">
-                                            {booking.roomNumber && <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</p>}
+                                            {booking.roomNumber && <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">Hab. {booking.roomNumber}</p>}
                                             {tableName === 'restaurant_bookings' && booking.guestsCount && (
                                                 <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{booking.guestsCount} {booking.guestsCount === 1 ? 'persona' : 'personas'}</p>
                                             )}
@@ -1101,7 +1101,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             ))}
                             </div>
                         ) : (
-                            !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg">
+                            !dbError && <div className="text-center py-10 text-slate-800 dark:text-slate-200 bg-slate-50/90 dark:bg-slate-900 backdrop-blur-sm rounded-xl">
                                 {tableName === 'events_bookings' ? 'No hay eventos registrados para este año.' : 'No hay servicios activos para esta fecha.'}
                             </div>
                         )}
@@ -1112,20 +1112,20 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                 {viewMode === 'monthly' && tableName === 'restaurant_bookings' && (
                     <div className="space-y-4">
                         {/* Period Selector Bar & Action */}
-                        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm space-y-3">
-                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2 border-b border-gray-100 dark:border-gray-700/60">
+                        <div className="bg-white dark:bg-slate-900 backdrop-blur-sm p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm space-y-3">
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-700/60">
                                 {/* Type toggle */}
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mr-1">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1">
                                         Modo de Consulta:
                                     </span>
-                                    <div className="inline-flex rounded-lg bg-gray-100 dark:bg-gray-700/70 p-0.5 border border-gray-200 dark:border-gray-600">
+                                    <div className="inline-flex rounded-xl bg-slate-100 dark:bg-slate-700/70 p-0.5 border border-slate-200 dark:border-slate-600">
                                         <button
                                             onClick={() => setPeriodFilterMode('month')}
                                             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
                                                 periodFilterMode === 'month'
-                                                    ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                                                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                                                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                                                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                             }`}
                                         >
                                             <span>📅</span>
@@ -1135,8 +1135,8 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                             onClick={() => setPeriodFilterMode('custom')}
                                             className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all flex items-center gap-1.5 ${
                                                 periodFilterMode === 'custom'
-                                                    ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-xs'
-                                                    : 'text-gray-600 dark:text-gray-300 hover:text-gray-900'
+                                                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                                                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                                             }`}
                                         >
                                             <span>📆</span>
@@ -1148,7 +1148,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 {userRole === 'editor' && (
                                     <button 
                                         onClick={() => handleOpenModal()} 
-                                        className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md text-sm self-start lg:self-auto"
+                                        className="bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold hover:bg-amber-300 transition-colors shadow-md text-sm self-start lg:self-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                                     >
                                         + Añadir Reserva
                                     </button>
@@ -1159,13 +1159,13 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             {periodFilterMode === 'month' ? (
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                             Seleccionar Mes:
                                         </span>
                                         <div className="flex items-center gap-1">
                                             <button
                                                 onClick={handlePrevMonth}
-                                                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                                                 title="Mes anterior"
                                             >
                                                 ◀
@@ -1174,11 +1174,11 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                 type="month"
                                                 value={selectedMonth}
                                                 onChange={(e) => setSelectedMonth(e.target.value)}
-                                                className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:outline-none"
                                             />
                                             <button
                                                 onClick={handleNextMonth}
-                                                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                                                 title="Mes siguiente"
                                             >
                                                 ▶
@@ -1186,79 +1186,79 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         </div>
                                         <button
                                             onClick={handleCurrentMonth}
-                                            className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors"
+                                            className="px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 transition-colors"
                                         >
                                             Mes Actual
                                         </button>
                                     </div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
-                                        Período: <span className="font-bold text-gray-800 dark:text-gray-200">{formatDate(monthStartStr)} al {formatDate(monthEndStr)}</span> ({daysInSelectedMonth} días)
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                                        Período: <span className="font-bold text-slate-800 dark:text-slate-200">{formatDate(monthStartStr)} al {formatDate(monthEndStr)}</span> ({daysInSelectedMonth} días)
                                     </div>
                                 </div>
                             ) : (
                                 <div className="space-y-2.5">
                                     <div className="flex flex-wrap items-center gap-3">
                                         <div className="flex items-center gap-1.5">
-                                            <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                                 Desde:
                                             </label>
                                             <input
                                                 type="date"
                                                 value={customStartDate}
                                                 onChange={(e) => setCustomStartDate(e.target.value)}
-                                                className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:outline-none"
                                             />
                                         </div>
 
                                         <div className="flex items-center gap-1.5">
-                                            <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                                 Hasta:
                                             </label>
                                             <input
                                                 type="date"
                                                 value={customEndDate}
                                                 onChange={(e) => setCustomEndDate(e.target.value)}
-                                                className="px-3 py-1.5 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-bold text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-xl text-sm font-bold text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:outline-none"
                                             />
                                         </div>
 
-                                        <div className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 ml-auto">
-                                            Total días en rango: <span className="font-bold text-gray-800 dark:text-gray-200">{monthlyDayStats.length} días</span>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-700/50 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 ml-auto">
+                                            Total días en rango: <span className="font-bold text-slate-800 dark:text-slate-200">{monthlyDayStats.length} días</span>
                                         </div>
                                     </div>
 
                                     {/* Presets */}
                                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                        <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mr-1">
+                                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">
                                             Rangos Rápidos:
                                         </span>
                                         <button
                                             onClick={handleSetRangeToday}
-                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors"
+                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition-colors"
                                         >
                                             Hoy
                                         </button>
                                         <button
                                             onClick={handleSetRangeThisWeek}
-                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors"
+                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition-colors"
                                         >
                                             Esta Semana
                                         </button>
                                         <button
                                             onClick={handleSetRangeThisMonth}
-                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors"
+                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition-colors"
                                         >
                                             Este Mes
                                         </button>
                                         <button
                                             onClick={handleSetRangeNext7Days}
-                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors"
+                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition-colors"
                                         >
                                             Próximos 7 Días
                                         </button>
                                         <button
                                             onClick={handleSetRangeNext30Days}
-                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 transition-colors"
+                                            className="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 transition-colors"
                                         >
                                             Próximos 30 Días
                                         </button>
@@ -1268,23 +1268,23 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                         </div>
 
                         {/* Filter by Service Bar */}
-                        <div className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl border border-gray-200/80 dark:border-gray-700/80 shadow-sm space-y-2">
+                        <div className="bg-white dark:bg-slate-900 backdrop-blur-sm p-4 rounded-xl border border-slate-200/80 dark:border-slate-700/80 shadow-sm space-y-2">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                <div className="text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 flex items-center gap-1.5">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                                     <span>🔍 Filtrar Total de Personas por Servicio:</span>
                                 </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    Mostrando cómputo de <span className="font-bold text-gray-800 dark:text-gray-200">{monthFormattedName}</span> ({monthlyDayStats.length} días)
+                                <div className="text-xs text-slate-500 dark:text-slate-400">
+                                    Mostrando cómputo de <span className="font-bold text-slate-800 dark:text-slate-200">{monthFormattedName}</span> ({monthlyDayStats.length} días)
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-2 pt-1">
                                 <button
                                     onClick={() => setMonthlyMealFilter('todos')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'todos'
-                                            ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-300 dark:ring-blue-800'
-                                            : 'bg-gray-100 dark:bg-gray-700/70 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                                            ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-2 ring-sky-600/40 shadow-md'
+                                            : 'bg-slate-100 dark:bg-slate-700/70 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'
                                     }`}
                                 >
                                     <span>Todos</span>
@@ -1293,7 +1293,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('total_desayunos')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'total_desayunos'
                                             ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 dark:ring-amber-800'
                                             : 'bg-amber-50/90 dark:bg-amber-900/30 text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 border border-amber-300/80 dark:border-amber-700/60'
@@ -1305,7 +1305,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('total_cenas')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'total_cenas'
                                             ? 'bg-indigo-700 text-white shadow-md ring-2 ring-indigo-300 dark:ring-indigo-800'
                                             : 'bg-indigo-50/90 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-200 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 border border-indigo-300/80 dark:border-indigo-700/60'
@@ -1317,7 +1317,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('desayuno')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'desayuno'
                                             ? 'bg-yellow-500 text-white shadow-md ring-2 ring-yellow-300 dark:ring-yellow-800'
                                             : 'bg-yellow-50/80 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/40 border border-yellow-200/60 dark:border-yellow-800/40'
@@ -1329,7 +1329,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('desayuno_compensacion')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'desayuno_compensacion'
                                             ? 'bg-amber-600 text-white shadow-md ring-2 ring-amber-300 dark:ring-amber-800'
                                             : 'bg-amber-50/80 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200/60 dark:border-amber-800/40'
@@ -1341,7 +1341,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('desayuno_cena')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'desayuno_cena' || monthlyMealFilter === 'MP'
                                             ? 'bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300 dark:ring-emerald-800'
                                             : 'bg-emerald-50/80 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200/60 dark:border-emerald-800/40'
@@ -1353,7 +1353,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('desayuno_cena_compensacion')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'desayuno_cena_compensacion'
                                             ? 'bg-teal-600 text-white shadow-md ring-2 ring-teal-300 dark:ring-teal-800'
                                             : 'bg-teal-50/80 dark:bg-teal-900/20 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/40 border border-teal-200/60 dark:border-teal-800/40'
@@ -1365,7 +1365,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('solo_bebidas')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'solo_bebidas'
                                             ? 'bg-cyan-600 text-white shadow-md ring-2 ring-cyan-300 dark:ring-cyan-800'
                                             : 'bg-cyan-50/80 dark:bg-cyan-900/20 text-cyan-800 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 border border-cyan-200/60 dark:border-cyan-800/40'
@@ -1377,7 +1377,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('cena')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'cena'
                                             ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300 dark:ring-indigo-800'
                                             : 'bg-indigo-50/80 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-200/60 dark:border-indigo-800/40'
@@ -1389,7 +1389,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                 <button
                                     onClick={() => setMonthlyMealFilter('cena_compensacion')}
-                                    className={`px-2 py-2.5 rounded-lg text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
+                                    className={`px-2 py-2.5 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center text-center ${
                                         monthlyMealFilter === 'cena_compensacion'
                                             ? 'bg-purple-600 text-white shadow-md ring-2 ring-purple-300 dark:ring-purple-800'
                                             : 'bg-purple-50/80 dark:bg-purple-900/20 text-purple-800 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-200/60 dark:border-purple-800/40'
@@ -1454,17 +1454,17 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             <div className={`p-4 rounded-xl border transition-all flex items-center justify-between ${
                                 monthlyMealFilter === 'total_desayunos'
                                     ? 'bg-amber-100 dark:bg-amber-900/50 border-amber-400 dark:border-amber-600 ring-2 ring-amber-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-amber-200/80 dark:border-amber-800/60 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-amber-200/80 dark:border-amber-800/60 shadow-sm'
                             }`}>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xl shadow-xs font-bold">
+                                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-xl shadow-xs font-bold">
                                         ☕
                                     </div>
                                     <div>
                                         <span className="text-xs uppercase font-bold text-amber-900 dark:text-amber-200 block">
                                             Total Desayunos (Período)
                                         </span>
-                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
                                             Desayunos + D+C + Compensaciones
                                         </span>
                                     </div>
@@ -1473,24 +1473,24 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-3xl font-black text-amber-900 dark:text-amber-100 block leading-none">
                                         {monthlyMetrics.totalAllDesayunos}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">personas</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">personas</span>
                                 </div>
                             </div>
 
                             <div className={`p-4 rounded-xl border transition-all flex items-center justify-between ${
                                 monthlyMealFilter === 'total_cenas'
                                     ? 'bg-indigo-100 dark:bg-indigo-900/50 border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-indigo-200/80 dark:border-indigo-800/60 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-indigo-200/80 dark:border-indigo-800/60 shadow-sm'
                             }`}>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xl shadow-xs font-bold">
+                                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-xs font-bold">
                                         🍲
                                     </div>
                                     <div>
                                         <span className="text-xs uppercase font-bold text-indigo-900 dark:text-indigo-200 block">
                                             Total Cenas (Período)
                                         </span>
-                                        <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
                                             Cenas + D+C + Compensaciones
                                         </span>
                                     </div>
@@ -1499,7 +1499,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-3xl font-black text-indigo-900 dark:text-indigo-100 block leading-none">
                                         {monthlyMetrics.totalAllCenas}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400 font-semibold uppercase">personas</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase">personas</span>
                                 </div>
                             </div>
                         </div>
@@ -1509,7 +1509,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'desayuno'
                                     ? 'bg-yellow-100/90 dark:bg-yellow-900/40 border-yellow-400 dark:border-yellow-600 ring-2 ring-yellow-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-yellow-200 dark:border-yellow-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-yellow-200 dark:border-yellow-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-yellow-800 dark:text-yellow-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Desayuno</span>
@@ -1519,14 +1519,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-yellow-900 dark:text-yellow-100">
                                         {monthlyMetrics.totalDesayunos}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
 
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'desayuno_compensacion'
                                     ? 'bg-amber-100/90 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600 ring-2 ring-amber-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-amber-200 dark:border-amber-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-amber-200 dark:border-amber-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-amber-800 dark:text-amber-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Desayuno Comp.</span>
@@ -1536,14 +1536,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-amber-900 dark:text-amber-100">
                                         {monthlyMetrics.totalDesayunoComp}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
 
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'desayuno_cena' || monthlyMealFilter === 'MP'
                                     ? 'bg-emerald-100/90 dark:bg-emerald-900/40 border-emerald-400 dark:border-emerald-600 ring-2 ring-emerald-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-emerald-200 dark:border-emerald-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-emerald-200 dark:border-emerald-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-emerald-800 dark:text-emerald-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Desayuno + Cena</span>
@@ -1553,14 +1553,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-emerald-900 dark:text-emerald-100">
                                         {monthlyMetrics.totalDesayunoCena}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
 
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'desayuno_cena_compensacion'
                                     ? 'bg-teal-100/90 dark:bg-teal-900/40 border-teal-400 dark:border-teal-600 ring-2 ring-teal-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-teal-200 dark:border-teal-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-teal-200 dark:border-teal-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-teal-800 dark:text-teal-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">D+C Comp.</span>
@@ -1570,14 +1570,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-teal-900 dark:text-teal-100">
                                         {monthlyMetrics.totalDesayunoCenaComp}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
 
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'solo_bebidas'
                                     ? 'bg-cyan-100/90 dark:bg-cyan-900/40 border-cyan-400 dark:border-cyan-600 ring-2 ring-cyan-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-cyan-200 dark:border-cyan-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-cyan-200 dark:border-cyan-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-cyan-800 dark:text-cyan-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Solo Bebidas</span>
@@ -1587,14 +1587,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-cyan-900 dark:text-cyan-100">
                                         {monthlyMetrics.totalSoloBebidas}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
 
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'cena'
                                     ? 'bg-indigo-100/90 dark:bg-indigo-900/40 border-indigo-400 dark:border-indigo-600 ring-2 ring-indigo-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-indigo-200 dark:border-indigo-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-indigo-200 dark:border-indigo-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-indigo-800 dark:text-indigo-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Cena</span>
@@ -1604,14 +1604,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-indigo-900 dark:text-indigo-100">
                                         {monthlyMetrics.totalCenas}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
 
                             <div className={`p-3 rounded-xl border transition-all ${
                                 monthlyMealFilter === 'cena_compensacion'
                                     ? 'bg-purple-100/90 dark:bg-purple-900/40 border-purple-400 dark:border-purple-600 ring-2 ring-purple-400 shadow-md'
-                                    : 'bg-white/90 dark:bg-gray-800/90 border-purple-200 dark:border-purple-800/50 shadow-sm'
+                                    : 'bg-white dark:bg-slate-900 border-purple-200 dark:border-purple-800/50 shadow-sm'
                             }`}>
                                 <div className="flex items-center justify-between text-purple-800 dark:text-purple-300 mb-1">
                                     <span className="text-[10px] font-bold uppercase tracking-wider">Cena Comp.</span>
@@ -1621,36 +1621,36 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     <span className="text-2xl font-black text-purple-900 dark:text-purple-100">
                                         {monthlyMetrics.totalCenaComp}
                                     </span>
-                                    <span className="text-[10px] text-gray-500 dark:text-gray-400">pers.</span>
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">pers.</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Extra KPI Bar */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-gray-50/80 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-200/60 dark:border-gray-700/60 text-xs">
-                            <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-2xs">
-                                <span className="text-gray-500 dark:text-gray-400">Reservas en período:</span>
-                                <span className="font-bold text-gray-800 dark:text-gray-100">{monthlyMetrics.uniqueBookingsCount} reservas</span>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50/80 dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs">
+                            <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-2xs">
+                                <span className="text-slate-500 dark:text-slate-400">Reservas en período:</span>
+                                <span className="font-bold text-slate-800 dark:text-slate-100">{monthlyMetrics.uniqueBookingsCount} reservas</span>
                             </div>
-                            <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-2xs">
-                                <span className="text-gray-500 dark:text-gray-400">Días con actividad:</span>
-                                <span className="font-bold text-gray-800 dark:text-gray-100">{monthlyMetrics.daysWithService} de {monthlyMetrics.totalDaysInPeriod} días</span>
+                            <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-2xs">
+                                <span className="text-slate-500 dark:text-slate-400">Días con actividad:</span>
+                                <span className="font-bold text-slate-800 dark:text-slate-100">{monthlyMetrics.daysWithService} de {monthlyMetrics.totalDaysInPeriod} días</span>
                             </div>
-                            <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-2xs">
-                                <span className="text-gray-500 dark:text-gray-400">Promedio diario:</span>
+                            <div className="flex items-center justify-between px-3 py-1.5 bg-white dark:bg-slate-800 rounded-xl shadow-2xs">
+                                <span className="text-slate-500 dark:text-slate-400">Promedio diario:</span>
                                 <span className="font-bold text-blue-600 dark:text-blue-400">{monthlyMetrics.avgDailyPersons} personas/día</span>
                             </div>
                         </div>
 
                         {/* Monthly Subtabs (Day-by-Day vs Bookings list) */}
-                        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pt-2">
+                        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pt-2">
                             <div className="flex gap-2">
                                 <button
                                     onClick={() => setMonthlyTab('days')}
                                     className={`px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all ${
                                         monthlyTab === 'days'
                                             ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+                                            : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                                     }`}
                                 >
                                     📅 Desglose Día por Día ({monthlyDayStats.length} días)
@@ -1660,7 +1660,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     className={`px-4 py-2 text-xs sm:text-sm font-bold border-b-2 transition-all ${
                                         monthlyTab === 'bookings'
                                             ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                                            : 'border-transparent text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+                                            : 'border-transparent text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'
                                     }`}
                                 >
                                     📋 Listado de Reservas del Período ({monthlyFilteredBookingsList.length})
@@ -1668,12 +1668,12 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                             </div>
 
                             {monthlyTab === 'days' && (
-                                <label className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300 cursor-pointer select-none">
+                                <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 cursor-pointer select-none">
                                     <input
                                         type="checkbox"
                                         checked={onlyDaysWithBookings}
                                         onChange={(e) => setOnlyDaysWithBookings(e.target.checked)}
-                                        className="rounded text-blue-600 focus:ring-blue-500"
+                                        className="rounded text-blue-600 focus:ring-amber-200 dark:focus:ring-amber-500/30"
                                     />
                                     <span>Solo días con personas</span>
                                 </label>
@@ -1688,20 +1688,20 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     .map(day => (
                                         <div
                                             key={day.dateStr}
-                                            className={`bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl border transition-all duration-200 shadow-sm ${
+                                            className={`bg-white dark:bg-slate-900 backdrop-blur-sm rounded-xl border transition-all duration-200 shadow-sm ${
                                                 day.totalGuestsDay > 0
-                                                    ? 'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700'
-                                                    : 'border-dashed border-gray-200 dark:border-gray-800 opacity-60'
+                                                    ? 'border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-700'
+                                                    : 'border-dashed border-slate-200 dark:border-slate-800 opacity-60'
                                             }`}
                                         >
                                             <div className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold shadow-2xs ${
                                                         day.dateStr === new Date().toISOString().split('T')[0]
-                                                            ? 'bg-blue-600 text-white'
+                                                            ? 'bg-sky-600 text-white'
                                                             : day.totalGuestsDay > 0
-                                                            ? 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
-                                                            : 'bg-gray-50 dark:bg-gray-800 text-gray-400'
+                                                            ? 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+                                                            : 'bg-slate-50 dark:bg-slate-800 text-slate-400'
                                                     }`}>
                                                         <span className="text-lg leading-none">{day.dayNumber}</span>
                                                         <span className="text-[10px] uppercase font-semibold">{day.dayOfWeek}</span>
@@ -1709,7 +1709,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                                     <div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="font-bold text-sm text-gray-900 dark:text-gray-100">
+                                                            <span className="font-bold text-sm text-slate-900 dark:text-slate-100">
                                                                 {day.dateStr}
                                                             </span>
                                                             {day.dateStr === new Date().toISOString().split('T')[0] && (
@@ -1758,9 +1758,9 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                     </div>
                                                 </div>
 
-                                                <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-gray-700/50">
+                                                <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-700/50">
                                                     <div className="flex flex-col items-start sm:items-end">
-                                                        <span className="text-[10px] uppercase font-bold text-gray-500 dark:text-gray-400">
+                                                        <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
                                                             Total del día ({
                                                                 monthlyMealFilter === 'todos' ? 'Todos' :
                                                                 monthlyMealFilter === 'total_desayunos' ? 'Total Desayunos' :
@@ -1783,14 +1783,14 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                         {day.bookings.length > 0 && (
                                                             <button
                                                                 onClick={() => toggleExpandDay(day.dateStr)}
-                                                                className="px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold transition-colors"
+                                                                className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors"
                                                             >
                                                                 {expandedMonthDays[day.dateStr] ? '▲ Ocultar' : `▼ Ver (${day.bookings.length})`}
                                                             </button>
                                                         )}
                                                         <button
                                                             onClick={() => handleJumpToDailyView(day.dateStr)}
-                                                            className="px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-semibold transition-colors border border-blue-200 dark:border-blue-800"
+                                                            className="px-2.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-100 text-xs font-semibold transition-colors border border-blue-200 dark:border-blue-800"
                                                             title="Abrir este día en la vista diaria"
                                                         >
                                                             Abrir Día ↗
@@ -1801,18 +1801,18 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                             {/* Expandable list of guests for that day */}
                                             {expandedMonthDays[day.dateStr] && day.bookings.length > 0 && (
-                                                <div className="px-4 pb-3 pt-1 border-t border-gray-100 dark:border-gray-700/60 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-xl space-y-1.5">
-                                                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider block mb-1">
+                                                <div className="px-4 pb-3 pt-1 border-t border-slate-100 dark:border-slate-700/60 bg-slate-50/50 dark:bg-slate-900 rounded-b-xl space-y-1.5">
+                                                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                                                         Huéspedes con servicio este día:
                                                     </span>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                                                         {day.bookings.map(b => (
-                                                            <div key={b.id} className="flex items-center justify-between p-2 rounded-lg bg-white dark:bg-gray-700/70 border border-gray-200/70 dark:border-gray-600/70 text-xs shadow-2xs">
+                                                            <div key={b.id} className="flex items-center justify-between p-2 rounded-xl bg-white dark:bg-slate-700/70 border border-slate-200/70 dark:border-slate-600/70 text-xs shadow-2xs">
                                                                 <div>
-                                                                    <span className="font-bold text-gray-800 dark:text-gray-100 block">
+                                                                    <span className="font-bold text-slate-800 dark:text-slate-100 block">
                                                                         {b.guestName}
                                                                     </span>
-                                                                    <div className="flex items-center gap-1.5 text-[10px] text-gray-500 dark:text-gray-400">
+                                                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-slate-400">
                                                                         {b.roomNumber && <span>Hab. {b.roomNumber}</span>}
                                                                         <span>•</span>
                                                                         <span>Estancia: {formatDate(b.startDate)} al {formatDate(b.endDate)}</span>
@@ -1823,7 +1823,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                                     <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${getMealTypeBadge(b.mealType).className}`}>
                                                                         {getMealTypeBadge(b.mealType).label}
                                                                     </span>
-                                                                    <span className="font-black text-gray-700 dark:text-gray-200">
+                                                                    <span className="font-black text-slate-700 dark:text-slate-200">
                                                                         {b.guestsCount || 1}p
                                                                     </span>
                                                                 </div>
@@ -1836,7 +1836,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                     ))}
 
                                 {monthlyDayStats.filter(d => onlyDaysWithBookings ? d.totalGuestsDay > 0 : true).length === 0 && (
-                                    <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                                    <div className="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                                         No hay servicios registrados para los filtros seleccionados en {monthFormattedName}.
                                     </div>
                                 )}
@@ -1853,13 +1853,13 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         placeholder="Buscar por nombre de huésped, número de habitación o notas..."
                                         value={monthlySearchQuery}
                                         onChange={(e) => setMonthlySearchQuery(e.target.value)}
-                                        className="w-full px-4 py-2.5 pl-10 bg-white/90 dark:bg-gray-800/90 border border-gray-300 dark:border-gray-600 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        className="w-full px-4 py-2.5 pl-10 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl text-sm focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 focus:outline-none"
                                     />
-                                    <span className="absolute left-3.5 top-3 text-gray-400">🔍</span>
+                                    <span className="absolute left-3.5 top-3 text-slate-400">🔍</span>
                                     {monthlySearchQuery && (
                                         <button
                                             onClick={() => setMonthlySearchQuery('')}
-                                            className="absolute right-3 top-2.5 text-xs text-gray-400 hover:text-gray-600 font-bold"
+                                            className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-slate-600 font-bold"
                                         >
                                             ✕
                                         </button>
@@ -1871,11 +1871,11 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         {monthlyFilteredBookingsList.map(booking => (
                                             <div
                                                 key={booking.id}
-                                                className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all"
+                                                className="bg-white dark:bg-slate-900 backdrop-blur-sm p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
                                             >
                                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-black dark:text-gray-300 font-bold text-xs bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded-md">
+                                                        <span className="text-black dark:text-slate-300 font-bold text-xs bg-slate-100 dark:bg-slate-700 px-2.5 py-1 rounded-md">
                                                             {formatDate(booking.startDate)} → {formatDate(booking.endDate)}
                                                         </span>
                                                         <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${getMealTypeBadge(booking.mealType).className}`}>
@@ -1887,13 +1887,13 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                                         <div className="flex gap-2">
                                                             <button 
                                                                 onClick={() => handleOpenModal(booking)} 
-                                                                className="bg-blue-500 text-white px-2.5 py-1 text-xs rounded-md font-semibold hover:bg-blue-600 transition-colors"
+                                                                className="bg-amber-400 text-slate-950 px-2.5 py-1 text-xs rounded-md font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                                                             >
                                                                 Editar
                                                             </button>
                                                             <button 
                                                                 onClick={() => handleDeleteBooking(booking.id)} 
-                                                                className="bg-red-500 text-white px-2.5 py-1 text-xs rounded-md font-semibold hover:bg-red-600 transition-colors"
+                                                                className="bg-rose-500 text-white px-2.5 py-1 text-xs rounded-md font-semibold hover:bg-rose-600 transition-colors"
                                                             >
                                                                 Cancelar
                                                             </button>
@@ -1903,13 +1903,13 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
 
                                                 <div className="flex justify-between items-center">
                                                     <div>
-                                                        <h3 className="font-bold text-base text-gray-900 dark:text-gray-100">{booking.guestName}</h3>
+                                                        <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">{booking.guestName}</h3>
                                                         {booking.description && (
-                                                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-0.5">{booking.description}</p>
+                                                            <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5">{booking.description}</p>
                                                         )}
                                                     </div>
                                                     <div className="flex flex-col items-end">
-                                                        {booking.roomNumber && <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Hab. {booking.roomNumber}</span>}
+                                                        {booking.roomNumber && <span className="text-xl font-bold text-slate-900 dark:text-slate-100">Hab. {booking.roomNumber}</span>}
                                                         <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{booking.guestsCount || 1} {booking.guestsCount === 1 ? 'persona' : 'personas'}</span>
                                                     </div>
                                                 </div>
@@ -1917,7 +1917,7 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-10 text-gray-500 dark:text-gray-400 bg-white/60 dark:bg-gray-800/60 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
+                                    <div className="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
                                         No se encontraron reservas para los criterios buscados en {monthFormattedName}.
                                     </div>
                                 )}
@@ -1936,29 +1936,29 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingBooking ? `Editar ${title}` : `Añadir Nuevo ${title}`}>
                 <form onSubmit={handleAddBooking}>
                     <div className="space-y-4">
-                        <input type="text" placeholder={tableName === 'events_bookings' ? "Título" : "Nombre del Huésped"} value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <input type="text" placeholder={tableName === 'events_bookings' ? "Título" : "Nombre del Huésped"} value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                         {tableName !== 'events_bookings' && (
-                            <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                            <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                         )}
                         {tableName === 'restaurant_bookings' && (
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Nº de Personas</label>
+                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Nº de Personas</label>
                                     <input 
                                         type="number" 
                                         min="1"
                                         value={newBooking.guestsCount} 
                                         onChange={(e) => setNewBooking({ ...newBooking, guestsCount: parseInt(e.target.value) || 1 })} 
-                                        className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                        className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" 
                                         required 
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Tipo de Servicio</label>
+                                    <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Tipo de Servicio</label>
                                     <select 
                                         value={newBooking.mealType} 
                                         onChange={(e) => setNewBooking({ ...newBooking, mealType: e.target.value as any })} 
-                                        className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30"
                                     >
                                         <option value="desayuno">Desayuno</option>
                                         <option value="desayuno_compensacion">Desayuno compensación</option>
@@ -1971,18 +1971,18 @@ const ServicesView: React.FC<ServicesViewProps> = ({ dbError, isDbInitialized, i
                                 </div>
                             </div>
                         )}
-                        <textarea placeholder="Descripción del servicio" value={newBooking.description} onChange={(e) => setNewBooking({ ...newBooking, description: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} required></textarea>
+                        <textarea placeholder="Descripción del servicio" value={newBooking.description} onChange={(e) => setNewBooking({ ...newBooking, description: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" rows={3} required></textarea>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Inicio</label>
-                                <input type="date" value={newBooking.startDate} onChange={(e) => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Fecha Inicio</label>
+                                <input type="date" value={newBooking.startDate} onChange={(e) => setNewBooking({ ...newBooking, startDate: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required/>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Fin</label>
-                                <input type="date" value={newBooking.endDate} onChange={(e) => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required/>
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Fecha Fin</label>
+                                <input type="date" value={newBooking.endDate} onChange={(e) => setNewBooking({ ...newBooking, endDate: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required/>
                             </div>
                         </div>
-                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        <button type="submit" className="w-full bg-amber-400 text-slate-950 p-3 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                             {editingBooking ? 'Guardar Cambios' : `Guardar ${title}`}
                         </button>
                     </div>
