@@ -55,14 +55,14 @@ const Header: React.FC<HeaderProps> = ({ title, children }) => {
   };
 
   return (
-    <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-md p-4 print:p-1 sticky top-0 z-10 border-b border-white/50 dark:border-gray-700/50">
-      <div className="flex justify-between items-center max-w-2xl mx-auto">
-        <h1 className="text-2xl print:text-base font-bold text-gray-800 dark:text-white">{title}</h1>
-        <div className="flex items-center space-x-2">
+    <div className="px-4 sm:px-6 pt-6 pb-2 print:p-1">
+      <div className="flex flex-wrap justify-between items-center gap-3">
+        <h1 className="font-display text-2xl print:text-base font-bold tracking-tight text-slate-900 dark:text-white min-w-0 break-words">{title}</h1>
+        <div className="flex flex-wrap items-center gap-2">
             {children}
             <button
                 onClick={toggleFullscreen}
-                className="no-print bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="no-print bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-200 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                 title={isFullscreen ? "Salir de Pantalla Completa" : "Pantalla Completa"}
                 aria-label={isFullscreen ? "Salir de Pantalla Completa" : "Pantalla Completa"}
             >

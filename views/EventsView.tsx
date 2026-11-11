@@ -351,12 +351,12 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
 
       <div className="p-4 max-w-5xl mx-auto w-full flex-grow flex flex-col">
         {dbError && (
-          <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+          <div className="bg-rose-100/80 dark:bg-rose-900/80 backdrop-blur-sm border-l-4 border-rose-500 text-rose-700 dark:text-rose-200 p-4 rounded-xl mb-4" role="alert">
             <p className="font-bold">Error de Conexión</p>
             <p className="whitespace-pre-line">{dbError}</p>
             <button 
               onClick={onRetryAuth} 
-              className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+              className="mt-3 bg-rose-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-rose-700 transition-colors"
             >
               Reintentar Conexión
             </button>
@@ -366,20 +366,20 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
         <div className="flex space-x-4 mb-6 justify-center">
           <button 
             onClick={() => setActiveTab('summary')} 
-            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'summary' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'summary' ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
           >
             Eventos Anuales
           </button>
           <button 
             onClick={() => setActiveTab('pdfs')} 
-            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'pdfs' ? 'bg-blue-600 text-white' : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+            className={`px-6 py-2 rounded-full font-semibold transition-colors shadow-sm ${activeTab === 'pdfs' ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'}`}
           >
             Resumen de eventos mensuales
           </button>
         </div>
 
         {activeTab === 'summary' ? (
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-md border border-gray-200/50 dark:border-gray-700/50 flex-grow">
+          <div className="bg-white dark:bg-slate-900 backdrop-blur-md rounded-xl shadow-md border border-slate-200/50 dark:border-slate-700/50 flex-grow">
             <ServicesView 
               dbError={dbError}
               isDbInitialized={isDbInitialized}
@@ -403,8 +403,8 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     onClick={() => setActiveMonth(month)}
                     className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
                       activeMonth === month 
-                        ? 'bg-blue-600 text-white shadow-md' 
-                        : 'bg-white/50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-gray-700/80'
+                        ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20 shadow-md' 
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80'
                     }`}
                   >
                     {month}
@@ -414,11 +414,11 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             </div>
 
             {isLoading ? (
-              <div className="text-center py-10 text-gray-500 dark:text-gray-400">Cargando...</div>
+              <div className="text-center py-10 text-slate-500 dark:text-slate-400">Cargando...</div>
             ) : (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-md p-6 border border-gray-200/50 dark:border-gray-700/50 flex-grow flex flex-col">
-                <div className="flex justify-between items-center mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Documentos de {activeMonth}</h2>
+              <div className="bg-white dark:bg-slate-900 backdrop-blur-md rounded-xl shadow-md p-6 border border-slate-200/50 dark:border-slate-700/50 flex-grow flex flex-col">
+                <div className="flex justify-between items-center mb-6 border-b border-slate-200 dark:border-slate-700 pb-4">
+                  <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Documentos de {activeMonth}</h2>
                   {userRole === 'editor' && (
                     <button 
                       onClick={() => {
@@ -426,7 +426,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                         setDraftDoc(null);
                         setIsEditorOpen(true);
                       }}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2 shadow-sm"
+                      className="bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2 rounded-xl font-bold transition-colors flex items-center space-x-2 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -438,24 +438,24 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
 
                 <div className="flex-grow flex flex-col space-y-3">
                   {!hasPdfs ? (
-                    <div className="flex-grow flex items-center justify-center text-gray-500 dark:text-gray-400 italic">
+                    <div className="flex-grow flex items-center justify-center text-slate-500 dark:text-slate-400 italic">
                       No hay documentos para {activeMonth}.
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {activeMonthPdfs.map(pdf => (
-                        <div key={pdf.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl group border border-gray-100 dark:border-gray-600 hover:shadow-md transition-shadow">
+                        <div key={pdf.id} className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-4 rounded-xl group border border-slate-100 dark:border-slate-600 hover:shadow-md transition-shadow">
                           <button 
                             onClick={() => setSelectedDoc(pdf)}
                             className="flex items-center space-x-4 overflow-hidden hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex-grow text-left"
                           >
-                            <div className="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-2 rounded-lg shrink-0">
+                            <div className="bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 p-2 rounded-xl shrink-0">
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
                               </svg>
                             </div>
                             <div className="flex flex-col overflow-hidden">
-                              <span className="text-base font-semibold truncate text-gray-800 dark:text-gray-200" title={pdf.fileName}>
+                              <span className="text-base font-semibold truncate text-slate-800 dark:text-slate-200" title={pdf.fileName}>
                                 {pdf.fileName}
                               </span>
                               <div className="flex items-center space-x-2">
@@ -464,7 +464,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                                     {new Date(pdf.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
                                   </span>
                                 )}
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                <span className="text-xs text-slate-500 dark:text-slate-400">
                                   Subido: {new Date(pdf.uploadedAt).toLocaleDateString('es-ES')}
                                 </span>
                               </div>
@@ -475,7 +475,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all shrink-0 ml-2">
                               <button 
                                 onClick={() => handleEditPdf(pdf)}
-                                className="text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-lg transition-all"
+                                className="text-slate-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 p-2 rounded-xl transition-all"
                                 title="Editar Documento"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -484,7 +484,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                               </button>
                               <button 
                                 onClick={() => handleDeletePdf(pdf)}
-                                className="text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-all"
+                                className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 p-2 rounded-xl transition-all"
                                 title="Eliminar Documento"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -500,19 +500,19 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                 </div>
 
                 {eventsWithoutDoc.length > 0 && (
-                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <h3 className="text-sm font-bold uppercase tracking-wide text-gray-600 dark:text-gray-300 mb-3">
+                  <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <h3 className="text-sm font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-3">
                       Eventos anuales de {activeMonth} sin documento
                     </h3>
                     <div className="flex flex-col gap-2">
                       {eventsWithoutDoc.map(ev => (
-                        <div key={ev.id} className="flex items-center justify-between gap-3 bg-purple-50/80 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg px-3 py-2">
+                        <div key={ev.id} className="flex items-center justify-between gap-3 bg-purple-50/80 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300 bg-white/70 dark:bg-gray-800/70 px-1.5 py-0.5 rounded shrink-0">
+                            <span className="text-xs font-medium text-purple-700 dark:text-purple-300 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shrink-0">
                               {formatShortDate(ev.startDate)}
                               {ev.endDate !== ev.startDate && ` - ${formatShortDate(ev.endDate)}`}
                             </span>
-                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{ev.title}</span>
+                            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{ev.title}</span>
                           </div>
                           {userRole === 'editor' && (
                             <button
@@ -521,7 +521,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                                 setDraftDoc({ fileName: ev.title, eventDate: ev.startDate });
                                 setIsEditorOpen(true);
                               }}
-                              className="text-xs font-semibold text-blue-700 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 shrink-0"
+                              className="text-xs font-semibold text-blue-700 bg-white dark:bg-slate-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded-md hover:bg-blue-50 dark:hover:bg-blue-900/30 shrink-0"
                             >
                               Crear documento
                             </button>
@@ -541,10 +541,10 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
       {selectedDoc && (
         <div className="fixed inset-0 z-[100] flex flex-col bg-black/95 backdrop-blur-md">
           {/* Header of Viewer */}
-          <div className="flex items-center justify-between p-4 bg-gray-900 text-white shadow-lg border-b border-gray-800 shrink-0">
+          <div className="flex items-center justify-between p-4 bg-slate-900 text-white shadow-lg border-b border-slate-800 shrink-0">
             <div className="flex flex-col overflow-hidden mr-4">
               <h3 className="font-bold truncate text-sm md:text-base text-white">{selectedDoc.fileName}</h3>
-              <div className="flex items-center gap-2 text-[10px] md:text-xs text-gray-400">
+              <div className="flex items-center gap-2 text-[10px] md:text-xs text-slate-400">
                 {selectedDoc.eventDate && (
                   <span className="text-blue-400 font-semibold">
                     {new Date(selectedDoc.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -561,7 +561,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               {/* Botón Imprimir / PDF */}
               <button
                 onClick={handlePrint}
-                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center space-x-1.5 text-xs md:text-sm font-semibold shadow-sm"
+                className="px-3 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl transition-colors flex items-center space-x-1.5 text-xs md:text-sm font-bold shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                 title="Imprimir o Guardar como PDF"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -578,7 +578,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                     setSelectedDoc(null);
                     handleEditPdf(docToEdit);
                   }}
-                  className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors flex items-center space-x-1.5 text-xs md:text-sm font-semibold shadow-sm"
+                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors flex items-center space-x-1.5 text-xs md:text-sm font-semibold shadow-sm"
                   title="Editar documento"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -594,7 +594,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                   href={selectedDoc.pdfUrl.replace('/preview', '/view')} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-lg transition-colors flex items-center space-x-1 text-xs"
+                  className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-xl transition-colors flex items-center space-x-1 text-xs"
                   title="Abrir en pestaña nueva"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -607,7 +607,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               {/* Botón Cerrar (X) */}
               <button
                 onClick={() => setSelectedDoc(null)}
-                className="p-2 bg-gray-800 hover:bg-red-600 text-white rounded-lg transition-colors"
+                className="p-2 bg-slate-800 hover:bg-rose-600 text-white rounded-xl transition-colors"
                 title="Cerrar (Escape)"
               >
                 <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -622,18 +622,18 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
             {selectedDoc.content ? (
               <div
                 id="printable-doc-sheet"
-                className="document-render-sheet bg-white text-gray-900 shadow-2xl rounded-sm w-full max-w-[794px] min-h-[1123px] my-4 p-8 sm:p-14 pb-28 font-sans leading-relaxed text-base box-border mx-auto"
+                className="document-render-sheet bg-white text-slate-900 shadow-2xl rounded-sm w-full max-w-[794px] min-h-[1123px] my-4 p-8 sm:p-14 pb-28 font-sans leading-relaxed text-base box-border mx-auto"
                 style={{
                   wordBreak: 'break-word',
                   overflowWrap: 'break-word',
                 }}
               >
                 {/* Header inside sheet */}
-                <div className="border-b border-gray-300 pb-4 mb-6">
-                  <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-2">
+                <div className="border-b border-slate-300 pb-4 mb-6">
+                  <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 mb-2">
                     {selectedDoc.fileName}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                     {selectedDoc.eventDate && (
                       <span className="font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-200">
                         Fecha del evento: {new Date(selectedDoc.eventDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
@@ -653,7 +653,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
               </div>
             ) : selectedDoc.pdfUrl ? (
               /* Legacy Fallback for existing PDF or Drive embeds */
-              <div className="w-full h-[85vh] relative overflow-hidden bg-white max-w-[794px] rounded-lg shadow-xl my-4 mx-auto">
+              <div className="w-full h-[85vh] relative overflow-hidden bg-white max-w-[794px] rounded-xl shadow-xl my-4 mx-auto">
                 <iframe
                   src={selectedDoc.pdfUrl.includes('drive.google.com') ? selectedDoc.pdfUrl : `${selectedDoc.pdfUrl}#view=FitH`}
                   className={`w-full h-full border-0 bg-white ${
@@ -666,7 +666,7 @@ const EventsView: React.FC<EventsViewProps> = ({ dbError, isDbInitialized, isAut
                 />
               </div>
             ) : (
-              <div className="bg-white text-gray-700 p-8 rounded-lg max-w-md my-auto text-center">
+              <div className="bg-white text-slate-700 p-8 rounded-xl max-w-md my-auto text-center">
                 <p>El documento está vacío.</p>
               </div>
             )}

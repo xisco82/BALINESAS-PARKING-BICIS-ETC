@@ -18,6 +18,7 @@ import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginView from './views/LoginView';
+import { ConciergeBell, LogOut } from 'lucide-react';
 import { 
     NewsIcon,
     EventsIcon,
@@ -227,52 +228,64 @@ const App: React.FC = () => {
   return (
     <ToastProvider>
       <ErrorBoundary>
-        <div className="min-h-screen text-gray-900 dark:text-gray-100 font-sans">
+        <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans">
           {isAuthenticated && userRole ? (
             <>
-              <main className="pb-24 max-w-7xl mx-auto">
+              <header className="no-print sticky top-0 z-30 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-white/10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 shrink-0 rounded-xl bg-[#0284c7] text-white flex items-center justify-center shadow-sm" aria-hidden="true">
+                      <ConciergeBell className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-display text-base sm:text-lg font-bold leading-tight text-slate-900 dark:text-white truncate">Eventos, Parking, Bicis y Balinesas</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">Recepción</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="shrink-0 inline-flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold rounded-xl px-3 sm:px-4 py-2.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
+                    title="Cerrar Sesión"
+                    aria-label="Cerrar Sesión"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">Cerrar Sesión</span>
+                  </button>
+                </div>
+                <BottomNav
+                    activeView={activeView}
+                    setActiveView={handleViewChange}
+                    navItems={visibleNavItems}
+                />
+              </header>
+
+              <main className="flex-1 w-full pb-6 max-w-7xl mx-auto">
                 {renderView()}
               </main>
-              <BottomNav 
-                  activeView={activeView} 
-                  setActiveView={handleViewChange}
-                  navItems={visibleNavItems} 
-              />
 
               {isLogoEnlarged && (
                 <div
-                  className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 animate-fade-in"
+                  className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-40 animate-fade-in"
                   onClick={handleLogoClick}
                 />
               )}
 
-              <img
-                src="https://i.postimg.cc/fRsXZ0mn/Xiscologo.png"
-                alt="Xisco Logo"
-                onClick={handleLogoClick}
-                onAnimationEnd={() => setAnimationClass('')}
-                className={`fixed shadow-lg cursor-pointer
-                  ${isLogoEnlarged
-                    ? `w-3/4 max-w-[500px] h-auto z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${animationClass}`
-                    : 'bottom-2 left-2 w-14 h-14 md:w-16 md:h-16 opacity-90 z-40 hover:scale-110 hover:opacity-100 transition-transform'
-                  }`
-                }
-              />
-
-              <div className="fixed bottom-24 right-4 z-40">
-                  <button 
-                    onClick={handleLogout} 
-                    className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-3 rounded-full shadow-lg text-gray-600 dark:text-gray-300 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                    title="Cerrar Sesión"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                  </button>
-                </div>
-                <footer className="hidden md:block fixed bottom-2 left-20 text-left text-xs text-gray-400 dark:text-gray-500 pointer-events-none z-40">
-                  © {new Date().getFullYear()} Xisco G. H. Todos los derechos reservados.
-                </footer>
+              <footer className="no-print text-xs text-slate-400 dark:text-slate-500 text-center py-6 flex items-center justify-center gap-2">
+                <img
+                  src="https://i.postimg.cc/fRsXZ0mn/Xiscologo.png"
+                  alt="Xisco Logo"
+                  onClick={handleLogoClick}
+                  onAnimationEnd={() => setAnimationClass('')}
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  className={`cursor-pointer rounded-md
+                    ${isLogoEnlarged
+                      ? `fixed shadow-2xl w-3/4 max-w-[500px] h-auto z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${animationClass}`
+                      : 'w-6 h-6 opacity-70 hover:opacity-100 transition-opacity'
+                    }`
+                  }
+                />
+                <span>Eventos, Parking, Bicis y Balinesas · Xisco Solutions</span>
+              </footer>
             </>
             ) : (
               <LoginView onLoginSuccess={handleLoginSuccess} />

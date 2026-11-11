@@ -331,7 +331,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
       <Header title="Incidencias Clientes">
         <button
           onClick={handleOpenAddModal}
-          className="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-4 py-2 rounded-xl text-sm font-semibold flex items-center shadow-md shadow-blue-500/10 gap-1.5"
+          className="bg-amber-400 text-slate-950 hover:bg-amber-300 transition-colors px-4 py-2 rounded-xl text-sm font-bold flex items-center shadow-md shadow-amber-500/10 gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
           aria-label="Añadir incidencia"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -343,19 +343,19 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
       </Header>
 
       {/* Internal Tabs/Pestañas */}
-      <div className="flex flex-col sm:flex-row bg-gray-100 dark:bg-gray-800 p-1 rounded-xl gap-1">
+      <div className="flex flex-col sm:flex-row bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1">
         <button
           type="button"
           onClick={() => setStatusTab('pendientes')}
-          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
             statusTab === 'pendientes'
               ? 'bg-amber-500 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <span>🟡 Pendientes de resolver</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${
-            statusTab === 'pendientes' ? 'bg-white text-amber-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            statusTab === 'pendientes' ? 'bg-white text-amber-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
           }`}>
             {pendingCount}
           </span>
@@ -363,15 +363,15 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
         <button
           type="button"
           onClick={() => setStatusTab('proceso')}
-          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
             statusTab === 'proceso'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              ? 'bg-sky-600/10 text-sky-700 dark:text-sky-300 ring-1 ring-sky-600/20 shadow-md'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <span>🔵 En proceso</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${
-            statusTab === 'proceso' ? 'bg-white text-blue-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            statusTab === 'proceso' ? 'bg-white text-blue-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
           }`}>
             {processCount}
           </span>
@@ -379,15 +379,15 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
         <button
           type="button"
           onClick={() => setStatusTab('resueltas')}
-          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
+          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
             statusTab === 'resueltas'
               ? 'bg-emerald-600 text-white shadow-md'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
         >
           <span>🟢 Resueltas</span>
           <span className={`text-xs px-2 py-0.5 rounded-full ${
-            statusTab === 'resueltas' ? 'bg-white text-emerald-600' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+            statusTab === 'resueltas' ? 'bg-white text-emerald-600' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
           }`}>
             {resolvedCount}
           </span>
@@ -395,11 +395,11 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
       </div>
 
       {dbError && (
-        <div className="bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 p-4 rounded-xl text-sm font-medium">
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400 p-4 rounded-xl text-sm font-medium">
           <p>{dbError}</p>
           <button 
             onClick={onRetryAuth}
-            className="mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg text-xs"
+            className="mt-2 bg-rose-600 hover:bg-rose-700 text-white font-bold py-1 px-3 rounded-xl text-xs"
           >
             Reintentar autenticación
           </button>
@@ -408,11 +408,11 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
 
       {/* Buscador & Calendario */}
       {!isLoading && (incidents.length > 0 || searchQuery.trim()) && (
-        <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md p-4 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 space-y-4 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/50 dark:border-slate-700/50 space-y-4 shadow-sm">
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Buscador de texto */}
             <div className="relative flex-1">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -422,13 +422,13 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 placeholder={statusTab === 'resueltas' ? "Buscar por cliente, habitación u observaciones..." : "Buscar pendientes por cliente, habitación..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-9 py-2.5 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+                className="w-full pl-9 pr-9 py-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 transition-all text-slate-900 dark:text-white"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
@@ -445,7 +445,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 className={`px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 border transition-all ${
                   showCalendar
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-800'
                 }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -458,10 +458,10 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
 
           {/* Calendario de incidencias resueltas */}
           {statusTab === 'resueltas' && showCalendar && (
-            <div className="pt-4 border-t border-gray-200/50 dark:border-gray-700/50 space-y-3">
+            <div className="pt-4 border-t border-slate-200/50 dark:border-slate-700/50 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-extrabold text-gray-800 dark:text-gray-200 uppercase tracking-wider">
+                  <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                     {calendarMonth.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
                   </span>
                   <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
@@ -472,7 +472,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1))}
-                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg text-gray-600 dark:text-gray-400 transition-colors animate-press"
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-600 dark:text-slate-400 transition-colors animate-press"
                     title="Mes Anterior"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -485,14 +485,14 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                       setCalendarMonth(new Date());
                       setSelectedDate(new Date().toISOString().split('T')[0]);
                     }}
-                    className="px-2.5 py-1 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg text-xs font-bold text-gray-600 dark:text-gray-400 transition-colors"
+                    className="px-2.5 py-1 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 transition-colors"
                   >
                     Hoy
                   </button>
                   <button
                     type="button"
                     onClick={() => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1))}
-                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-lg text-gray-600 dark:text-gray-400 transition-colors animate-press"
+                    className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-xl text-slate-600 dark:text-slate-400 transition-colors animate-press"
                     title="Mes Siguiente"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -503,7 +503,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
               </div>
 
               {/* Días de la semana */}
-              <div className="grid grid-cols-7 text-center text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+              <div className="grid grid-cols-7 text-center text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 <div>Lu</div>
                 <div>Ma</div>
                 <div>Mi</div>
@@ -532,8 +532,8 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                       }}
                       className={`relative aspect-square rounded-xl flex flex-col items-center justify-center p-1 transition-all ${
                         day.isCurrentMonth 
-                          ? 'text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800' 
-                          : 'text-gray-400 dark:text-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900/40 opacity-40'
+                          ? 'text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800' 
+                          : 'text-slate-400 dark:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-900/40 opacity-40'
                       } ${
                         isSelected 
                           ? 'bg-emerald-600 text-white font-extrabold scale-105 shadow-md shadow-emerald-600/25 hover:bg-emerald-700' 
@@ -554,22 +554,22 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
               </div>
 
               {/* Leyenda y Filtros activos */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-gray-50 dark:bg-gray-950 p-2.5 rounded-xl border border-gray-100 dark:border-gray-900">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-slate-50 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-100 dark:border-slate-900">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-extrabold text-gray-400 uppercase tracking-wider text-[10px]">Filtro:</span>
+                  <span className="font-extrabold text-slate-400 uppercase tracking-wider text-[10px]">Filtro:</span>
                   {selectedDate ? (
-                    <span className="font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 shadow-sm">
+                    <span className="font-extrabold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-xl border border-emerald-500/20 shadow-sm">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       {formatDate(selectedDate)}
                     </span>
                   ) : (
-                    <span className="font-bold text-gray-500 dark:text-gray-400 italic">Todos los días</span>
+                    <span className="font-bold text-slate-500 dark:text-slate-400 italic">Todos los días</span>
                   )}
                   
                   {searchQuery.trim() && (
-                    <span className="font-extrabold text-blue-700 dark:text-blue-400 flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20 max-w-[120px] truncate shadow-sm">
+                    <span className="font-extrabold text-blue-700 dark:text-blue-400 flex items-center gap-1 bg-blue-500/10 px-2 py-0.5 rounded-xl border border-blue-500/20 max-w-[120px] truncate shadow-sm">
                       &quot;{searchQuery}&quot;
                     </span>
                   )}
@@ -582,7 +582,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                       setSelectedDate(null);
                       setSearchQuery('');
                     }}
-                    className="font-black text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 uppercase tracking-wider text-[10px] bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-800 px-2.5 py-1 rounded-lg transition-colors"
+                    className="font-black text-slate-500 hover:text-rose-500 dark:text-slate-400 dark:hover:text-rose-400 uppercase tracking-wider text-[10px] bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-xl transition-colors"
                   >
                     Ver Todo
                   </button>
@@ -598,11 +598,11 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500"></div>
         </div>
       ) : filteredIncidents.length === 0 ? (
-        <div className="text-center py-16 bg-white/20 dark:bg-gray-800/20 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 dark:text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-gray-600 dark:text-gray-400 font-semibold">
+          <p className="text-slate-600 dark:text-slate-400 font-semibold">
             No hay incidencias {statusTab === 'pendientes' ? 'pendientes de resolver' : statusTab === 'proceso' ? 'en proceso' : 'resueltas'}.
           </p>
         </div>
@@ -613,11 +613,11 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
             return (
               <div 
                 key={incident.id} 
-                className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-md p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-gray-200/50 dark:border-gray-700/50 animate-fade-in"
+                className="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all border border-slate-200/50 dark:border-slate-700/50 animate-fade-in"
               >
                 <div className="flex justify-between items-start gap-4">
                   <div>
-                    <h3 className="font-extrabold text-lg text-gray-900 dark:text-gray-100">
+                    <h3 className="font-extrabold text-lg text-slate-900 dark:text-slate-100">
                       {incident.clientName}
                     </h3>
                     <p className="text-sm font-bold text-blue-600 dark:text-blue-400 mt-0.5">
@@ -640,21 +640,21 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 </div>
 
                 {/* Dates info */}
-                <div className="grid grid-cols-2 gap-4 mt-3 bg-gray-50/50 dark:bg-gray-900/50 p-3 rounded-xl border border-gray-200/20 text-xs">
+                <div className="grid grid-cols-2 gap-4 mt-3 bg-slate-50/50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/20 text-xs">
                   <div>
-                    <span className="block text-gray-500 font-bold dark:text-gray-400">FECHA ENTRADA</span>
-                    <span className="font-extrabold text-gray-800 dark:text-gray-200">{formatDate(incident.startDate)}</span>
+                    <span className="block text-slate-500 font-bold dark:text-slate-400">FECHA ENTRADA</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{formatDate(incident.startDate)}</span>
                   </div>
                   <div>
-                    <span className="block text-gray-500 font-bold dark:text-gray-400">FECHA SALIDA</span>
-                    <span className="font-extrabold text-gray-800 dark:text-gray-200">{formatDate(incident.endDate)}</span>
+                    <span className="block text-slate-500 font-bold dark:text-slate-400">FECHA SALIDA</span>
+                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{formatDate(incident.endDate)}</span>
                   </div>
                 </div>
 
                 {/* Observations */}
                 {incident.notes && (
                   <div className="mt-4">
-                    <p className="text-xs text-black bg-amber-100 border border-amber-300 px-3 py-2 rounded-lg break-words italic font-bold font-sans shadow-sm">
+                    <p className="text-xs text-black bg-amber-100 border border-amber-300 px-3 py-2 rounded-xl break-words italic font-bold font-sans shadow-sm">
                       <span className="not-italic font-black text-[10px] text-black mr-1.5 uppercase font-mono">Obs:</span>
                       {incident.notes}
                     </p>
@@ -662,8 +662,8 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 )}
 
                 {/* User action buttons */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/50 gap-3">
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 pt-4 border-t border-slate-200/50 dark:border-slate-700/50 gap-3">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                     Creado por: {incident.createdBy?.split('@')[0] || incident.createdBy}
                   </span>
                   
@@ -674,7 +674,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                         <button
                           type="button"
                           onClick={() => handleChangeStatus(incident, 'proceso')}
-                          className="px-2.5 py-1.5 text-xs rounded-xl font-bold transition-all bg-blue-500 text-white hover:bg-blue-600 shadow-sm shadow-blue-500/10 flex items-center gap-1"
+                          className="px-2.5 py-1.5 text-xs rounded-xl font-bold transition-all bg-amber-400 text-slate-950 hover:bg-amber-300 shadow-sm shadow-amber-500/10 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
                           title="Comenzar a trabajar"
                         >
                           <span>🔵 Comenzar</span>
@@ -735,7 +735,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenEditModal(incident)}
-                      className="p-1.5 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-all"
+                      className="p-1.5 text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-xl transition-all"
                       title="Editar Incidencia"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -746,7 +746,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleDelete(incident.id)}
-                      className="p-1.5 text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-all"
+                      className="p-1.5 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
                       title="Eliminar Incidencia"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -769,7 +769,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
               Nombre de Cliente *
             </label>
             <input
@@ -778,12 +778,12 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
               placeholder="Ej: Juan Pérez"
               value={formData.clientName}
               onChange={(e) => setFormData(prev => ({ ...prev, clientName: e.target.value }))}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+              className="w-full p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 transition-all text-slate-900 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
               Número de Habitación *
             </label>
             <input
@@ -792,13 +792,13 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
               placeholder="Ej: 104"
               value={formData.roomNumber}
               onChange={(e) => setFormData(prev => ({ ...prev, roomNumber: e.target.value }))}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+              className="w-full p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 transition-all text-slate-900 dark:text-white"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+              <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
                 Fecha Entrada *
               </label>
               <input
@@ -806,11 +806,11 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 required
                 value={formData.startDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 transition-all text-slate-900 dark:text-white"
               />
             </div>
             <div>
-              <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+              <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
                 Fecha Salida *
               </label>
               <input
@@ -818,13 +818,13 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 required
                 value={formData.endDate}
                 onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
-                className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+                className="w-full p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 transition-all text-slate-900 dark:text-white"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
               Observaciones / Descripción *
             </label>
             <textarea
@@ -833,12 +833,12 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={4}
-              className="w-full p-3 bg-gray-50 dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all text-gray-900 dark:text-white"
+              className="w-full p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30 transition-all text-slate-900 dark:text-white"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-1.5">
+            <label className="block text-xs font-black uppercase text-slate-500 dark:text-slate-400 mb-1.5">
               Estado de la Incidencia *
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -848,7 +848,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 className={`p-3 rounded-xl border text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                   formData.status === 'pendiente'
                     ? 'bg-amber-100 border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:border-amber-800 dark:text-amber-300 ring-2 ring-amber-500'
-                    : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <span>🟡 Pendiente</span>
@@ -859,7 +859,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 className={`p-3 rounded-xl border text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                   formData.status === 'proceso'
                     ? 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-950/40 dark:border-blue-800 dark:text-blue-300 ring-2 ring-blue-500'
-                    : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <span>🔵 En proceso</span>
@@ -870,7 +870,7 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
                 className={`p-3 rounded-xl border text-sm font-bold flex items-center justify-center gap-2 transition-all ${
                   formData.status === 'resuelta'
                     ? 'bg-emerald-100 border-emerald-300 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-800 dark:text-emerald-300 ring-2 ring-emerald-500'
-                    : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 <span>🟢 Resuelta</span>
@@ -878,17 +878,17 @@ const IncidenciasClientesView: React.FC<IncidenciasClientesViewProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
+          <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200/50 dark:border-slate-700/50">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+              className="px-4 py-2 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-md shadow-blue-500/10 transition-colors"
+              className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-sm font-bold shadow-md shadow-amber-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
             >
               Guardar
             </button>

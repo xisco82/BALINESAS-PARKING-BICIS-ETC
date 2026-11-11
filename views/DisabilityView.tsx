@@ -48,27 +48,27 @@ const AccessibilityCard: React.FC<{ booking: AccessibilityBooking, onDelete: (id
     }, [booking.arrivalDate, booking.departureDate]);
 
     return (
-        <div className={`${isCurrentlyActive ? 'bg-red-500/90 dark:bg-red-600/90 text-white' : 'bg-white/30 dark:bg-gray-800/30'} backdrop-blur-sm p-3 rounded-xl shadow-md animate-fade-in hover:shadow-lg transition-shadow duration-300`}>
+        <div className={`${isCurrentlyActive ? 'bg-rose-500/90 dark:bg-rose-600/90 text-white' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10'} backdrop-blur-sm p-3 rounded-xl shadow-md animate-fade-in hover:shadow-lg transition-shadow duration-300`}>
             <div className="flex justify-between items-start">
                 <div>
-                    <h3 className={`font-bold text-lg ${isCurrentlyActive ? 'text-white' : 'text-gray-900 dark:text-gray-100'}`}>{booking.guestName}</h3>
-                    <p className={`text-sm font-semibold ${isCurrentlyActive ? 'text-red-100' : 'text-blue-600 dark:text-blue-400'}`}>Habitación {booking.roomNumber}</p>
+                    <h3 className={`font-bold text-lg ${isCurrentlyActive ? 'text-white' : 'text-slate-900 dark:text-slate-100'}`}>{booking.guestName}</h3>
+                    <p className={`text-sm font-semibold ${isCurrentlyActive ? 'text-rose-100' : 'text-blue-600 dark:text-blue-400'}`}>Habitación {booking.roomNumber}</p>
                 </div>
-                <div className={`text-right text-sm font-medium ${isCurrentlyActive ? 'text-red-50' : 'text-gray-700 dark:text-gray-300'} flex-shrink-0 ml-2`}>
+                <div className={`text-right text-sm font-medium ${isCurrentlyActive ? 'text-rose-50' : 'text-slate-700 dark:text-slate-300'} flex-shrink-0 ml-2`}>
                     <p><span className="font-semibold">Llegada:</span> {formatDate(booking.arrivalDate)}</p>
                     <p><span className="font-semibold">Salida:</span> {formatDate(booking.departureDate)}</p>
                 </div>
             </div>
             
-            <div className={`pt-2 mt-2 border-t ${isCurrentlyActive ? 'border-white/30' : 'border-gray-200/80 dark:border-gray-700/80'}`}>
-                 <p className={`${isCurrentlyActive ? 'text-white' : 'text-gray-600 dark:text-gray-300'} whitespace-pre-wrap`}>{booking.disabilityInfo}</p>
+            <div className={`pt-2 mt-2 border-t ${isCurrentlyActive ? 'border-white/30' : 'border-slate-200/80 dark:border-slate-700/80'}`}>
+                 <p className={`${isCurrentlyActive ? 'text-white' : 'text-slate-600 dark:text-slate-300'} whitespace-pre-wrap`}>{booking.disabilityInfo}</p>
             </div>
             
             {userRole === 'editor' && (
               <div className="flex justify-end mt-2">
                   <button 
                       onClick={() => onDelete(booking.id)} 
-                      className={`${isCurrentlyActive ? 'bg-white text-red-600 hover:bg-red-50' : 'bg-red-500 text-white hover:bg-red-600'} px-3 py-1 text-xs rounded-md font-semibold transition-colors`}
+                      className={`${isCurrentlyActive ? 'bg-white text-rose-600 hover:bg-rose-50' : 'bg-rose-500 text-white hover:bg-rose-600'} px-3 py-1 text-xs rounded-md font-semibold transition-colors`}
                       aria-label="Eliminar registro"
                   >
                       Eliminar
@@ -175,19 +175,19 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
         <div>
             <Header title="Minusvalías">
                 {userRole === 'editor' && (
-                  <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                  <button onClick={() => setIsModalOpen(true)} className="bg-amber-400 text-slate-950 px-4 py-2 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                       Añadir Huésped
                   </button>
                 )}
             </Header>
             <div className="p-4 space-y-4">
                  {dbError && (
-                    <div className="bg-red-100/80 dark:bg-red-900/80 backdrop-blur-sm border-l-4 border-red-500 text-red-700 dark:text-red-200 p-4 rounded-lg mb-4" role="alert">
+                    <div className="bg-rose-100/80 dark:bg-rose-900/80 backdrop-blur-sm border-l-4 border-rose-500 text-rose-700 dark:text-rose-200 p-4 rounded-xl mb-4" role="alert">
                         <p className="font-bold">Error de Conexión</p>
                         <p className="whitespace-pre-line">{dbError}</p>
                         <button 
                             onClick={onRetryAuth} 
-                            className="mt-3 bg-red-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-red-700 transition-colors"
+                            className="mt-3 bg-rose-600 text-white px-4 py-1 rounded-md text-sm font-bold hover:bg-rose-700 transition-colors"
                         >
                             Reintentar Conexión
                         </button>
@@ -200,7 +200,7 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
                         <AccessibilityCard key={booking.id} booking={booking} onDelete={handleDeleteBooking} userRole={userRole} />
                     ))
                 ) : (
-                    !dbError && <div className="text-center py-10 text-gray-800 dark:text-gray-200 bg-gray-50/30 dark:bg-gray-800/30 backdrop-blur-sm rounded-lg">
+                    !dbError && <div className="text-center py-10 text-slate-800 dark:text-slate-200 bg-slate-50/30 dark:bg-slate-800/30 backdrop-blur-sm rounded-xl">
                         No hay registros de minusvalías en este momento.
                     </div>
                 )}
@@ -208,20 +208,20 @@ const DisabilityView: React.FC<DisabilityViewProps> = ({ dbError, isDbInitialize
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Añadir Registro de Minusvalía">
                 <form onSubmit={handleAddBooking}>
                     <div className="space-y-4">
-                        <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-                        <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        <input type="text" placeholder="Nombre del Huésped" value={newBooking.guestName} onChange={(e) => setNewBooking({ ...newBooking, guestName: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
+                        <input type="text" placeholder="Nº Habitación" value={newBooking.roomNumber} onChange={(e) => setNewBooking({ ...newBooking, roomNumber: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Llegada</label>
-                                <input type="date" value={newBooking.arrivalDate} onChange={(e) => setNewBooking({ ...newBooking, arrivalDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Fecha Llegada</label>
+                                <input type="date" value={newBooking.arrivalDate} onChange={(e) => setNewBooking({ ...newBooking, arrivalDate: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-600 dark:text-gray-300">Fecha Salida</label>
-                                <input type="date" value={newBooking.departureDate} onChange={(e) => setNewBooking({ ...newBooking, departureDate: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                                <label className="text-sm font-medium text-slate-600 dark:text-slate-300">Fecha Salida</label>
+                                <input type="date" value={newBooking.departureDate} onChange={(e) => setNewBooking({ ...newBooking, departureDate: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" required />
                             </div>
                         </div>
-                        <textarea placeholder="Descripción de la discapacidad o necesidad especial" value={newBooking.disabilityInfo} onChange={(e) => setNewBooking({ ...newBooking, disabilityInfo: e.target.value })} className="w-full p-3 bg-gray-100/80 dark:bg-gray-700/80 rounded-lg border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" rows={4} required></textarea>
-                        <button type="submit" className="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                        <textarea placeholder="Descripción de la discapacidad o necesidad especial" value={newBooking.disabilityInfo} onChange={(e) => setNewBooking({ ...newBooking, disabilityInfo: e.target.value })} className="w-full p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30" rows={4} required></textarea>
+                        <button type="submit" className="w-full bg-amber-400 text-slate-950 p-3 rounded-xl font-bold hover:bg-amber-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                             Guardar Registro
                         </button>
                     </div>

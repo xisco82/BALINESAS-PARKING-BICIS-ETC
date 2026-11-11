@@ -1,11 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Eventos. </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+              display: ['Outfit', '"Plus Jakarta Sans"', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
   <script type="importmap">
 {
   "imports": {
@@ -20,12 +35,15 @@
 </script>
 <style>
   body {
-    background-image: url('https://i.postimg.cc/856xjf34/piscina-sky.jpg');
-    background-size: cover;
-    background-position: center center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    background-color: #f8fafc;
+    color: #0f172a;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
+  @media (prefers-color-scheme: dark) {
+    body { background-color: #020617; color: #f1f5f9; }
+  }
+  h1, h2, .font-display { font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif; }
   @keyframes grow-in-pulse {
     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
     70% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
@@ -215,10 +233,8 @@
     }
 
     /* Hide UI elements not meant for printing */
-    .no-print, 
-    .fixed.bottom-0.left-0.right-0, /* BottomNav */
-    img[alt="Xisco Logo"],             /* Floating Logo */
-    .fixed.bottom-4.right-4          /* Logout Button container */
+    .no-print,
+    img[alt="Xisco Logo"]
     {
       display: none !important;
     }

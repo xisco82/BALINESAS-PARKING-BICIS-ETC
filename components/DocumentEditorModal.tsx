@@ -344,7 +344,7 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex flex-col bg-gray-900/90 backdrop-blur-md">
+    <div className="fixed inset-0 z-[120] flex flex-col bg-slate-900/90 backdrop-blur-md">
       {/* Hidden file input for uploading images */}
       <input
         type="file"
@@ -355,16 +355,16 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
       />
 
       {/* TOP HEADER BAR */}
-      <div className="bg-gray-900 border-b border-gray-800 text-white px-4 py-3 shrink-0 flex flex-wrap items-center justify-between gap-3 shadow-md">
+      <div className="bg-slate-900 border-b border-slate-800 text-white px-4 py-3 shrink-0 flex flex-wrap items-center justify-between gap-3 shadow-md">
         <div className="flex items-center gap-3">
-          <div className="bg-red-500/20 text-red-400 p-2 rounded-lg shrink-0">
+          <div className="bg-rose-500/20 text-rose-400 p-2 rounded-xl shrink-0">
             <FileText className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-base font-bold text-white flex items-center gap-2">
               {initialData?.id ? 'Editar Documento' : `Añadir Documento a ${monthName}`}
             </h2>
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[11px] text-slate-400">
               Redacta y formatea el documento directamente en la app
             </p>
           </div>
@@ -378,13 +378,13 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
               value={fileName}
               onChange={(e) => setFileName(e.target.value)}
               placeholder="Nombre del documento (ej: Menú Gala)"
-              className="w-full px-3 py-1.5 text-sm bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 text-sm bg-slate-800 border border-slate-700 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:focus:ring-amber-500/30"
               autoFocus
             />
           </div>
 
-          <div className="flex items-center gap-1 bg-gray-800 border border-gray-700 rounded-lg px-2.5 py-1 text-sm text-gray-300">
-            <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
+          <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1 text-sm text-slate-300">
+            <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
             <input
               type="date"
               value={eventDate}
@@ -398,21 +398,21 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
             <button
               onClick={onClose}
               disabled={isSaving}
-              className="px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleSaveDocument}
               disabled={isSaving || !fileName.trim()}
-              className="px-4 py-1.5 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 text-sm font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2"
             >
               <Check className="w-4 h-4" />
               <span>{isSaving ? 'Guardando...' : 'Guardar Documento'}</span>
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors ml-1"
+              className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors ml-1"
               title="Cerrar (Escape)"
             >
               <X className="w-5 h-5" />
@@ -422,30 +422,30 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
       </div>
 
       {/* RICH TEXT FORMATTING TOOLBAR */}
-      <div className="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2 flex items-center gap-1 overflow-x-auto select-none shrink-0 shadow-xs">
+      <div className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-3 py-2 flex items-center gap-1 overflow-x-auto select-none shrink-0 shadow-xs">
         {/* Undo / Redo */}
         <button
           onClick={() => executeCommand('undo')}
           title="Deshacer (Ctrl+Z)"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Undo className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('redo')}
           title="Rehacer (Ctrl+Y)"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Redo className="w-4 h-4" />
         </button>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Headings */}
         <select
           onChange={(e) => handleHeading(e.target.value as any)}
           defaultValue="P"
-          className="px-2 py-1 text-xs font-semibold bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-800 dark:text-gray-200 focus:outline-none"
+          className="px-2 py-1 text-xs font-semibold bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-slate-800 dark:text-slate-200 focus:outline-none"
           title="Estilo de párrafo / Título"
         >
           <option value="P">Texto normal</option>
@@ -454,39 +454,39 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
           <option value="H3">Título 3 (Pequeño)</option>
         </select>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Basic Text Formatting */}
         <button
           onClick={() => executeCommand('bold')}
           title="Negrita (Ctrl+B)"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Bold className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('italic')}
           title="Cursiva (Ctrl+I)"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Italic className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('underline')}
           title="Subrayado (Ctrl+U)"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Underline className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('strikeThrough')}
           title="Tachado"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Strikethrough className="w-4 h-4" />
         </button>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Text Color */}
         <div className="relative">
@@ -497,12 +497,12 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
               setShowTableMenu(false);
             }}
             title="Color de texto"
-            className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex items-center gap-0.5"
+            className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors flex items-center gap-0.5"
           >
             <Palette className="w-4 h-4" />
           </button>
           {showColorPicker && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-2 z-50 grid grid-cols-4 gap-1.5 w-36">
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-2 z-50 grid grid-cols-4 gap-1.5 w-36">
               {TEXT_COLORS.map((c) => (
                 <button
                   key={c.value}
@@ -510,7 +510,7 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
                     executeCommand('foreColor', c.value);
                     setShowColorPicker(false);
                   }}
-                  className="w-6 h-6 rounded-full border border-gray-300 dark:border-gray-600 transition-transform hover:scale-110"
+                  className="w-6 h-6 rounded-full border border-slate-300 dark:border-slate-600 transition-transform hover:scale-110"
                   style={{ backgroundColor: c.value }}
                   title={c.name}
                 />
@@ -528,12 +528,12 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
               setShowTableMenu(false);
             }}
             title="Color de resaltado"
-            className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex items-center gap-0.5"
+            className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors flex items-center gap-0.5"
           >
             <Highlighter className="w-4 h-4 text-amber-500" />
           </button>
           {showHighlightPicker && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-2 z-50 flex flex-col gap-1 w-36">
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-2 z-50 flex flex-col gap-1 w-36">
               {HIGHLIGHT_COLORS.map((h) => (
                 <button
                   key={h.value}
@@ -541,10 +541,10 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
                     executeCommand('hiliteColor', h.value);
                     setShowHighlightPicker(false);
                   }}
-                  className="px-2 py-1 text-xs rounded text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
+                  className="px-2 py-1 text-xs rounded text-left flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200"
                 >
                   <span
-                    className="w-3.5 h-3.5 rounded-full border border-gray-400"
+                    className="w-3.5 h-3.5 rounded-full border border-slate-400"
                     style={{ backgroundColor: h.value === 'transparent' ? '#fff' : h.value }}
                   />
                   <span>{h.name}</span>
@@ -554,57 +554,57 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
           )}
         </div>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Lists */}
         <button
           onClick={() => executeCommand('insertUnorderedList')}
           title="Lista con viñetas"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <List className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('insertOrderedList')}
           title="Lista numerada"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <ListOrdered className="w-4 h-4" />
         </button>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Alignment */}
         <button
           onClick={() => executeCommand('justifyLeft')}
           title="Alinear a la izquierda"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <AlignLeft className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('justifyCenter')}
           title="Centrar"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <AlignCenter className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('justifyRight')}
           title="Alinear a la derecha"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <AlignRight className="w-4 h-4" />
         </button>
         <button
           onClick={() => executeCommand('justifyFull')}
           title="Justificar"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <AlignJustify className="w-4 h-4" />
         </button>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Table Controls Menu */}
         <div className="relative">
@@ -615,48 +615,48 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
               setShowHighlightPicker(false);
             }}
             title="Herramientas de Tabla (horarios, montajes)"
-            className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex items-center gap-1 text-xs font-semibold"
+            className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors flex items-center gap-1 text-xs font-semibold"
           >
             <TableIcon className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="hidden sm:inline">Tabla</span>
           </button>
 
           {showTableMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-2 z-50 flex flex-col gap-1 w-48 text-xs text-gray-800 dark:text-gray-200">
+            <div className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-2 z-50 flex flex-col gap-1 w-48 text-xs text-slate-800 dark:text-slate-200">
               <button
                 onClick={() => insertTable(3, 3)}
                 className="px-2 py-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-bold flex items-center gap-2 text-left"
               >
                 <Plus className="w-3.5 h-3.5" /> Insertar Tabla (3x3)
               </button>
-              <div className="h-px bg-gray-200 dark:bg-gray-700 my-1" />
+              <div className="h-px bg-slate-200 dark:bg-slate-700 my-1" />
               <button
                 onClick={handleAddRow}
-                className="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-left"
+                className="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 text-left"
               >
-                <Rows className="w-3.5 h-3.5 text-gray-500" /> Añadir fila abajo
+                <Rows className="w-3.5 h-3.5 text-slate-500" /> Añadir fila abajo
               </button>
               <button
                 onClick={handleAddColumn}
-                className="px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-left"
+                className="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 text-left"
               >
-                <Columns className="w-3.5 h-3.5 text-gray-500" /> Añadir columna der.
+                <Columns className="w-3.5 h-3.5 text-slate-500" /> Añadir columna der.
               </button>
               <button
                 onClick={handleDeleteRow}
-                className="px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2 text-left"
+                className="px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center gap-2 text-left"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Eliminar fila
               </button>
               <button
                 onClick={handleDeleteColumn}
-                className="px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2 text-left"
+                className="px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center gap-2 text-left"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Eliminar columna
               </button>
               <button
                 onClick={handleDeleteTable}
-                className="px-2 py-1 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2 text-left font-semibold"
+                className="px-2 py-1 rounded hover:bg-rose-50 dark:hover:bg-rose-900/30 text-rose-600 dark:text-rose-400 flex items-center gap-2 text-left font-semibold"
               >
                 <Trash2 className="w-3.5 h-3.5" /> Borrar tabla entera
               </button>
@@ -664,13 +664,13 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
           )}
         </div>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Images */}
         <button
           onClick={() => fileInputRef.current?.click()}
           title="Subir imagen (o pega con Ctrl+V)"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors flex items-center gap-1 text-xs font-semibold"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors flex items-center gap-1 text-xs font-semibold"
         >
           <ImageIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
           <span className="hidden sm:inline">Imagen</span>
@@ -678,18 +678,18 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
         <button
           onClick={handleInsertImageUrl}
           title="Insertar imagen mediante URL"
-          className="p-1.5 text-xs text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+          className="p-1.5 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded"
         >
           URL
         </button>
 
-        <div className="h-5 w-px bg-gray-300 dark:bg-gray-600 mx-1" />
+        <div className="h-5 w-px bg-slate-300 dark:bg-slate-600 mx-1" />
 
         {/* Links */}
         <button
           onClick={handleInsertLink}
           title="Insertar enlace"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <LinkIcon className="w-4 h-4" />
         </button>
@@ -698,12 +698,12 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
         <button
           onClick={() => executeCommand('insertHorizontalRule')}
           title="Insertar línea separadora"
-          className="p-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors"
+          className="p-1.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors"
         >
           <Minus className="w-4 h-4" />
         </button>
 
-        <span className="ml-auto text-[11px] text-gray-400 italic hidden lg:inline">
+        <span className="ml-auto text-[11px] text-slate-400 italic hidden lg:inline">
           Consejo: Puedes pegar imágenes directamente con Ctrl+V
         </span>
       </div>
@@ -792,7 +792,7 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
 
       {/* EDITOR CANVAS (HOJA DIN A4 CENTRADA Y COMPLETAMENTE VISIBLE) */}
       <div
-        className="flex-grow overflow-y-auto overflow-x-auto bg-gray-200/90 dark:bg-gray-950 p-3 sm:p-6 pb-28 flex justify-center cursor-text"
+        className="flex-grow overflow-y-auto overflow-x-auto bg-slate-200/90 dark:bg-slate-950 p-3 sm:p-6 pb-28 flex justify-center cursor-text"
         onClick={(e) => {
           if (e.target === e.currentTarget && editorRef.current) {
             editorRef.current.focus();
@@ -803,7 +803,7 @@ export const DocumentEditorModal: React.FC<DocumentEditorModalProps> = ({
           ref={editorRef}
           contentEditable
           onPaste={handlePaste}
-          className="document-editor-sheet w-full max-w-[794px] min-h-[1123px] bg-white text-gray-900 shadow-2xl rounded-sm border border-gray-300 p-8 sm:p-14 pb-28 focus:outline-none focus:ring-2 focus:ring-blue-400/50 leading-relaxed text-base font-sans mx-auto box-border"
+          className="document-editor-sheet w-full max-w-[794px] min-h-[1123px] bg-white text-slate-900 shadow-2xl rounded-sm border border-slate-300 p-8 sm:p-14 pb-28 focus:outline-none focus:ring-2 focus:ring-blue-400/50 leading-relaxed text-base font-sans mx-auto box-border"
           style={{
             wordBreak: 'break-word',
             overflowWrap: 'break-word',
